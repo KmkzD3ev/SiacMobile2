@@ -1,0 +1,205 @@
+<resources>
+    <string name="app_name">Siac Mobile</string>
+    <string name="action_settings">Settings</string>
+    <string name="zenitech">© Zenitech</string>
+    <string name="searchable">Procurar por</string>
+
+
+    <string name="testprinterbt2">Test Printer BT 2.0</string>
+    <string name="testprinterbt4">Test Printer BT 4.0</string>
+    <string name="testprinterusb">Test Printer USB</string>
+    <string name="testprinternet">Test Printer NET</string>
+    <string name="tickettype">Ticket Type</string>
+    <string name="tickettype58mm">58MM Ticket</string>
+    <string name="tickettype80mm">80MM Ticket</string>
+    <string name="printcount">Print Count</string>
+    <string name="printsuccess">Impressão Concluída</string>
+    <string name="printfailed">Impressão Falhou</string>
+
+    <!--Principal-->
+    <string name="title_activity_main">Siac Mobile</string>
+    <string name="txt_btn_vendas">VENDAS</string>
+    <string name="txt_btn_contas_receber">CONTAS A RECEBER</string>
+    <string name="txt_btn_relatorios">RELATÓRIOS</string>
+    <string name="txt_btn_enviar_bd">ENVIAR BANCO DE DADOS</string>
+
+    <string name="title_home">Principal</string>
+    <string name="title_dashboard">Relatórios</string>
+    <string name="title_notifications">Gerenciar</string>
+
+    <!--Login-->
+    <string name="title_activity_login">Login</string>
+    <string name="prompt_id">Id</string>
+    <string name="prompt_login">login</string>
+    <string name="prompt_password">Senha</string>
+    <string name="action_sign_in_short">Entrar</string>
+    <string name="action_sign_in">Entrar</string>
+
+    <!--Unidades-->
+    <string name="title_activity_unidades">Unidades</string>
+    <string name="txt_unidades">Selecione a Unidade</string>
+    <string name="txt_btn_baixarBD">Baixar Banco de Dados</string>
+
+    <!--Vendas-->
+    <string name="vendas_title_activity_vendas">Vendas</string>
+    <string name="vendas_subtitle_activity_vendas">Siac Mobile</string>
+    <string name="vendas_tit_produto">Produto</string>
+    <string name="vendas_tit_itens">Itens</string>
+    <string name="title_activity_financeiro_da_venda">Financeiro Da Venda</string>
+
+    <!--Consultar -->
+    <string name="title_activity_contas_receber_consultar_cliente">Consultar Cliente</string>
+    <string name="title_activity_contas_receber_cliente">Contas Receber Cliente</string>
+    <string name="title_activity_contas_receber_baixar_conta">Baixar Conta</string>
+    <string name="title_activity_download_manager">DownloadManager</string>
+    <string name="title_activity_vendas_consultar_clientes">Consultar Clientes Venda</string>
+    <string name="title_activity_relatorio_vendas">Relatório de Vendas</string>
+    <string name="title_activity_relatorio_vendas_cliente">Relatório Vendas Cliente</string>
+    <string name="title_activity_relatorio_contas_receber">Relatório Contas Receber</string>
+    <string name="title_activity_principal2">MainActivity</string>
+    <string name="title_activity_teste">Enviar Dados</string>
+    <string name="title_activity_impressora">Impressora</string>
+    <string name="title_activity_relatorio_vendas_pedidos">Relatório Vendas Pedido</string>
+    <!-- Strings used for fragments for navigation -->
+    <string name="first_fragment_label">First Fragment</string>
+    <string name="second_fragment_label">Second Fragment</string>
+    <string name="next">Next</string>
+    <string name="previous">Previous</string>
+
+    <!-- TEXTOS DA IMPRESSÂO Selecione a impressora para conectar-->
+    <string name="title_select_device">Selecione o dispositivo</string>
+    <string name="title_scanning">Procurando dispositivos&#8230;</string>
+    <string name="title_bluetooth_disabled">Bluetooth desabilitado</string>
+    <string name="title_read_information">Read information</string>
+    <string name="title_print_self_test">Print self test</string>
+    <string name="title_print_text">Print text</string>
+    <string name="title_print_image">Print image</string>
+    <string name="title_print_page">Print page</string>
+    <string name="title_print_barcode">Print barcode</string>
+    <string name="title_read_card">Read card</string>
+    <string name="title_read_barcode">Read barcode</string>
+    <string name="title_scan">Escanear</string>
+    <string name="title_please_wait">Por favor, espere</string>
+    <string name="title_warning">Warning</string>
+    <string name="title_address">Endereço</string>
+    <string name="title_connect">Conectar</string>
+    <string name="title_identity">Identidade</string>
+    <string name="title_enrol">Enrol</string>
+    <string name="title_check">Check</string>
+    <string name="title_get">Get</string>
+    <string name="title_fingerprint">Fingerprint</string>
+    <string name="title_delete_all">Delete all</string>
+
+    <string name="hello_first_fragment">Hello first fragment</string>
+    <string name="hello_second_fragment">Hello second fragment. Arg: %1$s</string>
+    <string name="title_activity_sincronizar_banco_dados">Sincronizar Banco de Dados</string>
+
+
+    <!-- MSG Sincronismo -->
+    <string name="sincronizando">Sincronizando</string>
+    <string name="gerando_banco_de_dados">Gerando banco de dados…\nEsta ação pode demorar um pouco!</string>
+    <string name="fazendo_dowloand_do_banco">Fazendo download dos dados…\nAguarde um pouco mais!</string>
+    <string name="inportando_banco">Importando banco de dados…</string>
+    <string name="verificando_serial">Validando serial…</string>
+    <string name="ativando_serial">Ativando POS…</string>
+    <string name="informe_um_serial">Informe um serial válido!</string>
+    <string name="informe_um_codigo_instalacao">Informe um código de instalação válido!</string>
+    <string name="sincronizado">Tudo Certo!</string>
+    <string name="oops">Oops!</string>
+    <string name="txt_app_finalizado">App Finalizado!\nPressione \"BAIXAR BANCO DE DADOS\", para carregar novos dados.</string>
+    <string name="serial">Serial</string>
+    <string name="sincronizar">BAIXAR BANCO DE DADOS</string>
+
+    <!---->
+    <string name="zeros">00,00</string>
+    <string name="zero">0</string>
+    <string name="reenviar_dados">REENVIAR DADOS</string>
+    <string name="renviar_vendas_nao_processadas">Renviar vendas não processadas</string>
+    <string name="enviar_todo_o_movimento_atual">Enviar todo o movimento atual</string>
+    <string name="enviar_dados">ENVIAR DADOS</string>
+    <string name="retornar_o_app_ao_estado_inicial">Retornar o app ao estado inicial</string>
+    <string name="finalizar_app">FINALIZAR APP</string>
+    <string name="pagamento">PAGAMENTO</string>
+    <string name="zero_reais">0,00</string>
+
+    <!--    -->
+    <string name="title_activity_reset_app">Reset App</string>
+    <string name="mensagem_reset">Insira o código que você recebeu</string>
+    <string name="_0">0</string>
+
+    <string name="printer_info">Printer information</string>
+    <string name="card_info">Card information</string>
+    <string name="tag_info">Tag information</string>
+    <string name="barcode">Barcode</string>
+    <string name="card_no">Card#</string>
+    <string name="holder">Holder</string>
+    <string name="exp_date">Exp date</string>
+    <string name="no_card_read">No card information read</string>
+
+    <string name="msg_printing_self_test">Printing self test&#8230;</string>
+    <string name="msg_printing_text">Printing text&#8230;</string>
+    <string name="msg_printing_image">Printing image&#8230;</string>
+    <string name="msg_printing_page">Printing page&#8230;</string>
+    <string name="msg_printing_barcode">Printing barcode&#8230;</string>
+    <string name="msg_printing_relatorio">Imprimindo Ralatório&#8230;</string>
+    <string name="msg_printing_boleto">Imprimindo Boleto&#8230;</string>
+    <string name="msg_reading_magstripe">Reading magnetic card&#8230;</string>
+    <string name="msg_reading_barcode">Reading barcode&#8230;</string>
+    <string name="msg_connecting">Conectando ao dispositivo&#8230;</string>
+    <string name="msg_unsupport_page_mode">Printer does not supports page mode</string>
+    <string name="msg_please_touch_finger">Please touch with finger</string>
+    <string name="msg_enrol_identity">Enrol new identity.Please tab and hold finger&#8230;</string>
+    <string name="msg_delete_all_identities">Delete all identities&#8230;</string>
+    <string name="msg_check_identity">Check identity.Please tab and hold finger&#8230;</string>
+    <string name="msg_get_identity">Get identity.Please tab and hold finger&#8230;</string>
+    <string name="msg_invalid_identity">Invalid identity</string>
+    <string name="msg_downloading_image">Downloading image&#8230;</string>
+    <string name="msg_printing_nfce">Imprimindo NFC-e&#8230;</string>
+    <string name="msg_printing_comp_pag_cartao_nfce">Imprimindo Comprovante Pagamento&#8230;</string>
+    <string name="title_activity_relatorios_vendas">MainActivity</string>
+    <string name="title_activity_relatorios_das_vendas">MainActivity</string>
+    <string name="title_activity_relatorio_das_vendas">MainActivity</string>
+    <string name="title_activity_relatorio_de_vendas_geral">MainActivity</string>
+    <string name="consultar_vale">CONSULTAR VALE</string>
+    <string name="n_mero_do_vale">Número do Vale</string>
+    <string name="title_activity_vale_list_clientes">ValeListClientes</string>
+
+    <string name="lorem_ipsum">
+        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nam in scelerisque sem. Mauris
+        volutpat, dolor id interdum ullamcorper, risus dolor egestas lectus, sit amet mattis purus
+        dui nec risus. Maecenas non sodales nisi, vel dictum dolor. Class aptent taciti sociosqu ad
+        litora torquent per conubia nostra, per inceptos himenaeos. Suspendisse blandit eleifend
+        diam, vel rutrum tellus vulputate quis. Aliquam eget libero aliquet, imperdiet nisl a,
+        ornare ex. Sed rhoncus est ut libero porta lobortis. Fusce in dictum tellus.\n\n
+        Suspendisse interdum ornare ante. Aliquam nec cursus lorem. Morbi id magna felis. Vivamus
+        egestas, est a condimentum egestas, turpis nisl iaculis ipsum, in dictum tellus dolor sed
+        neque. Morbi tellus erat, dapibus ut sem a, iaculis tincidunt dui. Interdum et malesuada
+        fames ac ante ipsum primis in faucibus. Curabitur et eros porttitor, ultricies urna vitae,
+        molestie nibh. Phasellus at commodo eros, non aliquet metus. Sed maximus nisl nec dolor
+        bibendum, vel congue leo egestas.\n\n
+        Sed interdum tortor nibh, in sagittis risus mollis quis. Curabitur mi odio, condimentum sit
+        amet auctor at, mollis non turpis. Nullam pretium libero vestibulum, finibus orci vel,
+        molestie quam. Fusce blandit tincidunt nulla, quis sollicitudin libero facilisis et. Integer
+        interdum nunc ligula, et fermentum metus hendrerit id. Vestibulum lectus felis, dictum at
+        lacinia sit amet, tristique id quam. Cras eu consequat dui. Suspendisse sodales nunc ligula,
+        in lobortis sem porta sed. Integer id ultrices magna, in luctus elit. Sed a pellentesque
+        est.\n\n
+        Aenean nunc velit, lacinia sed dolor sed, ultrices viverra nulla. Etiam a venenatis nibh.
+        Morbi laoreet, tortor sed facilisis varius, nibh orci rhoncus nulla, id elementum leo dui
+        non lorem. Nam mollis ipsum quis auctor varius. Quisque elementum eu libero sed commodo. In
+        eros nisl, imperdiet vel imperdiet et, scelerisque a mauris. Pellentesque varius ex nunc,
+        quis imperdiet eros placerat ac. Duis finibus orci et est auctor tincidunt. Sed non viverra
+        ipsum. Nunc quis augue egestas, cursus lorem at, molestie sem. Morbi a consectetur ipsum, a
+        placerat diam. Etiam vulputate dignissim convallis. Integer faucibus mauris sit amet finibus
+        convallis.\n\n
+        Phasellus in aliquet mi. Pellentesque habitant morbi tristique senectus et netus et
+        malesuada fames ac turpis egestas. In volutpat arcu ut felis sagittis, in finibus massa
+        gravida. Pellentesque id tellus orci. Integer dictum, lorem sed efficitur ullamcorper,
+        libero justo consectetur ipsum, in mollis nisl ex sed nisl. Donec maximus ullamcorper
+        sodales. Praesent bibendum rhoncus tellus nec feugiat. In a ornare nulla. Donec rhoncus
+        libero vel nunc consequat, quis tincidunt nisl eleifend. Cras bibendum enim a justo luctus
+        vestibulum. Fusce dictum libero quis erat maximus, vitae volutpat diam dignissim.
+    </string>
+    <string name="title_activity_contas_pagar">ContasPagar</string>
+
+</resources>
