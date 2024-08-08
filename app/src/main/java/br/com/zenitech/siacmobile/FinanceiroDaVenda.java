@@ -160,6 +160,14 @@ public class FinanceiroDaVenda extends AppCompatActivity implements AdapterView.
         setSupportActionBar(toolbar);
         Objects.requireNonNull(getSupportActionBar()).setDisplayHomeAsUpEnabled(true);
 
+
+
+        /*
+        DatabaseHelper dbHelper = new DatabaseHelper(this);
+        double limiteCreditoCliente = dbHelper.getLimiteCreditoCliente(codigo_cliente);
+        Log.d("Limite Crédito Cliente F", "O limite de crédito do cliente é: " + limiteCreditoCliente + codigo_cliente);
+               */
+
         //
         formasPagamentoPrazo = new ArrayList<>();
         valoresCompra = new ArrayList<>();
@@ -228,11 +236,12 @@ public class FinanceiroDaVenda extends AppCompatActivity implements AdapterView.
         btnAddF = findViewById(R.id.btnAddF);
         btnAddF.setOnClickListener(v -> {
 
-            // Captura o valor inserido no campo txtValorFormaPagamento
+            //*********** Captura o valor inserido no campo txtValorFormaPagamento**************//
             String valorInserido = txtValorFormaPagamento.getText().toString().replaceAll("[^\\d.,]", "").replace(",", ".").trim();
             String[] fPag1 = spFormasPagamentoCliente.getSelectedItem().toString().split(" _ ");
 
-            // Se a forma de pagamento for "A PRAZO", adicionar o valor ao array valoresCompra
+            //**************Se a forma de pagamento for "A PRAZO", adicionar o valor ao array valoresCompra**************//
+
             if (fPag1.length > 1 && "A PRAZO".equals(fPag1[1])) {
                 valoresCompra.add(valorInserido);
                 Log.d("ValorAdicionado", "Valor adicionado ao array: " + valorInserido);
@@ -296,7 +305,24 @@ public class FinanceiroDaVenda extends AppCompatActivity implements AdapterView.
             Log.d("TotalValoresCompra", "Soma  valores  compra a prazo enviad SHARE: " + totalValoresCompra.toString());
 
 
-            _salvarFinanceiro();
+            //********Verifica se o valor da compra a prazo excede o limite de crédito disponível************//
+
+            DatabaseHelper dbHelper = new DatabaseHelper(this);
+            int limiteCreditoCliente = dbHelper.getLimiteCreditoCliente(codigo_cliente);
+            Log.d("Limite Crédito Cliente", "O limite de crédito do cliente é: " + limiteCreditoCliente);
+
+            BigDecimal limiteCreditoBigDecimal = BigDecimal.valueOf(limiteCreditoCliente);
+
+            if (totalValoresCompra.compareTo(limiteCreditoBigDecimal) > 0) {
+                // Exibir diálogo de alerta
+                new AlertDialog.Builder(this)
+                        .setTitle("Limite de Crédito Excedido")
+                        .setMessage("O valor da compra excede o limite disponível.")
+                        .setPositiveButton(android.R.string.ok, null)
+                        .show();
+            } else {
+                _salvarFinanceiro();
+            }
         });
 
         //unidades = bd.getUnidade();
@@ -860,7 +886,6 @@ public class FinanceiroDaVenda extends AppCompatActivity implements AdapterView.
         txtVencimentoFormaPagamento.setText(data);
     }
 
-    @SuppressLint("LongLogTag")
     @Override
     public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
         txtDocumentoFormaPagamento.setText("");

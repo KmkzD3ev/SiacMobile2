@@ -39,9 +39,13 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     private static final String NOME_CLIENTE = "nome_cliente";
     private static final String LATITUDE_CLIENTE = "latitude_cliente";
     private static final String LONGITUDE_CLIENTE = "longitude_cliente";
-    private static final String SALDO_CLIENTE = "saldo"; // Constante para o campo saldo
+    private static final String SALDO_CLIENTE = "saldo";
+    private static final String LIMITE_CREDITO_CLIENTE = "limite_credito_cliente"; // Constante para o campo limite_credito_cliente
 
-    private static final String[] COLUNAS_CLIENTES = {CODIGO_CLIENTE, NOME_CLIENTE, LATITUDE_CLIENTE, LONGITUDE_CLIENTE,SALDO_CLIENTE};
+    private static final String[] COLUNAS_CLIENTES = {CODIGO_CLIENTE, NOME_CLIENTE, LATITUDE_CLIENTE, LONGITUDE_CLIENTE, SALDO_CLIENTE, LIMITE_CREDITO_CLIENTE};
+// Constante para o campo saldo
+
+
 
     //CONSTANTES PRODUTOS
     private static final String TABELA_PRODUTOS = "produtos";
@@ -307,6 +311,32 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         db.close();
         return unidades;
     }
+
+    //************************OBTER LIMITE DE CREDITO****************//
+    public int getLimiteCreditoCliente(String codigo_cliente) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        String query = "SELECT SUM(IFNULL(" + LIMITE_CREDITO_CLIENTE + ", 0)) as total_limite FROM " + TABELA_CLIENTES + " WHERE " + CODIGO_CLIENTE + " = ?";
+        String[] selectionArgs = new String[]{codigo_cliente};
+        Cursor cursor = db.rawQuery(query, selectionArgs);
+
+        if (cursor != null) {
+            if (cursor.moveToFirst()) {
+                @SuppressLint("Range") int totalLimite = (int) cursor.getDouble(cursor.getColumnIndex("total_limite"));
+                Log.d(TAG, "Total limite de crédito para o cliente " + codigo_cliente + ": " + totalLimite);
+                cursor.close();
+                return totalLimite;
+            } else {
+                cursor.close();
+                Log.d(TAG, "Cliente " + codigo_cliente + " não encontrado.");
+                return 0;
+            }
+        } else {
+            Log.d(TAG, "Cursor nulo. Cliente " + codigo_cliente + " não encontrado.");
+            return 0;
+        }
+    }
+
+
 
 
     //########## PRODUTOS ############
@@ -1263,6 +1293,9 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         db.close();*/
         return baixa_a_prazo;
     }
+
+    //***************CONSULTA DE INADIMPLENCIA POR PARAMETRO***************//
+
     public boolean isInadimplenteBloqueado() {
         int bloqueio = 0;  // Valor padrão para inativo
         SQLiteDatabase db = this.getReadableDatabase();
@@ -2746,6 +2779,22 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
 
         return ret;
+    }
+    // Método para consultar o limite de crédito de um cliente específico
+    public double getLimiteCreditoCliente(int clienteId) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        String query = "SELECT " + LIMITE_CREDITO_CLIENTE + " FROM " + TABELA_CLIENTES + " WHERE " + CODIGO_CLIENTE + " = ?";
+        String[] selectionArgs = new String[]{String.valueOf(clienteId)};
+        Cursor cursor = db.rawQuery(query, selectionArgs);
+
+        if (cursor != null) {
+            cursor.moveToFirst();
+            @SuppressLint("Range") double limiteCredito = cursor.getDouble(cursor.getColumnIndex(LIMITE_CREDITO_CLIENTE));
+            cursor.close();
+            return limiteCredito;
+        } else {
+            return 0.0;
+        }
     }
 
 

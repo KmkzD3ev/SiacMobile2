@@ -493,7 +493,7 @@ public class Vendas extends AppCompatActivity {
         //super.onBackPressed();
     }
 
-
+//*****************CONSULTA E TRATAMENTO DA INADIMPLENCIA*******************//
     private void consultarInadimplencia() {
         Log.d("Inadimplencia", "Verificando inadimplência para o cliente: " + nome_cliente + " (ID: " + id_cliente + ")");
         boolean isInadimplente = verificarInadimplencia(id_cliente);

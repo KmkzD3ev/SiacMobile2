@@ -166,7 +166,8 @@ public class Impressora extends AppCompatActivity {
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        // Solicitar permissões Bluetooth
+        // ******************Solicitar permissões Bluetooth*****************//
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             ActivityCompat.requestPermissions(this, new String[]{
                     Manifest.permission.BLUETOOTH_CONNECT,
@@ -408,6 +409,9 @@ public class Impressora extends AppCompatActivity {
         tempo(1000);
     }
 
+
+    //**************************  REQUISIÇAO DE PERMISSOES  *************************//
+
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
@@ -471,6 +475,8 @@ public class Impressora extends AppCompatActivity {
         }, tempo);
     }
 
+    //*******************   ATIVAÇAO BLUETOOTH    ******************//
+
     private void ativarBluetooth() {
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this, new String[]{
@@ -481,6 +487,9 @@ public class Impressora extends AppCompatActivity {
         }
         new AtivarDesativarBluetooth().enableBT(this);
     }
+
+
+    //**********************   TRATAMENTO DE PERMISSOES    *********************//
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -708,8 +717,8 @@ public class Impressora extends AppCompatActivity {
         }
 
         mPrinter.setConnectionListener(() -> {
-            Log.d(LOG_TAG, "A impressora está desconectada");
-            toast("A impressora está desconectada");
+            Log.d(LOG_TAG, "Preparando Impressao");
+            toast("Preparando Impressao");
 
             runOnUiThread(() -> {
                 if (!isFinishing()) {
@@ -754,6 +763,8 @@ public class Impressora extends AppCompatActivity {
         }
     }
 
+   // ****************** ABRIR CONEXAO******************  //
+    @SuppressLint("MissingPermission")
     private void establishBluetoothConnection(final String address) {
         //// Checar se o endereço é vazio, se sim, chamar waitForConnection
        /* if (address.isEmpty()) {
@@ -848,7 +859,7 @@ public class Impressora extends AppCompatActivity {
                     Log.d(LOG_TAG, "Conexão Bluetooth estabelecida com sucesso");
                 } catch (IOException e) {
 
-                    error("Falhou ao conectar: " + e.getMessage());
+                   // error("Falhou ao conectar: " + e.getMessage());
                     waitForConnection();
                     return;
                 }
@@ -873,6 +884,8 @@ public class Impressora extends AppCompatActivity {
         });
         t.start();
     }
+
+
 
     private void establishNetworkConnection(final String address) {
         closePrinterServer();
@@ -1295,7 +1308,7 @@ public class Impressora extends AppCompatActivity {
 
     /***************************** - IMPRESSÃO - *********************************/
 
-    // ** PROMISSORIA 58mm
+    // ********* PROMISSORIA 58mm ****************//
     @SuppressLint({"MissingPermission", "LongLogTag"})
     private void printPromissoria() {
 
@@ -1468,7 +1481,7 @@ public class Impressora extends AppCompatActivity {
         }, R.string.msg_printing_relatorio);
     }
 
-    // ** RELATÓRIO 58mm
+    // ***************** RELATÓRIO 58mm **************************//
 
     private void printRelatorioNFCE58mm() {
         runTask((dialog, printer) -> {
@@ -1578,7 +1591,8 @@ public class Impressora extends AppCompatActivity {
         }, R.string.msg_printing_relatorio);
     }
 
-//FORMATAÇAO PARA TODOS OS VALORES DE FORMAS DE PAGAMENTO RELATORIOS
+//******* FORMATAÇAO PARA TODOS OS VALORES DE FORMAS DE PAGAMENTO RELATORIOS  *******//
+
     private String formatarFormasPagamento(String strFormPags) {
         StringBuilder formattedFormPags = new StringBuilder();
         String[] formasPagamento = strFormPags.split("\\r?\\n");
