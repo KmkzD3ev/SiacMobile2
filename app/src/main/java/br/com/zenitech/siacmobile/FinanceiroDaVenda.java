@@ -307,17 +307,26 @@ public class FinanceiroDaVenda extends AppCompatActivity implements AdapterView.
 
             //********Verifica se o valor da compra a prazo excede o limite de crédito disponível************//
 
+            // Verifica se o valor da compra a prazo excede o limite de crédito disponível ou se o limite é zero
             DatabaseHelper dbHelper = new DatabaseHelper(this);
             int limiteCreditoCliente = dbHelper.getLimiteCreditoCliente(codigo_cliente);
             Log.d("Limite Crédito Cliente", "O limite de crédito do cliente é: " + limiteCreditoCliente);
 
             BigDecimal limiteCreditoBigDecimal = BigDecimal.valueOf(limiteCreditoCliente);
+           totalValoresCompra = somarValoresCompra();
 
-            if (totalValoresCompra.compareTo(limiteCreditoBigDecimal) > 0) {
-                // Exibir diálogo de alerta
+            if (limiteCreditoBigDecimal.compareTo(BigDecimal.ZERO) == 0) {
+                // Exibir diálogo de alerta caso não haja limite de crédito
+                new AlertDialog.Builder(this)
+                        .setTitle("Limite de Crédito Indisponível")
+                        .setMessage("Não há limite de crédito disponível para realizar compras a prazo.")
+                        .setPositiveButton(android.R.string.ok, null)
+                        .show();
+            } else if (totalValoresCompra.compareTo(limiteCreditoBigDecimal) > 0) {
+                // Exibir diálogo de alerta caso o valor da compra exceda o limite disponível
                 new AlertDialog.Builder(this)
                         .setTitle("Limite de Crédito Excedido")
-                        .setMessage("O valor da compra excede o limite disponível.")
+                        .setMessage("O valor da compra excede o limite de crédito disponível.")
                         .setPositiveButton(android.R.string.ok, null)
                         .show();
             } else {
