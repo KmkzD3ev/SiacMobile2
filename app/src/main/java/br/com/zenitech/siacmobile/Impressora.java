@@ -2,6 +2,7 @@ package br.com.zenitech.siacmobile;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
+import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.bluetooth.BluetoothAdapter;
@@ -82,6 +83,8 @@ public class Impressora extends AppCompatActivity {
     private static final String LOG_TAG = "Impressora";
     private static final int REQUEST_BLUETOOTH_PERMISSIONS = 1;
     public static boolean liberaImpressao;
+    private ProgressDialog dialog;
+    private volatile boolean isDialogVisible = false;
 
     // Pedido para obter o dispositivo bluetooth
     private static final int REQUEST_GET_DEVICE = 0;
@@ -547,36 +550,49 @@ public class Impressora extends AppCompatActivity {
             }
         });
     }
+    private void showProgressDialog(int msgResId) {
+        ((Activity) context).runOnUiThread(() -> {
+            if (!((Activity) context).isFinishing() && !((Activity) context).isDestroyed()) {
+                dialog = new ProgressDialog(context);
+                dialog.setTitle(context.getString(R.string.title_please_wait));
+                dialog.setMessage(context.getString(msgResId));
+                dialog.setCancelable(false);
+                dialog.setCanceledOnTouchOutside(false);
+                dialog.show();
+                isDialogVisible = true;
+            }
+        });
+    }
+
+    private void dismissProgressDialog() {
+        ((Activity) context).runOnUiThread(() -> {
+            if (dialog != null && dialog.isShowing() && isDialogVisible) {
+                dialog.dismiss();
+                isDialogVisible = false;
+            }
+        });
+    }
+
 
     private void runTask(final PrinterRunnable r, final int msgResId) {
-        final ProgressDialog dialog = new ProgressDialog(Impressora.this);
-        dialog.setTitle(getString(R.string.title_please_wait));
-        dialog.setMessage(getString(msgResId));
-        dialog.setCancelable(false);
-        dialog.setCanceledOnTouchOutside(false);
-        dialog.show();
-
+        showProgressDialog(msgResId);
         Thread t = new Thread(() -> {
             try {
                 r.run(dialog, mPrinter);
             } catch (IOException e) {
                 e.printStackTrace();
                 error("I/O error occurs: " + e.getMessage());
-
                 Log.d(LOG_TAG, e.getMessage(), e);
             } catch (Exception e) {
                 e.printStackTrace();
                 Log.d(LOG_TAG, e.getMessage(), e);
                 error("Critical error occurs: " + e.getMessage());
-                //dialog.dismiss();
-                finish();
             } finally {
-                dialog.dismiss();
+                dismissProgressDialog();
             }
         });
         t.start();
     }
-
     protected void initPrinter(InputStream inputStream, OutputStream outputStream)
             throws IOException {
         Log.d(LOG_TAG, "Initialize printer... RASTREANDO TOASTS");

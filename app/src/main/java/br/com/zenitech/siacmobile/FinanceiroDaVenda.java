@@ -5,6 +5,7 @@ import static br.com.zenitech.siacmobile.Configuracoes.getApplicationName;
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.bluetooth.BluetoothAdapter;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -95,6 +96,7 @@ public class FinanceiroDaVenda extends AppCompatActivity implements AdapterView.
     public static LinearLayout bgTotal;
     public EditText txtNotaFiscal;
     LinearLayout formFinan;
+    private  Boolean iSPromissoria;
 
     private ArrayList<String> formasPagamentoPrazo; // Array com a s formas de pagamento A_PRAZO
     private ArrayList<String> valoresCompra;  // Armazena o valor da compra quando formas de pagamento A_PRAZO e Identificada
@@ -172,6 +174,7 @@ public class FinanceiroDaVenda extends AppCompatActivity implements AdapterView.
         formasPagamentoPrazo = new ArrayList<>();
         valoresCompra = new ArrayList<>();
         creditoPrefs = new CreditoPrefs(this);
+        iSPromissoria = false;
 
 
         classAuxiliar = new ClassAuxiliar();
@@ -907,6 +910,15 @@ public class FinanceiroDaVenda extends AppCompatActivity implements AdapterView.
         // Verificar se a forma de pagamento selecionada é "A PRAZO"
         String[] detalhesPagamento = selectedItem.split(" _ ");
 
+        // Verificar se a forma de pagamento selecionada é "A PRAZO" e contém "PROMISSORIA"
+        if (fPag.length > 1 && "A PRAZO".equals(fPag[1]) && fPag[0].contains("PROMISSORIA")) {
+            iSPromissoria= true;
+            BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+            if (!bluetoothAdapter.isEnabled()) {
+                Toast.makeText(context, "Ative o Bluetooth para imprimir a promissória.", Toast.LENGTH_LONG).show();
+            }
+        }
+
 
 
         /*if (fPag.length > 1 && "A PRAZO".equals(fPag[1])) {
@@ -1336,11 +1348,27 @@ public class FinanceiroDaVenda extends AppCompatActivity implements AdapterView.
 
         }
     }
+    public void showSequentialToasts(String firstMessage, String secondMessage) {
+        Toast firstToast = Toast.makeText(getApplicationContext(), firstMessage, Toast.LENGTH_LONG);
+        firstToast.show();
+        if(iSPromissoria == true){
+
+            new Handler().postDelayed(() -> {
+                Toast secondToast = Toast.makeText(getApplicationContext(), secondMessage, Toast.LENGTH_LONG);
+                secondToast.show();
+            }, 3500); // Aguarda o tempo de exibição do primeiro Toast (aprox. 3.5 segundos)
+        }
+    }
+
+
 
     private void finalizarFinanceiroVenda() {
         bd.updateFinalizarVenda(String.valueOf(prefs.getInt("id_venda_app", 1)));
 
-        msg("Venda Finalizada Com Sucesso.");
+        //msg("Venda Finalizada Com Sucesso.");
+
+// Uso da função
+        showSequentialToasts("Venda Finalizada Com Sucesso...", "Aguarde a impressão da promissória.");
 
         /*Intent intent = new Intent(FinanceiroDaVenda.this, Principal2.class);
         //intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK);

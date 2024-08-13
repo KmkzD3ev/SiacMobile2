@@ -69,7 +69,9 @@
     <!-- TEXTOS DA IMPRESSÂO Selecione a impressora para conectar-->
     <string name="title_select_device">Selecione o dispositivo</string>
     <string name="title_scanning">Procurando dispositivos&#8230;</string>
-    <string name="title_bluetooth_disabled">Bluetooth desabilitado</string>
+    <string name="title_bluetooth_disabled">Bluetooth desabilitado!
+        Ative e tente Novamente.
+    </string>
     <string name="title_read_information">Read information</string>
     <string name="title_print_self_test">Print self test</string>
     <string name="title_print_text">Print text</string>
