@@ -1,5 +1,6 @@
 package br.com.zenitech.siacmobile;
 
+import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
@@ -9,6 +10,7 @@ import com.google.android.material.bottomnavigation.BottomNavigationView;
 
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.multidex.BuildConfig;
 import androidx.navigation.NavController;
 import androidx.navigation.Navigation;
 import androidx.navigation.ui.AppBarConfiguration;
@@ -32,6 +34,7 @@ public class Principal2 extends AppCompatActivity {
     ArrayList<UnidadesDomain> elementosUnidades;
     UnidadesDomain unidades;
 
+    @SuppressLint("MissingInflatedId")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);

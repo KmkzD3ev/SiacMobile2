@@ -303,6 +303,7 @@ public class FinanceiroDaVenda extends AppCompatActivity implements AdapterView.
             Log.d("ValoresCompraAntesDeFinalizar", "Conteúdo do array valoresCompra: " + valoresCompra);
             //
 
+            // Pega os valores de todas as compras a prazo e soma para comparaçao de limite //
             BigDecimal totalValoresCompra = somarValoresCompra();
             creditoPrefs.setValorAprazo(totalValoresCompra.toString());
             Log.d("TotalValoresCompra", "Soma  valores  compra a prazo enviad SHARE: " + totalValoresCompra.toString());
@@ -1274,7 +1275,10 @@ public class FinanceiroDaVenda extends AppCompatActivity implements AdapterView.
     }
 
 
-// Função para somar os valores do array valoresCompra
+    /**
+     *    Função para somar os valores do array valoresCompra
+      */
+
     private BigDecimal somarValoresCompra() {
         BigDecimal somaTotal = BigDecimal.ZERO; // Inicializa a variável somaTotal com zero
 
@@ -1351,14 +1355,15 @@ public class FinanceiroDaVenda extends AppCompatActivity implements AdapterView.
     public void showSequentialToasts(String firstMessage, String secondMessage) {
         Toast firstToast = Toast.makeText(getApplicationContext(), firstMessage, Toast.LENGTH_LONG);
         firstToast.show();
-        if(iSPromissoria == true){
-
-            new Handler().postDelayed(() -> {
+        new Handler().postDelayed(() -> {
+            Log.d("ToastCondition", "iSPromissoria value: " + iSPromissoria);
+            if (iSPromissoria) {
                 Toast secondToast = Toast.makeText(getApplicationContext(), secondMessage, Toast.LENGTH_LONG);
                 secondToast.show();
-            }, 3500); // Aguarda o tempo de exibição do primeiro Toast (aprox. 3.5 segundos)
-        }
+            }
+        }, 3500);
     }
+
 
 
 
@@ -1449,7 +1454,10 @@ public class FinanceiroDaVenda extends AppCompatActivity implements AdapterView.
         });
     }
 
-    //captura e armazena da list somente as formas de pagamento A_PRAZO
+    /**
+     *  captura e armazena da list somente as formas de pagamento A_PRAZO
+     */
+
     public void logFormasPagamentoPrazo() {
         formasPagamentoPrazo.clear(); // Limpa a lista antes de adicionar novos valores
         if (listaFormasPagamentoCliente != null && !listaFormasPagamentoCliente.isEmpty()) {

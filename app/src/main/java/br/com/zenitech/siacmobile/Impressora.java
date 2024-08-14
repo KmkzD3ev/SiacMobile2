@@ -169,7 +169,7 @@ public class Impressora extends AppCompatActivity {
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        // ******************Solicitar permissões Bluetooth*****************//
+        /****************** Solicitar permissões Bluetooth *****************/
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             ActivityCompat.requestPermissions(this, new String[]{
@@ -413,7 +413,7 @@ public class Impressora extends AppCompatActivity {
     }
 
 
-    //**************************  REQUISIÇAO DE PERMISSOES  *************************//
+    /**************************  REQUISIÇAO DE PERMISSOES  *************************/
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
@@ -478,7 +478,7 @@ public class Impressora extends AppCompatActivity {
         }, tempo);
     }
 
-    //*******************   ATIVAÇAO BLUETOOTH    ******************//
+    /*******************   ATIVAÇAO BLUETOOTH    ******************/
 
     private void ativarBluetooth() {
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
@@ -492,7 +492,7 @@ public class Impressora extends AppCompatActivity {
     }
 
 
-    //**********************   TRATAMENTO DE PERMISSOES    *********************//
+    /**********************   TRATAMENTO DE PERMISSOES    *********************/
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -526,6 +526,13 @@ public class Impressora extends AppCompatActivity {
         runOnUiThread(() -> Toast.makeText(getApplicationContext(), text, Toast.LENGTH_LONG).show());
     }
 
+    /**
+     * CRIAÇAO DA DIALOG PERSONALIZADA
+     * @param iconResId
+     * @param title
+     * @param msg
+     */
+
     private void dialog(final int iconResId, final String title, final String msg) {
         runOnUiThread(() -> {
             AlertDialog.Builder builder = new AlertDialog.Builder(Impressora.this);
@@ -540,6 +547,12 @@ public class Impressora extends AppCompatActivity {
         });
     }
 
+    /**
+     *
+     * Controle do estado da atividade para evitasr encerramento prematuro
+     */
+
+
     private void status(final String text) {
         runOnUiThread(() -> {
             if (text != null) {
@@ -550,6 +563,12 @@ public class Impressora extends AppCompatActivity {
             }
         });
     }
+
+    /**
+     * EXIBIÇAO DA DIALOG PERSONALIZADA
+     *
+     */
+
     private void showProgressDialog(int msgResId) {
         ((Activity) context).runOnUiThread(() -> {
             if (!((Activity) context).isFinishing() && !((Activity) context).isDestroyed()) {
@@ -563,6 +582,12 @@ public class Impressora extends AppCompatActivity {
             }
         });
     }
+
+
+    /**
+     * METODO PARA CONTROLE E ENCERRAMENTO DA DIALOG PERSONALIZADA
+     *
+     */
 
     private void dismissProgressDialog() {
         ((Activity) context).runOnUiThread(() -> {
@@ -746,6 +771,9 @@ public class Impressora extends AppCompatActivity {
 
     }
 
+    /**
+     * AGUARDAR PROCESSOS PARA ESTABELECER NOVA CONEXAO
+     */
     private synchronized void waitForConnection() {
         //status(null);
 
@@ -779,7 +807,12 @@ public class Impressora extends AppCompatActivity {
         }
     }
 
-   // ****************** ABRIR CONEXAO******************  //
+    /**
+     * ABRIR CONEXAO BLUETOOTH
+     *
+     * @param address
+     */
+
     @SuppressLint("MissingPermission")
     private void establishBluetoothConnection(final String address) {
         //// Checar se o endereço é vazio, se sim, chamar waitForConnection
@@ -1048,6 +1081,10 @@ public class Impressora extends AppCompatActivity {
             }
         }
     }
+
+    /**
+     * FECHAR CONEXOES ATIVAS
+     */
 
     synchronized void closeActiveConnection() {
         closePrinterConnection();
@@ -1694,6 +1731,7 @@ public class Impressora extends AppCompatActivity {
 
     private void printBoleto() {
         runTask((dialog, printer) -> {
+
             //Log.d(LOG_TAG, "Print Relatório NFC-e");
             //printer.reset();
 
@@ -1798,7 +1836,7 @@ public class Impressora extends AppCompatActivity {
         if (file.exists()) file.delete();
         try {
             FileOutputStream out = new FileOutputStream(file);
-            finalBitmap.compress(Bitmap.CompressFormat.PNG, 100, out);
+            finalBitmap.compress(Bitmap.CompressFormat.PNG, 50, out);
             out.flush();
             out.close();
 

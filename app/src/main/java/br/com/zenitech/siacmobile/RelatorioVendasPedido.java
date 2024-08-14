@@ -99,7 +99,9 @@ public class RelatorioVendasPedido extends AppCompatActivity {
             txtTotalRelatorioVendas.setText(String.valueOf(classAuxiliar.maskMoney(new BigDecimal(valTotalPed))));
         }
 
-        //******************SOLICITA NOVAMENTE AS PERMISSOES NESSA TELA**************//
+        /**
+         * ********* Caso Usuario realise uma venda sem impressao **************
+         * ********* SOLICITA NOVAMENTE AS PERMISSOES NESSA TELA  **************/
 
         configuracoes = new Configuracoes();
         findViewById(R.id.btnPrintRelPed).setOnClickListener(v -> {
@@ -141,7 +143,7 @@ public class RelatorioVendasPedido extends AppCompatActivity {
         startActivity(i);
     }
 
-    //**********************TRATAMENTO DAS PERMISSOES***************//
+    /**********************TRATAMENTO DAS PERMISSOES***************/
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
@@ -169,7 +171,7 @@ public class RelatorioVendasPedido extends AppCompatActivity {
 
         return super.onOptionsItemSelected(item);
     }
-//*******************FECHA OUTRAS CONEXOES PRA EVITAR ERROS*****************//
+/*******************FECHA OUTRAS CONEXOES PRA EVITAR ERROS*****************/
 
     private synchronized void closeActiveConnection() {
         Impressora impressora = new Impressora();
