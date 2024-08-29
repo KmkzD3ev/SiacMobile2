@@ -312,7 +312,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         return unidades;
     }
 
-    //************************OBTER LIMITE DE CREDITO****************//
+    /*********************** OBTER LIMITE DE CREDITO ****************/
+
     public int getLimiteCreditoCliente(String codigo_cliente) {
         SQLiteDatabase db = this.getReadableDatabase();
         String query = "SELECT SUM(IFNULL(" + LIMITE_CREDITO_CLIENTE + ", 0)) as total_limite FROM " + TABELA_CLIENTES + " WHERE " + CODIGO_CLIENTE + " = ?";
@@ -1294,7 +1295,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         return baixa_a_prazo;
     }
 
-    //***************CONSULTA DE INADIMPLENCIA POR PARAMETRO***************//
+    /************** CONSULTA DE INADIMPLENCIA POR PARAMETRO ***************/
 
     public boolean isInadimplenteBloqueado() {
         int bloqueio = 0;  // Valor padrão para inativo

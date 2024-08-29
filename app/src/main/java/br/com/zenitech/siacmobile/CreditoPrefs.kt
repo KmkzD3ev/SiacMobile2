@@ -3,6 +3,13 @@ package br.com.zenitech.siacmobile
 import android.content.Context
 import android.content.SharedPreferences
 
+/**
+ * BANCO LOCAL PARA ANALISE DE CREDITO
+ *
+ * SALVA AS FORMAS DE PAGAMENTO A PRAZO PARA SOMAR OS VALORES E COMPARAR AO LIMITE
+ *
+ *
+ */
 class CreditoPrefs
     (context: Context){
      private val prefs: SharedPreferences = context.getSharedPreferences("financeiro_prefs",Context.MODE_PRIVATE)
