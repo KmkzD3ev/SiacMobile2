@@ -236,7 +236,7 @@ public class Impressora extends AppCompatActivity {
             waitForConnection();
         }
         //// Remover a verificação inicial e tentar sempre estabelecer conexão
-       // establishBluetoothConnection(prefs.getString("enderecoBlt", ""));
+       // establishBluetoothConnection(prefs.getString("enderecoBlt", ""));*/
 
 
         // BOLETO
@@ -415,22 +415,30 @@ public class Impressora extends AppCompatActivity {
 
     /**************************  REQUISIÇAO DE PERMISSOES  *************************/
 
+
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+
         if (requestCode == REQUEST_BLUETOOTH_PERMISSIONS) {
+            boolean allPermissionsGranted = true;
             for (int grantResult : grantResults) {
                 if (grantResult != PackageManager.PERMISSION_GRANTED) {
-                    // Se alguma permissão não for concedida, mostrar mensagem e sair
-                    AlertDialog.Builder builder = new AlertDialog.Builder(this);
-                    builder.setMessage("Permissões Bluetooth necessárias para imprimir o relatório.")
-                            .setPositiveButton("OK", (dialog, which) -> dialog.dismiss())
-                            .show();
-                    return;
+                    allPermissionsGranted = false;
+                    break;
                 }
             }
-            // Permissões concedidas, iniciar a impressora
-            ativarBluetooth();
+
+            if (allPermissionsGranted) {
+                // Permissões concedidas, ativar o Bluetooth
+                ativarBluetooth();
+            } else {
+                // Se alguma permissão não for concedida, mostrar mensagem e sair
+                AlertDialog.Builder builder = new AlertDialog.Builder(this);
+                builder.setMessage("Permissões Bluetooth necessárias para imprimir o relatório.")
+                        .setPositiveButton("OK", (dialog, which) -> dialog.dismiss())
+                        .show();
+            }
         }
     }
 
@@ -480,6 +488,7 @@ public class Impressora extends AppCompatActivity {
 
     /*******************   ATIVAÇAO BLUETOOTH    ******************/
 
+    @SuppressLint("MissingPermission")
     private void ativarBluetooth() {
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this, new String[]{
@@ -549,7 +558,7 @@ public class Impressora extends AppCompatActivity {
 
     /**
      *
-     * Controle do estado da atividade para evitasr encerramento prematuro
+     * Controle do estado da atividade para evitar encerramento prematuro
      */
 
 

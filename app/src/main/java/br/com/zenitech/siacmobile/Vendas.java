@@ -1,7 +1,5 @@
 package br.com.zenitech.siacmobile;
 
-import static br.com.zenitech.siacmobile.FinanceiroDaVenda.codigo_cliente;
-
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;

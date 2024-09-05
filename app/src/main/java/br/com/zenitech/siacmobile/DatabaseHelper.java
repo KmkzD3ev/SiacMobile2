@@ -338,6 +338,26 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     }
 
 
+    public void updateLimiteCreditoCliente(String codigo_cliente, BigDecimal novoLimite) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues values = new ContentValues();
+
+        // Coloca o novo valor no ContentValues para a coluna correspondente ao limite de crédito
+        values.put(LIMITE_CREDITO_CLIENTE, novoLimite.doubleValue());
+
+        // Atualiza a tabela onde o código do cliente for o informado
+        int rowsAffected = db.update(TABELA_CLIENTES, values, CODIGO_CLIENTE + " = ?", new String[]{codigo_cliente});
+
+        // Loga o resultado da operação
+        if (rowsAffected > 0) {
+            Log.d(TAG, "Limite de crédito atualizado com sucesso para o cliente " + codigo_cliente + ". Novo limite: " + novoLimite);
+        } else {
+            Log.d(TAG, "Falha ao atualizar o limite de crédito para o cliente " + codigo_cliente);
+        }
+    }
+
+
+
 
 
     //########## PRODUTOS ############

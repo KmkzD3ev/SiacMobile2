@@ -56,6 +56,7 @@ import java.lang.ref.WeakReference;
 import java.math.BigDecimal;
 import java.text.NumberFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
@@ -152,6 +153,8 @@ public class FinanceiroDaVenda extends AppCompatActivity implements AdapterView.
 
     //
     ArrayAdapter adapterSpBandeira, adapterSpParcela;
+    private ArrayList<String> formasPagamento = new ArrayList<>(); //ARRAY PARA FORMAS DE PAGAMENTO
+
 
     @SuppressLint("LongLogTag")
     @Override
@@ -239,9 +242,20 @@ public class FinanceiroDaVenda extends AppCompatActivity implements AdapterView.
         btnAddF = findViewById(R.id.btnAddF);
         btnAddF.setOnClickListener(v -> {
 
-            //*********** Captura o valor inserido no campo txtValorFormaPagamento**************//
+            /*********** Captura o valor inserido no campo txtValorFormaPagamento**************/
+
             String valorInserido = txtValorFormaPagamento.getText().toString().replaceAll("[^\\d.,]", "").replace(",", ".").trim();
             String[] fPag1 = spFormasPagamentoCliente.getSelectedItem().toString().split(" _ ");
+
+            // Adiciona a forma de pagamento ao array de formas de pagamento
+            formasPagamento.add(Arrays.toString(fPag1));
+
+            // Log para verificar a forma de pagamento inserida
+            Log.d("FORMAPAGAMENTO ADCIONADA", "Forma de pagamento adicionada ao array: " + Arrays.toString(fPag1));
+
+            // Log do array completo para verificar todas as formas de pagamento
+            Log.d("CONTEUDO FORMAS PAGAMENTO", "Conteúdo atual do array formasPagamento: " + formasPagamento.toString());
+
 
             //**************Se a forma de pagamento for "A PRAZO", adicionar o valor ao array valoresCompra**************//
 
@@ -298,43 +312,80 @@ public class FinanceiroDaVenda extends AppCompatActivity implements AdapterView.
             }
         });
         //
+
+        /****** Verifica se o valor da compra a prazo excede o limite de crédito disponível ************/
+
         btnPagamento = findViewById(R.id.btnPagamento);
         btnPagamento.setOnClickListener(v -> {
-            Log.d("ValoresCompraAntesDeFinalizar", "Conteúdo do array valoresCompra: " + valoresCompra);
-            //
+            // Logando o conteúdo atual do array de formas de pagamento
+            Log.d("CONTEUDO ARRAYPAGAMENTO-FINALIZAÇAO", "Conteúdo do array formasPagamento: " + formasPagamento.toString());
 
-            // Pega os valores de todas as compras a prazo e soma para comparaçao de limite //
-            BigDecimal totalValoresCompra = somarValoresCompra();
-            creditoPrefs.setValorAprazo(totalValoresCompra.toString());
-            Log.d("TotalValoresCompra", "Soma  valores  compra a prazo enviad SHARE: " + totalValoresCompra.toString());
+            if (!formasPagamento.isEmpty()) {
+                BigDecimal totalValoresCompraPrazo = BigDecimal.ZERO;
+                boolean temFormaAPrazo = false;
 
+                // Percorre todas as formas de pagamento no array
+                for (int i = 0; i < formasPagamento.size(); i++) {
+                    String formaPagamento = formasPagamento.get(i);
+                    Log.d("FORMA PAGAMENTO", "Forma de pagamento: " + formaPagamento);
 
-            //********Verifica se o valor da compra a prazo excede o limite de crédito disponível************//
+                    // Verifica se a forma de pagamento é "A PRAZO"
+                    if (formaPagamento.contains("A PRAZO")) {
+                        // Obter o valor associado a essa forma de pagamento
+                        BigDecimal valorFormaPrazo = new BigDecimal(valoresCompra.get(i));
+                        totalValoresCompraPrazo = totalValoresCompraPrazo.add(valorFormaPrazo);
+                        temFormaAPrazo = true; // Indica que há uma forma de pagamento "A PRAZO"
+                    }
+                }
 
-            // Verifica se o valor da compra a prazo excede o limite de crédito disponível ou se o limite é zero
-            DatabaseHelper dbHelper = new DatabaseHelper(this);
-            int limiteCreditoCliente = dbHelper.getLimiteCreditoCliente(codigo_cliente);
-            Log.d("Limite Crédito Cliente", "O limite de crédito do cliente é: " + limiteCreditoCliente);
+                // Se houver pelo menos uma forma de pagamento "A PRAZO", fazer a verificação de limite de crédito
+                if (temFormaAPrazo) {
+                    Log.d("VERIFICANDO LIMITE", "Verificando limite de crédito para formas de pagamento a prazo.");
 
-            BigDecimal limiteCreditoBigDecimal = BigDecimal.valueOf(limiteCreditoCliente);
-           totalValoresCompra = somarValoresCompra();
+                    // Atualiza o SharedPreferences com o total de compra a prazo
+                    creditoPrefs.setValorAprazo(totalValoresCompraPrazo.toString());
+                    Log.d("TotalValoresCompraPrazo", "Soma dos valores de compra a prazo enviados para SharedPreferences: " + totalValoresCompraPrazo.toString());
 
-            if (limiteCreditoBigDecimal.compareTo(BigDecimal.ZERO) == 0) {
-                // Exibir diálogo de alerta caso não haja limite de crédito
-                new AlertDialog.Builder(this)
-                        .setTitle("Limite de Crédito Indisponível")
-                        .setMessage("Não há limite de crédito disponível para realizar compras a prazo.")
-                        .setPositiveButton(android.R.string.ok, null)
-                        .show();
-            } else if (totalValoresCompra.compareTo(limiteCreditoBigDecimal) > 0) {
-                // Exibir diálogo de alerta caso o valor da compra exceda o limite disponível
-                new AlertDialog.Builder(this)
-                        .setTitle("Limite de Crédito Excedido")
-                        .setMessage("O valor da compra excede o limite de crédito disponível.")
-                        .setPositiveButton(android.R.string.ok, null)
-                        .show();
-            } else {
+                    // Verifica o limite de crédito disponível
+                    DatabaseHelper dbHelper = new DatabaseHelper(this);
+                    int limiteCreditoCliente = dbHelper.getLimiteCreditoCliente(codigo_cliente);
+                    Log.d("Limite Crédito Cliente", "O limite de crédito do cliente é: " + limiteCreditoCliente);
+
+                    BigDecimal limiteCreditoBigDecimal = BigDecimal.valueOf(limiteCreditoCliente);
+
+                    // Bloquear venda a prazo se o limite for zero
+                    if (limiteCreditoBigDecimal.compareTo(BigDecimal.ZERO) == 0) {
+                        Log.d("LIMITE ZERADO", "Limite de crédito é zero. Bloqueando venda a prazo.");
+                        formasPagamento.clear();
+                        // Exibir diálogo de alerta caso não haja limite de crédito
+                        new AlertDialog.Builder(this)
+                                .setTitle("Limite de Crédito Indisponível")
+                                .setMessage("Não há limite de crédito disponível para realizar compras a prazo.")
+                                .setPositiveButton(android.R.string.ok, null)
+                                .show();
+
+                        return; // Bloqueia a venda a prazo
+                    } else if (totalValoresCompraPrazo.compareTo(limiteCreditoBigDecimal) > 0) {
+                        Log.d("LIMITE EXCEDIDO", "O valor da compra a prazo excede o limite de crédito.");
+                        // Exibir diálogo de alerta caso o valor a prazo exceda o limite disponível
+                        String mensagem = String.format("O valor da compra excede o limite de crédito disponível.\nCrédito disponível: R$ %.2f", limiteCreditoBigDecimal);
+                        formasPagamento.clear();
+                        new AlertDialog.Builder(this)
+                                .setTitle("Limite de Crédito Excedido")
+                                .setMessage(mensagem)
+                                .setPositiveButton(android.R.string.ok, null)
+                                .show();
+                        return; // Bloqueia a venda a prazo
+                    } else {
+                        // Atualiza o limite de crédito do cliente após a venda
+                        atualizarLimiteCreditoCliente(codigo_cliente, totalValoresCompraPrazo);
+                    }
+                }
+
+                // Se a verificação do limite for bem-sucedida, ou se for "À VISTA", sempre salvar o financeiro
                 _salvarFinanceiro();
+            } else {
+                Log.d("Erro", "Nenhuma forma de pagamento foi selecionada.");
             }
         });
 
@@ -453,6 +504,22 @@ public class FinanceiroDaVenda extends AppCompatActivity implements AdapterView.
         if (configuracoes.GetDevice()) {
             iniciarStone();
         }
+    }
+
+    /**************** ATUALIZAR VALOR DE CREDITO DISPONIVEL **********************/
+    // Método para atualizar o limite de crédito do cliente após a venda
+    private void atualizarLimiteCreditoCliente(String codigo_cliente, BigDecimal valorVenda) {
+        // Busca o limite de crédito atual
+        DatabaseHelper dbHelper = new DatabaseHelper(this);
+        int limiteAtual = dbHelper.getLimiteCreditoCliente(codigo_cliente);
+
+        // Subtrai o valor da venda do limite atual
+        BigDecimal novoLimite = BigDecimal.valueOf(limiteAtual).subtract(valorVenda);
+
+        // Atualiza o limite no banco de dados
+        dbHelper.updateLimiteCreditoCliente(codigo_cliente, novoLimite);
+
+        Log.d("AtualizarLimiteCredito", "Novo limite de crédito do cliente: " + novoLimite);
     }
 
     @Override
@@ -904,7 +971,8 @@ public class FinanceiroDaVenda extends AppCompatActivity implements AdapterView.
         txtDocumentoFormaPagamento.setText("");
         String[] fPag = spFormasPagamentoCliente.getSelectedItem().toString().split(" _ ");
         String selectedItem = spFormasPagamentoCliente.getSelectedItem().toString(); // Captura o item selecionado no Spinner
-         creditoPrefs.setFormaPagamentoPrazo(selectedItem);
+        creditoPrefs.setFormaPagamentoPrazo(selectedItem);
+
         // Logando o item selecionado para visualização no Logcat
         Log.d("ItemSelecionado", "Item selecionado ENVIADO AO PREFS: " + selectedItem);
 
@@ -938,7 +1006,7 @@ public class FinanceiroDaVenda extends AppCompatActivity implements AdapterView.
             valoresCompra.clear();
         }*/
 
-    // SELECT PIX
+        // SELECT PIX
         if (fPag[0].equals("PIX")) {
             runOnUiThread(() -> {
 
@@ -1276,8 +1344,11 @@ public class FinanceiroDaVenda extends AppCompatActivity implements AdapterView.
 
 
     /**
+     *
      *    Função para somar os valores do array valoresCompra
-      */
+     *
+     *
+     */
 
     private BigDecimal somarValoresCompra() {
         BigDecimal somaTotal = BigDecimal.ZERO; // Inicializa a variável somaTotal com zero
@@ -1372,7 +1443,7 @@ public class FinanceiroDaVenda extends AppCompatActivity implements AdapterView.
 
         //msg("Venda Finalizada Com Sucesso.");
 
-// Uso da função
+        // Uso da função
         showSequentialToasts("Venda Finalizada Com Sucesso...", "Aguarde a impressão da promissória.");
 
         /*Intent intent = new Intent(FinanceiroDaVenda.this, Principal2.class);
@@ -1455,7 +1526,7 @@ public class FinanceiroDaVenda extends AppCompatActivity implements AdapterView.
     }
 
     /**
-     *  captura e armazena da list somente as formas de pagamento A_PRAZO
+     *  captura e armazena na list somente as formas de pagamento A_PRAZO
      */
 
     public void logFormasPagamentoPrazo() {
