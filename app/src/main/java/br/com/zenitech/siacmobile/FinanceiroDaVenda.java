@@ -55,14 +55,18 @@ import com.google.maps.android.SphericalUtil;
 import java.lang.ref.WeakReference;
 import java.math.BigDecimal;
 import java.text.NumberFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 
 import br.com.zenitech.siacmobile.adapters.FinanceiroVendasAdapter;
 import br.com.zenitech.siacmobile.domains.Conta;
+import br.com.zenitech.siacmobile.domains.FinanceiroReceberClientes;
 import br.com.zenitech.siacmobile.domains.FinanceiroVendasDomain;
 import br.com.zenitech.siacmobile.domains.PosApp;
 import br.com.zenitech.siacmobile.interfaces.ILogin;
@@ -166,12 +170,15 @@ public class FinanceiroDaVenda extends AppCompatActivity implements AdapterView.
         Objects.requireNonNull(getSupportActionBar()).setDisplayHomeAsUpEnabled(true);
 
 
+        // Inicialize o DatabaseHelper aqui
+        bd = new DatabaseHelper(this);
 
-        /*
-        DatabaseHelper dbHelper = new DatabaseHelper(this);
-        double limiteCreditoCliente = dbHelper.getLimiteCreditoCliente(codigo_cliente);
-        Log.d("Limite Crédito Cliente F", "O limite de crédito do cliente é: " + limiteCreditoCliente + codigo_cliente);
-               */
+        // Inicializações e configurações
+        spFormasPagamentoCliente = findViewById(R.id.spFormasPagamentoCliente);
+        codigo_cliente = getIntent().getStringExtra("codigo_cliente");
+
+        carregarFormasDePagamento();
+
 
         //
         formasPagamentoPrazo = new ArrayList<>();
@@ -313,7 +320,7 @@ public class FinanceiroDaVenda extends AppCompatActivity implements AdapterView.
         });
         //
 
-        /****** Verifica se o valor da compra a prazo excede o limite de crédito disponível ************/
+        /******************* Verifica se o valor da compra a prazo excede o limite de crédito disponível ************/
 
         btnPagamento = findViewById(R.id.btnPagamento);
         btnPagamento.setOnClickListener(v -> {
@@ -401,7 +408,7 @@ public class FinanceiroDaVenda extends AppCompatActivity implements AdapterView.
             if (params != null) {
 
                 codigo_cliente = params.getString("codigo_cliente");
-                Log.d("CREDITO PREFS", "onCreate:ENVIANDO PRO SHARE "+ codigo_cliente);
+                Log.d("CREDITO PREFS", "onCreate:ENVIANDO PRO SHARE " + codigo_cliente);
 
 
                 if (!Objects.requireNonNull(params.getString("saldo")).equalsIgnoreCase("")) {
@@ -446,10 +453,23 @@ public class FinanceiroDaVenda extends AppCompatActivity implements AdapterView.
         spBandeira = findViewById(R.id.spBandeira);
         spParcela = findViewById(R.id.spParcela);
 
-        listaFormasPagamentoCliente = bd.getFormasPagamentoCliente(codigo_cliente);
+
+
+
+
+
+
+
+
+
+
+
+
+
+      /* listaFormasPagamentoCliente = bd.getFormasPagamentoCliente(codigo_cliente);
         ArrayAdapter adapter = new ArrayAdapter(this, android.R.layout.simple_spinner_item, listaFormasPagamentoCliente);
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        spFormasPagamentoCliente.setAdapter(adapter);
+        spFormasPagamentoCliente.setAdapter(adapter);*/
 
         /*spFormasPagamentoCliente.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
@@ -505,6 +525,55 @@ public class FinanceiroDaVenda extends AppCompatActivity implements AdapterView.
             iniciarStone();
         }
     }
+
+    /**************** BLOQUEAR PAGAMENTO A PRAZO PARA INADIMPLENCIA *******************/
+    // Carrega formas de pagamento no spinner com base na inadimplência
+    public void carregarFormasDePagamento () {
+        Log.d("FinanceiroDaVenda", "Iniciando carregamento das formas de pagamento para o cliente: " + codigo_cliente);
+
+        ArrayList<String> formasDePagamento;
+        if (verificarInadimplencia(codigo_cliente)) {
+            Log.d("FinanceiroDaVenda", "Cliente está inadimplente. Carregando apenas 'DINHEIRO _ À VISTA'.");
+            formasDePagamento = new ArrayList<>();
+            formasDePagamento.add("DINHEIRO _ A VISTA");
+        } else {
+            Log.d("FinanceiroDaVenda", "Cliente não está inadimplente. Carregando todas as formas de pagamento disponíveis.");
+            formasDePagamento = bd.getFormasPagamentoCliente(codigo_cliente);
+        }
+
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, formasDePagamento);
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        spFormasPagamentoCliente.setAdapter(adapter);
+
+        Log.d("FinanceiroDaVenda", "Formas de pagamento configuradas no spinner.");
+    }
+
+
+    private boolean verificarInadimplencia(String clienteId) {
+        // Implementação robusta de verificação de inadimplência
+        ArrayList<FinanceiroReceberClientes> contasReceber = bd.getContasReceberCliente(clienteId);
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+        Date dataAtual = new Date();
+        boolean isInadimplente = false;
+
+        for (FinanceiroReceberClientes conta : contasReceber) {
+            String vencimento = conta.getVencimento_financeiro();
+            try {
+                Date dataVencimento = sdf.parse(vencimento);
+                if (dataVencimento != null && dataVencimento.before(dataAtual)) {
+                    Log.d("FinanceiroDaVenda", "Conta vencida encontrada. Cliente inadimplente.");
+                    isInadimplente = true;
+                    return true;
+                }
+            } catch (ParseException e) {
+                Log.e("FinanceiroDaVenda", "Erro ao analisar a data de vencimento: " + vencimento, e);
+            }
+        }
+
+        Log.d("FinanceiroDaVenda", "Nenhuma conta vencida encontrada. Cliente não está inadimplente.");
+        return false;
+    }
+
 
     /**************** ATUALIZAR VALOR DE CREDITO DISPONIVEL **********************/
     // Método para atualizar o limite de crédito do cliente após a venda

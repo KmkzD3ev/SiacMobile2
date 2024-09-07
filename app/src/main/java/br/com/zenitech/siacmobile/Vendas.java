@@ -497,6 +497,11 @@ public class Vendas extends AppCompatActivity {
         Log.d("Inadimplencia", "Verificando inadimplência para o cliente: " + nome_cliente + " (ID: " + id_cliente + ")");
         boolean isInadimplente = verificarInadimplencia(id_cliente);
 
+
+        // Salvar o status de inadimplência no SharedPreferences
+        ClienteInadimplenciaHelper inadimplenciaHelper = new ClienteInadimplenciaHelper(this);
+        inadimplenciaHelper.salvarStatusInadimplencia(id_cliente, isInadimplente);
+
         if (isInadimplente) {
             boolean isBloqueioInadimplente = bd.isInadimplenteBloqueado();
             Log.d("Inadimplencia", "Bloqueio por inadimplência ativo: " + isBloqueioInadimplente);
@@ -507,12 +512,12 @@ public class Vendas extends AppCompatActivity {
                 builder.setMessage("O cliente " + nome_cliente + " está inadimplente.");
                 builder.setPositiveButton("OK", (dialog, which) -> {
                     dialog.dismiss();
-                    // Navega para a atividade Principal e exibe o HomeFragment
+                    /* Navega para a atividade Principal e exibe o HomeFragment
                     Intent intent = new Intent(Vendas.this, Principal2.class);
                     intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
                     intent.putExtra("navigateToHome", true);
                     startActivity(intent);
-                    finish();
+                    finish();*/
                 });
                 AlertDialog alerta = builder.create();
                 alerta.setCancelable(false);
