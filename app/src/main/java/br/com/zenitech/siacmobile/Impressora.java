@@ -413,7 +413,7 @@ public class Impressora extends AppCompatActivity {
     }
 
 
-    /**************************  REQUISIÇAO DE PERMISSOES  *************************/
+    /**************************  TRATAMEMTO  DE PERMISSOES  *************************/
 
 
     @Override
@@ -501,7 +501,7 @@ public class Impressora extends AppCompatActivity {
     }
 
 
-    /**********************   TRATAMENTO DE PERMISSOES    *********************/
+    /**********************   RESULTADO DE PERMISSOES    *********************/
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -1653,7 +1653,7 @@ public class Impressora extends AppCompatActivity {
         }, R.string.msg_printing_relatorio);
     }
 
-//******* FORMATAÇAO PARA TODOS OS VALORES DE FORMAS DE PAGAMENTO RELATORIOS  *******//
+/******* FORMATAÇAO PARA TODOS OS VALORES DE FORMAS DE PAGAMENTO RELATORIOS  *******/
 
     private String formatarFormasPagamento(String strFormPags) {
         StringBuilder formattedFormPags = new StringBuilder();

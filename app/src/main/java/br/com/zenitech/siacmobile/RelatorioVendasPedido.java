@@ -143,7 +143,7 @@ public class RelatorioVendasPedido extends AppCompatActivity {
         startActivity(i);
     }
 
-    /**********************TRATAMENTO DAS PERMISSOES***************/
+    /********************** TRATAMENTO DAS PERMISSOES ***************/
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {

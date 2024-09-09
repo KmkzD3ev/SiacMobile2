@@ -512,6 +512,7 @@ public class Vendas extends AppCompatActivity {
                 builder.setMessage("O cliente " + nome_cliente + " está inadimplente.");
                 builder.setPositiveButton("OK", (dialog, which) -> {
                     dialog.dismiss();
+
                     /* Navega para a atividade Principal e exibe o HomeFragment
                     Intent intent = new Intent(Vendas.this, Principal2.class);
                     intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);

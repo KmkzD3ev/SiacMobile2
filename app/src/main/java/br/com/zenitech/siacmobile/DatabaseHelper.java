@@ -337,6 +337,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         }
     }
 
+    /**************** METODO DE ATUALIZAR LIMITE DE CREDITO APOS TRANSAÇOES **************/
 
     public void updateLimiteCreditoCliente(String codigo_cliente, BigDecimal novoLimite) {
         SQLiteDatabase db = this.getWritableDatabase();

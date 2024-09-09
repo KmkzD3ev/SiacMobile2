@@ -249,7 +249,7 @@ public class FinanceiroDaVenda extends AppCompatActivity implements AdapterView.
         btnAddF = findViewById(R.id.btnAddF);
         btnAddF.setOnClickListener(v -> {
 
-            /*********** Captura o valor inserido no campo txtValorFormaPagamento**************/
+            /*********** Captura o valor inserido no campo txtValorFormaPagamento **************/
 
             String valorInserido = txtValorFormaPagamento.getText().toString().replaceAll("[^\\d.,]", "").replace(",", ".").trim();
             String[] fPag1 = spFormasPagamentoCliente.getSelectedItem().toString().split(" _ ");
