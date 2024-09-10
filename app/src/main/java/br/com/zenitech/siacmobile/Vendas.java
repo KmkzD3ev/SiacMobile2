@@ -82,6 +82,8 @@ public class Vendas extends AppCompatActivity {
     private String quantidade_emissor;
     private String valor_unit_emissor;
     private String editandoVenda = "";
+    private boolean isPrecoFixo = false; // PARAMETRO PARA VERIFICAÇO E EDIÇAO DE PREÇO PRE-DEFINIDO
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -256,13 +258,15 @@ public class Vendas extends AppCompatActivity {
             public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
                 //
                 String preco = bd.getMargemCliente(spProduto.getSelectedItem().toString(), id_cliente);
+                boolean isPrecoFixo = bd.isPrecoFixo();
                 if (preco.equals("0,00")) {
                     etPreco.setEnabled(true);
                     etPreco.setText("0,00");
                 } else {
                     etPreco.setText(preco);
-                    etPreco.setEnabled(true);
-                    //etPreco.setEnabled(false);
+                    etPreco.setEnabled(!isPrecoFixo); // Bloqueia a edição se o preço for fixo
+                   // Toast.makeText(Vendas.this, "PREÇO FIXO ENCONTRADO BLOQUEANDO EDIÇAO!.", Toast.LENGTH_SHORT).show();
+
                 }
             }
 

@@ -33,6 +33,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public SQLiteDatabase myDataBase;
     final Context context;
     private final ClassAuxiliar aux = new ClassAuxiliar();
+    private boolean isPrecoFixo = false; //VARIAVEL PRA GUARDAR RESULTADO DE PREÇO FIXO ENCONTRADO
+
     //CONSTANTES CLIENTES
     private static final String TABELA_CLIENTES = "clientes";
     private static final String CODIGO_CLIENTE = "codigo_cliente";
@@ -2413,6 +2415,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         return i;
     }
 
+
+
     /*################### MARGEN CLIENTES #####################*/
     //
     public String getMargemCliente(String produto, String id) {
@@ -2465,6 +2469,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         String margem_cliente = null;
         String preco;
         String rota = this.getRotaCliente(id);
+        isPrecoFixo = false; // Inicializa como falso
+
 
         // PREÇO PO UNIDADE
         try {
@@ -2492,6 +2498,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             if (cursor.moveToFirst()) {
                 do {
                     preco_unidade = cursor.getString(cursor.getColumnIndexOrThrow("margem_cliente"));
+                    isPrecoFixo = true; // Inicializa como falso
+
                 } while (cursor.moveToNext());
             }
         } catch (Exception e) {
@@ -2519,6 +2527,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             if (cursor.moveToFirst()) {
                 do {
                     preco_rota = cursor.getString(cursor.getColumnIndexOrThrow("margem_cliente"));
+                    isPrecoFixo = true;
+
                 } while (cursor.moveToNext());
             }
 
@@ -2542,6 +2552,12 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         Log.e("MARGEN ", preco);
 
         return preco;
+    }
+
+    /************* METODO PARA VERIFICAR PREÇO FIXO ****************/
+
+    public boolean isPrecoFixo() {
+        return isPrecoFixo;
     }
 
     public String getRotaCliente(String codigo_cliente) {
