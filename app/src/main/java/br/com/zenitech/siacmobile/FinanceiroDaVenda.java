@@ -339,7 +339,7 @@ public class FinanceiroDaVenda extends AppCompatActivity implements AdapterView.
                     // Verifica se a forma de pagamento é "A PRAZO"
                     if (formaPagamento.contains("A PRAZO")) {
                         // Obter o valor associado a essa forma de pagamento
-                        BigDecimal valorFormaPrazo = new BigDecimal(valoresCompra.get(i));
+                        BigDecimal valorFormaPrazo = new BigDecimal(valoresCompra.get(0));
                         totalValoresCompraPrazo = totalValoresCompraPrazo.add(valorFormaPrazo);
                         temFormaAPrazo = true; // Indica que há uma forma de pagamento "A PRAZO"
                     }
