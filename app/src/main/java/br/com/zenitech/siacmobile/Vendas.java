@@ -49,6 +49,8 @@ public class Vendas extends AppCompatActivity {
     //
     private SharedPreferences prefs;
     private SharedPreferences.Editor ed;
+    private CreditoPrefs creditoPrefs;
+
 
     AlertDialog alerta;
 
@@ -99,6 +101,7 @@ public class Vendas extends AppCompatActivity {
         //
         prefs = getSharedPreferences("preferencias", MODE_PRIVATE);
         ed = prefs.edit();
+        creditoPrefs = new CreditoPrefs(this);
 
         //
         bd = new DatabaseHelper(this);
@@ -447,6 +450,19 @@ public class Vendas extends AppCompatActivity {
             builder.setMessage("Você Deseja Realmente Cancelar Esta Venda?");
             //define um botão como positivo
             builder.setPositiveButton("Sim", (arg0, arg1) -> {
+
+
+                /* Restaurar limite de crédito ao cancelar uma venda a prazo
+                String valorAprazo = creditoPrefs.getValorAprazo();
+                if (valorAprazo != null && !valorAprazo.isEmpty()) {
+                    BigDecimal valorRestituido = new BigDecimal(valorAprazo);
+                    DatabaseHelper dbHelper = new DatabaseHelper(this);
+                    dbHelper.restituirLimiteCreditoCliente(id_cliente, valorRestituido); // Use id_cliente aqui
+                    creditoPrefs.clear(); // Limpa as informações armazenadas após o cancelamento
+                }*/
+
+
+
                 //Toast.makeText(InformacoesVagas.this, "positivo=" + arg1, Toast.LENGTH_SHORT).show();
                 int i = bd.deleteVenda(prefs.getInt("id_venda_app", 0));
                 if (i != 0) {

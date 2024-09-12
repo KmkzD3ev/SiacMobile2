@@ -6,6 +6,7 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -16,12 +17,14 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.cardview.widget.CardView;
 import androidx.fragment.app.Fragment;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Objects;
 
 import br.com.zenitech.siacmobile.BuildConfig;
 import br.com.zenitech.siacmobile.ClassAuxiliar;
 import br.com.zenitech.siacmobile.ContasReceberConsultarCliente;
+import br.com.zenitech.siacmobile.CreditoPrefs;
 import br.com.zenitech.siacmobile.DatabaseHelper;
 import br.com.zenitech.siacmobile.EnviarDadosServidor;
 import br.com.zenitech.siacmobile.R;
@@ -39,6 +42,7 @@ public class HomeFragment extends Fragment {
 
     private DatabaseHelper bd;
     SharedPreferences prefs;
+    private CreditoPrefs creditoPrefs;
     ClassAuxiliar aux;
     private AlertDialog alerta;
     Context context;
@@ -62,7 +66,9 @@ public class HomeFragment extends Fragment {
         context = view.getContext();
         bd = new DatabaseHelper(context);
         prefs = context.getSharedPreferences("preferencias", MODE_PRIVATE);
+        creditoPrefs = new CreditoPrefs(context);
         aux = new ClassAuxiliar();
+
 
         try {
             String[] dados_venda = bd.getUltimaVendasCliente();
@@ -323,6 +329,24 @@ public class HomeFragment extends Fragment {
         builder.setMessage("Você Deseja Realmente Excluir Esta Venda?");
         //define um botão como positivo
         builder.setPositiveButton("Sim", (arg0, arg1) -> {
+
+            /* Restaurar limite de crédito ao cancelar uma venda a prazo
+            String valorAprazo = creditoPrefs.getValorAprazo();
+            String codigoCliente = creditoPrefs.getIdCliente();
+
+            if (valorAprazo != null && !valorAprazo.isEmpty() && !codigoCliente.isEmpty()) {
+                // Lógica de restituição do limite de crédito
+                BigDecimal valorRestituido = new BigDecimal(valorAprazo);
+                DatabaseHelper dbHelper = new DatabaseHelper(context);
+                dbHelper.restituirLimiteCreditoCliente(codigoCliente, valorRestituido);
+
+                // Log para verificar a restituição
+                Log.d("RESTITUIR LIMITE", "Restituindo limite de crédito. Valor: " + valorRestituido + " para o cliente: " + codigoCliente);
+
+                // Limpa as informações armazenadas após o cancelamento
+                creditoPrefs.clear();
+            }*/
+
             //Toast.makeText(InformacoesVagas.this, "positivo=" + arg1, Toast.LENGTH_SHORT).show();
             int i = bd.deleteVenda(prefs.getInt("id_venda_app", 0));
             if (i != 0) {

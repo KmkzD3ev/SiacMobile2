@@ -269,6 +269,17 @@ public class FinanceiroDaVenda extends AppCompatActivity implements AdapterView.
             if (fPag1.length > 1 && "A PRAZO".equals(fPag1[1])) {
                 valoresCompra.add(valorInserido);
                 Log.d("ValorAdicionado", "Valor adicionado ao array: " + valorInserido);
+
+                // Salvando as informações de forma de pagamento e valor no CreditoPrefs
+                creditoPrefs.setFormaPagamentoPrazo(spFormasPagamentoCliente.getSelectedItem().toString());
+                creditoPrefs.setValorAprazo(valorInserido);
+                creditoPrefs.setIdCliente(codigo_cliente);
+
+                // Logando as informações salvas no CreditoPrefs
+                Log.d("CREDITOPREFS", "Forma de pagamento a prazo salva: " + creditoPrefs.getFormaPagamentoPrazo());
+                Log.d("CREDITOPREFS", "Valor a prazo salvo: " + creditoPrefs.getValorAprazo());
+                Log.d("CREDITOPREFS", "ID do cliente salvo: " + creditoPrefs.getIdCliente());
+
             }
             Log.d("ValoresCompraArray", "Valores atuais no array: " + valoresCompra.toString());
 
@@ -338,16 +349,30 @@ public class FinanceiroDaVenda extends AppCompatActivity implements AdapterView.
 
                     // Verifica se a forma de pagamento é "A PRAZO"
                     if (formaPagamento.contains("A PRAZO")) {
+                        if (!valoresCompra.isEmpty()) {
                         // Obter o valor associado a essa forma de pagamento
                         BigDecimal valorFormaPrazo = new BigDecimal(valoresCompra.get(0));
                         totalValoresCompraPrazo = totalValoresCompraPrazo.add(valorFormaPrazo);
                         temFormaAPrazo = true; // Indica que há uma forma de pagamento "A PRAZO"
+                    }else {
+                            Toast.makeText(context, "Insira as Informaçoes corretamente!", Toast.LENGTH_SHORT).show();
+                        }
                     }
                 }
 
                 // Se houver pelo menos uma forma de pagamento "A PRAZO", fazer a verificação de limite de crédito
                 if (temFormaAPrazo) {
                     Log.d("VERIFICANDO LIMITE", "Verificando limite de crédito para formas de pagamento a prazo.");
+
+                    // Salvando o valor total de compra a prazo no CreditoPrefs
+                    creditoPrefs.setValorAprazo(totalValoresCompraPrazo.toString());
+                    creditoPrefs.setIdCliente(codigo_cliente);
+
+
+                 // Logando as informações salvas no CreditoPrefs
+                    Log.d("CREDITOPREFS", "Valor total de compra a prazo salvo: " + creditoPrefs.getValorAprazo());
+                    Log.d("CREDITOPREFS", "ID do cliente salvo: " + creditoPrefs.getIdCliente());
+
 
                     // Atualiza o SharedPreferences com o total de compra a prazo
                     creditoPrefs.setValorAprazo(totalValoresCompraPrazo.toString());
@@ -452,16 +477,6 @@ public class FinanceiroDaVenda extends AppCompatActivity implements AdapterView.
         spFormasPagamentoCliente = findViewById(R.id.spFormasPagamentoCliente);
         spBandeira = findViewById(R.id.spBandeira);
         spParcela = findViewById(R.id.spParcela);
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -576,6 +591,7 @@ public class FinanceiroDaVenda extends AppCompatActivity implements AdapterView.
 
 
     /**************** ATUALIZAR VALOR DE CREDITO DISPONIVEL **********************/
+
     // Método para atualizar o limite de crédito do cliente após a venda
     private void atualizarLimiteCreditoCliente(String codigo_cliente, BigDecimal valorVenda) {
         // Busca o limite de crédito atual
@@ -1286,6 +1302,24 @@ public class FinanceiroDaVenda extends AppCompatActivity implements AdapterView.
         builder.setMessage("Você Deseja Realmente Cancelar Esta Venda?");
         //define um botão como positivo
         builder.setPositiveButton("Sim", (arg0, arg1) -> {
+
+            // Restaurar limite de crédito ao cancelar uma venda a prazo
+            String valorAprazo = creditoPrefs.getValorAprazo();
+            String codigoCliente = creditoPrefs.getIdCliente();
+
+            if (valorAprazo != null && !valorAprazo.isEmpty() && !codigoCliente.isEmpty()) {
+                // Lógica de restituição do limite de crédito
+                BigDecimal valorRestituido = new BigDecimal(valorAprazo);
+                DatabaseHelper dbHelper = new DatabaseHelper(context);
+                dbHelper.restituirLimiteCreditoCliente(codigoCliente, valorRestituido);
+
+                // Log para verificar a restituição
+                Log.d("RESTITUIR LIMITE", "Restituindo limite de crédito. Valor: " + valorRestituido + " para o cliente: " + codigoCliente);
+
+                // Limpa as informações armazenadas após o cancelamento
+                creditoPrefs.clear();
+            }
+
             //Toast.makeText(InformacoesVagas.this, "positivo=" + arg1, Toast.LENGTH_SHORT).show();
             int i = bd.deleteVenda(prefs.getInt("id_venda_app", 0));
             if (i != 0) {

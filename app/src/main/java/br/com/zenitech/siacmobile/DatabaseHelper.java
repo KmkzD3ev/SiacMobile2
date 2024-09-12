@@ -839,6 +839,58 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         return i;
     }
 
+    /***************** METODO PARA RESTITUIR LIMITE DE CREDITO ********************/
+
+    public void restituirLimiteCreditoCliente(String codigoCliente, BigDecimal valorRestituido) {
+        SQLiteDatabase db = this.getWritableDatabase();
+
+        // Log para saber qual cliente estamos processando
+        Log.d("RESTITUIR LIMITE", "Processando restituição para o cliente: " + codigoCliente);
+
+        // Consultar o limite atual de crédito do cliente
+        String query = "SELECT " + LIMITE_CREDITO_CLIENTE + " FROM " + TABELA_CLIENTES + " WHERE " + CODIGO_CLIENTE + " = ?";
+        Cursor cursor = db.rawQuery(query, new String[]{codigoCliente});
+
+        if (cursor.moveToFirst()) {
+            // Obter o limite atual de crédito
+            @SuppressLint("Range") BigDecimal limiteAtual = new BigDecimal(cursor.getDouble(cursor.getColumnIndex(LIMITE_CREDITO_CLIENTE)));
+
+            // Log para verificar o limite atual antes da restituição
+            Log.d("RESTITUIR LIMITE", "Limite atual antes da restituição: " + limiteAtual.toString());
+
+            // Adicionar o valor restituído ao limite atual
+            BigDecimal novoLimite = limiteAtual.add(valorRestituido);
+
+            // Log para verificar o valor que está sendo restituído
+            Log.d("RESTITUIR LIMITE", "Valor restituído: " + valorRestituido.toString());
+
+            // Log para verificar o novo limite de crédito após a restituição
+            Log.d("RESTITUIR LIMITE", "Novo limite de crédito após restituição: " + novoLimite.toString());
+
+            // Atualizar o limite de crédito no banco de dados
+            ContentValues values = new ContentValues();
+            values.put(LIMITE_CREDITO_CLIENTE, novoLimite.doubleValue());
+
+            int rowsUpdated = db.update(TABELA_CLIENTES, values, CODIGO_CLIENTE + " = ?", new String[]{codigoCliente});
+
+            // Log para confirmar se a atualização foi bem-sucedida
+            if (rowsUpdated > 0) {
+                Log.d("RESTITUIR LIMITE", "Limite de crédito atualizado com sucesso para o cliente: " + codigoCliente);
+            } else {
+                Log.e("RESTITUIR LIMITE", "Erro ao atualizar o limite de crédito para o cliente: " + codigoCliente);
+            }
+        } else {
+            // Log para o caso de não encontrar o cliente no banco
+            Log.e("RESTITUIR LIMITE", "Cliente não encontrado: " + codigoCliente);
+        }
+
+        cursor.close();
+        db.close();
+    }
+
+
+
+
 
     //########## RELATÓRIOS DE VENDA ############
     //LISTAR TODOS OS CLIENTES
