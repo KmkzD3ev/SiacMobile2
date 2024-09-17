@@ -24,6 +24,7 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.Spinner;
@@ -158,6 +159,8 @@ public class FinanceiroDaVenda extends AppCompatActivity implements AdapterView.
     //
     ArrayAdapter adapterSpBandeira, adapterSpParcela;
     private ArrayList<String> formasPagamento = new ArrayList<>(); //ARRAY PARA FORMAS DE PAGAMENTO
+    private CheckBox checkbox_confirmar;
+
 
 
     @SuppressLint("LongLogTag")
@@ -170,8 +173,38 @@ public class FinanceiroDaVenda extends AppCompatActivity implements AdapterView.
         Objects.requireNonNull(getSupportActionBar()).setDisplayHomeAsUpEnabled(true);
 
 
-        // Inicialize o DatabaseHelper aqui
+        // Inicialize o DatabaseHelper
         bd = new DatabaseHelper(this);
+        // Inicializando o CheckBox
+        checkbox_confirmar = findViewById(R.id.checkbox_confirmar);
+
+        // Chamando o método VendaFuturaAtiva e bloqueio_ediçao obtendo seus resultados
+        boolean isVendaFuturaAtiva = bd.VendaFuturaAtiva();
+        boolean isbBloqueioediaoPreco = bd.BloqueioEdicaoPreco();
+
+        // Logando o resultado
+        Log.d("INICIO ATIVIDADE", "onCreate: Venda Futura Ativa: " + isVendaFuturaAtiva);
+        Log.d("INICIO ATIVIDADE", "onCreate: BLOQUEIO EDIÇAO: " + isbBloqueioediaoPreco);
+
+
+     /************ CHAMADA DO METOD PARA ATUALIZAR VENDA FUTURA ***********/
+        if (isVendaFuturaAtiva == false) {
+            checkbox_confirmar.setVisibility(View.VISIBLE);
+            // Configura um listener para mudanças de estado no CheckBox
+            checkbox_confirmar.setOnCheckedChangeListener((buttonView, isChecked) -> {
+                int entregaFutura = isChecked ? 1 : 0; // Se marcado, entregaFutura = 1, caso contrário = 0
+                // Chama o método para atualizar o banco de dados com o novo estado
+                int result = bd.atualizarEntregaFutura(prefs.getInt("id_venda_app", 1), entregaFutura);
+                if (result > 0) {
+                    Log.d("CheckBox", "Atualização de entrega futura bem-sucedida.");
+                } else {
+                    Log.e("CheckBox", "Falha ao atualizar entrega futura.");
+                }
+            });
+        } else {
+            checkbox_confirmar.setVisibility(View.GONE);
+        }
+
 
         // Inicializações e configurações
         spFormasPagamentoCliente = findViewById(R.id.spFormasPagamentoCliente);
@@ -242,6 +275,7 @@ public class FinanceiroDaVenda extends AppCompatActivity implements AdapterView.
         txtVencimentoFormaPagamento.addTextChangedListener(classAuxiliar.maskData("##/##/####", txtVencimentoFormaPagamento));
 
         txtTotalItemFinanceiro = findViewById(R.id.txtTotalItemFinanceiro);
+
 
 
         //
@@ -1537,8 +1571,6 @@ public class FinanceiroDaVenda extends AppCompatActivity implements AdapterView.
             }
         }, 3500);
     }
-
-
 
 
     private void finalizarFinanceiroVenda() {

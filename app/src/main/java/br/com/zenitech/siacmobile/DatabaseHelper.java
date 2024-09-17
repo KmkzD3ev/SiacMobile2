@@ -45,7 +45,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     private static final String LIMITE_CREDITO_CLIENTE = "limite_credito_cliente"; // Constante para o campo limite_credito_cliente
 
     private static final String[] COLUNAS_CLIENTES = {CODIGO_CLIENTE, NOME_CLIENTE, LATITUDE_CLIENTE, LONGITUDE_CLIENTE, SALDO_CLIENTE, LIMITE_CREDITO_CLIENTE};
-// Constante para o campo saldo
+     // Constante para o campo saldo
 
 
 
@@ -134,6 +134,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
         if (newVersion > oldVersion)
             try {
+                db.execSQL("ALTER TABLE pos ADD COLUMN bloqueio_edicao_preco INTEGER DEFAULT 0;");
+                Log.d("DatabaseUpgrade", "Coluna bloqueio_edicao_preco adicionada à tabela pos.");
                 copyDataBase();
             } catch (IOException e) {
                 e.printStackTrace();
@@ -360,6 +362,31 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     }
 
 
+    /*************** METODO DE CONSULTA VENDA FUTURA *********/
+    public boolean isVendaFuturaAtiva() {
+        int vendaFutura = 0;  // Valor padrão para inativo (0 = não é venda futura)
+        SQLiteDatabase db = this.getReadableDatabase();
+
+        // Consulta SQL para buscar o parâmetro 'venda_futura' na tabela desejada
+        String selectQuery = "SELECT venda_futura FROM pos";  // Altere 'pos' pelo nome da sua tabela, se necessário
+        Cursor cursor = db.rawQuery(selectQuery, null);
+
+        try {
+            if (cursor.moveToFirst()) {
+                // Obtém o valor do campo 'venda_futura'
+                vendaFutura = cursor.getInt(cursor.getColumnIndexOrThrow("venda_futura"));
+                Log.d("isVendaFuturaAtiva", "Valor retornado pelo banco: " + vendaFutura);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            cursor.close();
+            db.close();
+        }
+
+        // Retorna true se 'venda_futura' for igual a 1 (ativo), false se for 0 (inativo)
+        return vendaFutura == 1;
+    }
 
 
 
@@ -888,6 +915,80 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         db.close();
     }
 
+    /**************** METODO PARA CONSULTA PARAMETRO BLOQUEIO EDIÇAO DE PREÇOS ***************/
+
+    public boolean BloqueioEdicaoPreco() {
+        int bloqueio = 0;  // Valor padrão para inativo
+        SQLiteDatabase db = this.getReadableDatabase();
+        String selectQuery = "SELECT bloqueio_edicao_preco FROM pos";
+        Cursor cursor = db.rawQuery(selectQuery, null);
+
+        try {
+            if (cursor.moveToFirst()) {
+                bloqueio = cursor.getInt(cursor.getColumnIndexOrThrow("bloqueio_edicao_preco"));
+                Log.d("BloqueioEdicaoPreco", "Valor retornado pelo banco: " + bloqueio);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            cursor.close();
+            db.close();
+        }
+
+        return bloqueio == 1;  // Retorna true se o bloqueio for 1 (ativo), false se for 0 (inativo)
+    }
+
+
+    /***************** METODO DA IDENTIFICAR VENDA FUTURA ******************/
+
+    public boolean VendaFuturaAtiva() {
+        int vendaFutura = 0;  // Valor padrão para inativo (0 = não é venda futura)
+        SQLiteDatabase db = this.getReadableDatabase();
+
+        // Consulta SQL para buscar o parâmetro 'venda_futura' na tabela desejada
+        String selectQuery = "SELECT bloqueio_venda_futura FROM pos";
+        Cursor cursor = db.rawQuery(selectQuery, null);
+
+        try {
+            if (cursor.moveToFirst()) {
+                // Obtém o valor do campo 'venda_futura'
+                vendaFutura = cursor.getInt(cursor.getColumnIndexOrThrow("bloqueio_venda_futura"));
+                Log.d("Venda Futura Ativa", "Valor retornado pelo banco: " + vendaFutura);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            cursor.close();
+            db.close();
+        }
+
+        // Retorna true se 'venda_futura' for igual a 1 (ativo), false se for 0 (inativo)
+        return vendaFutura == 1;
+    }
+
+
+    /******************** METODO PARA ATUALIZAR ENTREGA_FUTURA *********/
+    public int atualizarEntregaFutura(int idVenda, int entregaFutura) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues contentValues = new ContentValues();
+        contentValues.put("entrega_futura_venda", entregaFutura);
+
+        // Logando o valor que será atualizado
+        Log.d("UpdateLog", "Tentando atualizar 'entrega_futura_venda' para: " + entregaFutura + " no idVenda: " + idVenda);
+
+        // Atualiza o campo 'entrega_futura_venda' para o registro específico com idVenda
+        int result = db.update("vendas_app", contentValues, "codigo_venda = ?", new String[] {String.valueOf(idVenda)});
+        db.close();
+
+        // Logando o resultado da atualização
+        if (result > 0) {
+            Log.d("DATAHELPER SUCESS", "Atualização bem-sucedida: " + result + " linha(s) afetada(s). CodigoVenda: "  + ", EntregaFutura: " + entregaFutura);
+        } else {
+            Log.d("DatabaseHelper FAIL", "Falha na atualização: Nenhuma linha afetada.");
+        }
+
+        return result;
+    }
 
 
 
@@ -2550,7 +2651,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             if (cursor.moveToFirst()) {
                 do {
                     preco_unidade = cursor.getString(cursor.getColumnIndexOrThrow("margem_cliente"));
-                    isPrecoFixo = true; // Inicializa como falso
+                    isPrecoFixo = true; //PREÇO FIXO ENCONTRADO RECEBE TRUE
 
                 } while (cursor.moveToNext());
             }

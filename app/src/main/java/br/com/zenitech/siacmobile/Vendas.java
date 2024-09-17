@@ -256,8 +256,51 @@ public class Vendas extends AppCompatActivity {
             }
         });
 
+        /***************** CLICK DO BOTAO APOS A CONSULTA DO PARAMETRO ******************/
+
 
         spProduto.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
+                // Consulta o parâmetro global de bloqueio de edição de preço
+                boolean bloqueioEdicaoPreco = bd.BloqueioEdicaoPreco();  // Verifica se o bloqueio está ativo
+
+                // Obtém o preço do produto selecionado
+                String preco = bd.getMargemCliente(spProduto.getSelectedItem().toString(), id_cliente);
+
+                // Verifica se o preço é fixo (caso o bloqueio de edição esteja ativo)
+                boolean isPrecoFixo = bd.isPrecoFixo();  // Método para verificar se o preço é fixo
+
+                // Se o bloqueio de edição de preço estiver ativo
+                if (bloqueioEdicaoPreco) {
+                    // Se for preço fixo, desabilita a edição
+                    if (isPrecoFixo) {
+                        etPreco.setText(preco);  // Preenche o campo com o preço retornado
+                        etPreco.setEnabled(false);  // Bloqueia a edição
+                        Toast.makeText(Vendas.this, "PREÇO FIXO ENCONTRADO. EDIÇÃO BLOQUEADA!", Toast.LENGTH_SHORT).show();
+                    } else {
+                        // Se não for preço fixo, permite edição
+                        etPreco.setText(preco);
+                        etPreco.setEnabled(true);  // Permite edição
+                    }
+                } else {
+                    // Se o bloqueio de edição de preço estiver inativo, segue o comportamento original
+                    if (preco.equals("0,00")) {
+                        etPreco.setEnabled(true);  // Permite edição
+                        etPreco.setText("0,00");
+                    } else {
+                        etPreco.setText(preco);  // Preenche o campo com o preço retornado
+                        etPreco.setEnabled(true);  // Permite edição, mesmo se for preço fixo
+                    }
+                }
+            }
+
+            public void onNothingSelected(AdapterView<?> adapterView) {
+                return;
+            }
+        });
+
+
+       /* spProduto.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
                 //
                 String preco = bd.getMargemCliente(spProduto.getSelectedItem().toString(), id_cliente);
@@ -276,7 +319,7 @@ public class Vendas extends AppCompatActivity {
             public void onNothingSelected(AdapterView<?> adapterView) {
                 return;
             }
-        });
+        });*/
 
 
         /*String[] somar = {"4.0", "3.0"};
@@ -597,8 +640,5 @@ public class Vendas extends AppCompatActivity {
 
         return false; // Cliente não está inadimplente ou bloqueio não está ativo
     }
-
-
-
 
 }
