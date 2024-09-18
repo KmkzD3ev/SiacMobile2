@@ -597,7 +597,7 @@ public class FinanceiroDaVenda extends AppCompatActivity implements AdapterView.
         Log.d("FinanceiroDaVenda", "Formas de pagamento configuradas no spinner.");
     }
 
-
+/****************** METODO PARA VERIFICAR INADIMPLENCIA  ***************/
     private boolean verificarInadimplencia(String clienteId) {
         // Implementação robusta de verificação de inadimplência
         ArrayList<FinanceiroReceberClientes> contasReceber = bd.getContasReceberCliente(clienteId);

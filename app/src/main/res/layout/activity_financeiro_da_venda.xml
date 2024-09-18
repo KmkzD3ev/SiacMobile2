@@ -20,7 +20,20 @@
 
     </com.google.android.material.appbar.AppBarLayout>
 
+
+
     <include layout="@layout/content_financeiro_da_venda" />
+
+
+    <android.widget.CheckBox
+        android:id="@+id/checkbox_confirmar"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="50dp"
+
+        android:layout_marginTop="546dp"
+        android:text="Venda futura" />
+
 
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/fab"
