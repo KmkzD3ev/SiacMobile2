@@ -276,7 +276,7 @@ public class Vendas extends AppCompatActivity {
                     if (isPrecoFixo) {
                         etPreco.setText(preco);  // Preenche o campo com o preço retornado
                         etPreco.setEnabled(false);  // Bloqueia a edição
-                        Toast.makeText(Vendas.this, "PREÇO FIXO ENCONTRADO. EDIÇÃO BLOQUEADA!", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(Vendas.this, "PREÇO FIXO ENCONTRADO. EDIÇÃO BLOQUEADA", Toast.LENGTH_SHORT).show();
                     } else {
                         // Se não for preço fixo, permite edição
                         etPreco.setText(preco);

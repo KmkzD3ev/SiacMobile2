@@ -1665,7 +1665,7 @@ public class FinanceiroDaVenda extends AppCompatActivity implements AdapterView.
      */
 
     public void logFormasPagamentoPrazo() {
-        formasPagamentoPrazo.clear(); // Limpa a lista antes de adicionar novos valores
+        formasPagamentoPrazo.clear(); // Limpa a lista antes de adicionar novos valoresS
         if (listaFormasPagamentoCliente != null && !listaFormasPagamentoCliente.isEmpty()) {
             for (String formaPagamento : listaFormasPagamentoCliente) {
                 String[] detalhesPagamento = formaPagamento.split(" _ ");
