@@ -3,6 +3,7 @@ package br.com.zenitech.siacmobile.interfaces;
 import java.util.ArrayList;
 
 import br.com.zenitech.siacmobile.Configuracoes;
+import br.com.zenitech.siacmobile.CreditoPrefs;
 import br.com.zenitech.siacmobile.domains.Conta;
 import br.com.zenitech.siacmobile.domains.EnviarDados;
 import retrofit2.Call;
@@ -47,7 +48,9 @@ public interface IEnviarDados {
             @Field("FPAGAMENTOS") String FPAGAMENTOS,
             @Field("DOCUMENTOS") String DOCUMENTOS,
             @Field("NOTASFISCAIS") String NOTASFISCAIS,
-            @Field("CODALIQUOTAS") String CODALIQUOTAS
+            @Field("CODALIQUOTAS") String CODALIQUOTAS,
+            @Field("ENTFUTURA") String ENTFUTURA  // Novo campo adicionado para entrega futura
+
     );
 
     @FormUrlEncoded

@@ -25,6 +25,7 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.Spinner;
 import android.widget.TextView;
@@ -95,6 +96,16 @@ public class Vendas extends AppCompatActivity {
         setSupportActionBar(toolbar);
         Objects.requireNonNull(getSupportActionBar()).setDisplayHomeAsUpEnabled(true);
 
+
+        // Inicializa corretamente o SharedPreferences e o Editor antes de qualquer uso
+        prefs = getSharedPreferences("preferencias", MODE_PRIVATE);
+        ed = prefs.edit();  // Inicializando o Editor aqui
+
+        // Inicializar entrega_futura_venda como 0 (padrão)
+        ed.putInt("entrega_futura_venda", 0).apply();
+        Log.d("CheckBox", "Valor padrão de entrega_futura_venda definido para: 0");
+
+
         //
         classAuxiliar = new ClassAuxiliar();
 
@@ -105,6 +116,22 @@ public class Vendas extends AppCompatActivity {
 
         //
         bd = new DatabaseHelper(this);
+
+
+        // Inicializa o CheckBox
+        CheckBox checkBoxConfirmar = findViewById(R.id.checkbox_confirmar);
+
+        // Adiciona o listener de mudança de estado do CheckBox
+        checkBoxConfirmar.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            // Se o checkbox for marcado, definimos entrega_futura_venda para 1, caso contrário permanece 0
+            int entregaFutura = isChecked ? 1 : 0;
+
+            // Armazena o valor no SharedPreferences
+            ed.putInt("entrega_futura_venda", entregaFutura).apply();
+
+            // Log para verificação
+            Log.d("CheckBox", "Valor de entrega_futura_venda definido para: " + entregaFutura);
+        });
 
         //
         rvVendas = findViewById(R.id.rvVendas);
@@ -345,6 +372,11 @@ public class Vendas extends AppCompatActivity {
 
     //ADICIONAR VENDAS
     private void addVenda() {
+        // Primeiro, lista os registros existentes com entrega_futura_venda e seus códigos de venda
+        ArrayList<String> registrosEntregaFutura = bd.listarCodigosEntregaFutura();
+        Log.d("Registros Existentes", "Registros de entrega_futura_venda e seus códigos de venda: " + registrosEntregaFutura.toString());
+
+
         if (listaVendas.size() == 0) {
             //
             id = id + 1;
@@ -387,6 +419,23 @@ public class Vendas extends AppCompatActivity {
             listaVendas = bd.getVendasCliente(prefs.getInt("id_venda_app", 1));
             adapter = new VendasAdapter(this, listaVendas);
             rvVendas.setAdapter(adapter);
+
+
+            // Recupera o valor de entrega futura salvo no SharedPreferences
+            int entregaFutura = prefs.getInt("entrega_futura_venda", 0);
+
+            // Atualiza o campo entrega_futura_venda apenas para a venda recém-adicionada (usando id_venda_app)
+            int codigoVendaRecemAdicionada = prefs.getInt("id_venda_app", 1); // Obtenha o ID da venda recém-adicionada
+            int resultado = bd.atualizarEntregaFutura(entregaFutura, codigoVendaRecemAdicionada);
+
+            // Verifica se a atualização foi bem-sucedida
+            if (resultado > 0) {
+                Log.d("UpdateLog", "Campo entrega_futura_venda atualizado com sucesso para o código de venda: " + codigoVendaRecemAdicionada);
+            } else {
+                Log.d("UpdateLog", "Falha ao atualizar o campo entrega_futura_venda.");
+            }
+
+
 
             textTotalItens.setText(String.valueOf(listaVendas.size()));
 
@@ -474,6 +523,9 @@ public class Vendas extends AppCompatActivity {
 
     @Override
     protected void onDestroy() {
+
+        ArrayList<Integer> codigosVenda = bd.listarCodigosVenda();
+        Log.d("CODIGOS DE VENDA", "Códigos de venda ao finalizar a atividade: " + codigosVenda.toString());
         //bd.close();
         super.onDestroy();
     }
@@ -554,7 +606,7 @@ public class Vendas extends AppCompatActivity {
         //super.onBackPressed();
     }
 
-/*****************CONSULTA E TRATAMENTO DA INADIMPLENCIA*******************/
+    /*****************CONSULTA E TRATAMENTO DA INADIMPLENCIA*******************/
 
     private void consultarInadimplencia() {
         Log.d("Inadimplencia", "Verificando inadimplência para o cliente: " + nome_cliente + " (ID: " + id_cliente + ")");

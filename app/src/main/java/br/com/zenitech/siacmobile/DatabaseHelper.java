@@ -389,6 +389,26 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     }
 
 
+    /************ METODO DE LOG TEMPORARIO *************/
+    @SuppressLint("Range")
+    public ArrayList<String> listarCodigosEntregaFutura() {
+        ArrayList<String> lista = new ArrayList<>();
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = db.rawQuery("SELECT codigo_venda, entrega_futura_venda FROM vendas_app", null);
+
+        if (cursor.moveToFirst()) {
+            do {
+                int codigoVenda = cursor.getInt(cursor.getColumnIndex("codigo_venda"));
+                int entregaFutura = cursor.getInt(cursor.getColumnIndex("entrega_futura_venda"));
+                lista.add("Código Venda: " + codigoVenda + ", Entrega Futura: " + entregaFutura);
+            } while (cursor.moveToNext());
+        }
+        cursor.close();
+        return lista;
+    }
+
+
+
 
     //########## PRODUTOS ############
 
@@ -968,27 +988,68 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
 
     /******************** METODO PARA ATUALIZAR ENTREGA_FUTURA *********/
-    public int atualizarEntregaFutura(int idVenda, int entregaFutura) {
+
+
+    public int atualizarEntregaFutura(int entregaFutura, int codigoVenda) {
         SQLiteDatabase db = this.getWritableDatabase();
+
+        // Preparar a atualização
         ContentValues contentValues = new ContentValues();
         contentValues.put("entrega_futura_venda", entregaFutura);
 
         // Logando o valor que será atualizado
-        Log.d("UpdateLog", "Tentando atualizar 'entrega_futura_venda' para: " + entregaFutura + " no idVenda: " + idVenda);
+        Log.d("UpdateLog", "Tentando atualizar 'entrega_futura_venda' para: " + entregaFutura + " para o codigo_venda: " + codigoVenda);
 
-        // Atualiza o campo 'entrega_futura_venda' para o registro específico com idVenda
-        int result = db.update("vendas_app", contentValues, "codigo_venda = ?", new String[] {String.valueOf(idVenda)});
-        db.close();
+        // Atualiza o campo 'entrega_futura_venda' apenas para o registro com o código de venda específico
+        int result = db.update("vendas_app", contentValues, "codigo_venda = ?", new String[] { String.valueOf(codigoVenda) });
 
-        // Logando o resultado da atualização
+        // Verifica e loga as linhas afetadas após a atualização
         if (result > 0) {
-            Log.d("DATAHELPER SUCESS", "Atualização bem-sucedida: " + result + " linha(s) afetada(s). CodigoVenda: "  + ", EntregaFutura: " + entregaFutura);
+            Log.d("DATAHELPER SUCCESS", "Atualização bem-sucedida: " + result + " linha(s) afetada(s). EntregaFutura: " + entregaFutura);
+
+            // Consultar a linha afetada
+            Cursor cursor = db.rawQuery("SELECT codigo_venda, entrega_futura_venda FROM vendas_app WHERE codigo_venda = ?", new String[] { String.valueOf(codigoVenda) });
+
+            Log.d("Affected Rows", "Linhas afetadas:");
+
+            if (cursor.moveToFirst()) {
+                do {
+                    @SuppressLint("Range") int codigoVendaAtual = cursor.getInt(cursor.getColumnIndex("codigo_venda"));
+                    @SuppressLint("Range") int entregaFuturaAtual = cursor.getInt(cursor.getColumnIndex("entrega_futura_venda"));
+
+                    Log.d("Affected Row", "codigo_venda: " + codigoVendaAtual + ", entrega_futura_venda atual: " + entregaFuturaAtual);
+                } while (cursor.moveToNext());
+            }
+            cursor.close();
         } else {
             Log.d("DatabaseHelper FAIL", "Falha na atualização: Nenhuma linha afetada.");
         }
 
+        db.close();
         return result;
     }
+
+
+    /*************** CONSULTAR CODIGO VENDA ***********************/
+
+    public ArrayList<Integer> listarCodigosVenda() {
+        SQLiteDatabase db = this.getReadableDatabase();
+        ArrayList<Integer> listaCodigosVenda = new ArrayList<>();
+
+        Cursor cursor = db.rawQuery("SELECT codigo_venda FROM vendas_app", null);
+
+        if (cursor.moveToFirst()) {
+            do {
+                int codigoVenda = cursor.getInt(cursor.getColumnIndex("codigo_venda"));
+                listaCodigosVenda.add(codigoVenda);
+            } while (cursor.moveToNext());
+        }
+        cursor.close();
+        return listaCodigosVenda;
+    }
+
+
+
 
 
 

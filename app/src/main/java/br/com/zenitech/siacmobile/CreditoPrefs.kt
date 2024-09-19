@@ -2,6 +2,8 @@ package br.com.zenitech.siacmobile
 
 import android.content.Context
 import android.content.SharedPreferences
+import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
 
 /**
  * Classe para armazenar temporariamente informações sobre vendas a prazo,
@@ -9,6 +11,7 @@ import android.content.SharedPreferences
  */
 class CreditoPrefs(context: Context) {
     private val prefs: SharedPreferences
+    private val gson: Gson = Gson() // Inicializando o Gson para serializar e deserializar JSON
 
     init {
         prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
@@ -34,6 +37,26 @@ class CreditoPrefs(context: Context) {
         set(idCliente) {
             prefs.edit().putString("IdCliente", idCliente).apply()
         }
+
+
+    // Método para salvar o array estadosEntregaFutura
+    fun salvarEstadosEntregaFutura(estadosEntregaFutura: ArrayList<Int>) {
+        val json = gson.toJson(estadosEntregaFutura) // Converter ArrayList para JSON
+        prefs.edit().putString("estadosEntregaFutura", json).apply()
+    }
+
+    // Método para recuperar o array estadosEntregaFutura
+    fun recuperarEstadosEntregaFutura(): ArrayList<Int> {
+        val json = prefs.getString("estadosEntregaFutura", "")
+        return if (!json.isNullOrEmpty()) {
+            val type = object : TypeToken<ArrayList<Int>>() {}.type
+            gson.fromJson(json, type) // Converter de volta para ArrayList
+        } else {
+            ArrayList() // Retorna lista vazia se não houver nada salvo
+        }
+    }
+
+
 
     // Limpa todas as informações armazenadas (quando a venda for cancelada ou concluída)
     fun clear() {
