@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
+
 <androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
@@ -21,20 +22,6 @@
     </com.google.android.material.appbar.AppBarLayout>
 
     <include layout="@layout/content_vendas" />
-
-
-    <android.widget.CheckBox
-        android:id="@+id/checkbox_confirmar"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginEnd="50dp"
-        android:layout_marginTop="530dp"
-        android:text="Venda futura" />
-
-
-
-
-
 
 
 

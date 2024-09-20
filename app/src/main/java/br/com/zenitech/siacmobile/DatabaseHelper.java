@@ -987,8 +987,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     }
 
 
-    /******************** METODO PARA ATUALIZAR ENTREGA_FUTURA *********/
-
+    /******************** METODO PARA ATUALIZAR ENTREGA_FUTURA **************/
 
     public int atualizarEntregaFutura(int entregaFutura, int codigoVenda) {
         SQLiteDatabase db = this.getWritableDatabase();
@@ -1032,27 +1031,22 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
     /*************** CONSULTAR CODIGO VENDA ***********************/
 
-    public ArrayList<Integer> listarCodigosVenda() {
+    public ArrayList<Integer> listarEntregasFuturas() {
         SQLiteDatabase db = this.getReadableDatabase();
-        ArrayList<Integer> listaCodigosVenda = new ArrayList<>();
+        ArrayList<Integer> listaEntregasFuturas = new ArrayList<>();
 
-        Cursor cursor = db.rawQuery("SELECT codigo_venda FROM vendas_app", null);
+        // Consulta para selecionar o campo 'entrega_futura_venda' da tabela
+        Cursor cursor = db.rawQuery("SELECT entrega_futura_venda FROM vendas_app", null);
 
         if (cursor.moveToFirst()) {
             do {
-                int codigoVenda = cursor.getInt(cursor.getColumnIndex("codigo_venda"));
-                listaCodigosVenda.add(codigoVenda);
+                @SuppressLint("Range") int entregaFutura = cursor.getInt(cursor.getColumnIndex("entrega_futura_venda"));
+                listaEntregasFuturas.add(entregaFutura);
             } while (cursor.moveToNext());
         }
         cursor.close();
-        return listaCodigosVenda;
+        return listaEntregasFuturas;
     }
-
-
-
-
-
-
 
     //########## RELATÓRIOS DE VENDA ############
     //LISTAR TODOS OS CLIENTES

@@ -96,6 +96,7 @@ public class Vendas extends AppCompatActivity {
         setSupportActionBar(toolbar);
         Objects.requireNonNull(getSupportActionBar()).setDisplayHomeAsUpEnabled(true);
 
+       /************ COMPONENTES PARA PERSISTIR ESTADO CHECBOX ***********/
 
         // Inicializa corretamente o SharedPreferences e o Editor antes de qualquer uso
         prefs = getSharedPreferences("preferencias", MODE_PRIVATE);
@@ -117,7 +118,7 @@ public class Vendas extends AppCompatActivity {
         //
         bd = new DatabaseHelper(this);
 
-
+       /************* LISTNER DO CHECBOX *****************/
         // Inicializa o CheckBox
         CheckBox checkBoxConfirmar = findViewById(R.id.checkbox_confirmar);
 
@@ -283,7 +284,7 @@ public class Vendas extends AppCompatActivity {
             }
         });
 
-        /***************** CLICK DO BOTAO APOS A CONSULTA DO PARAMETRO ******************/
+        /***************** CLICK DO BOTAO APOS A CONSULTA DO PARAMETRO  PREÇO_FIXO ******************/
 
 
         spProduto.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
@@ -303,7 +304,7 @@ public class Vendas extends AppCompatActivity {
                     if (isPrecoFixo) {
                         etPreco.setText(preco);  // Preenche o campo com o preço retornado
                         etPreco.setEnabled(false);  // Bloqueia a edição
-                        Toast.makeText(Vendas.this, "PREÇO FIXO ENCONTRADO. EDIÇÃO BLOQUEADA", Toast.LENGTH_SHORT).show();
+                       // Toast.makeText(Vendas.this, "PREÇO FIXO ENCONTRADO. EDIÇÃO BLOQUEADA", Toast.LENGTH_SHORT).show();
                     } else {
                         // Se não for preço fixo, permite edição
                         etPreco.setText(preco);
@@ -404,7 +405,7 @@ public class Vendas extends AppCompatActivity {
                     "0",//ENTREGA_FUTURA_VENDA
                     "0",//ENTREGA_FUTURA_REALIZADA
                     "" + prefs.getString("usuario_atual", "app"),//USUARIO_ATUAL
-                    "" + classAuxiliar.inserirDataAtual(),//DATA_CADASTRO
+                    ""  + classAuxiliar.inserirDataAtual(),//DATA_CADASTRO
                     "" + String.valueOf(prefs.getInt("id_venda_app", 1)),
                     "0",
                     ""
@@ -420,6 +421,7 @@ public class Vendas extends AppCompatActivity {
             adapter = new VendasAdapter(this, listaVendas);
             rvVendas.setAdapter(adapter);
 
+          /******** ATUALIZAÇAO DO CAMPO DE ENTREGA-FUTURA DENTRO DA VENDA *******/
 
             // Recupera o valor de entrega futura salvo no SharedPreferences
             int entregaFutura = prefs.getInt("entrega_futura_venda", 0);
@@ -524,7 +526,7 @@ public class Vendas extends AppCompatActivity {
     @Override
     protected void onDestroy() {
 
-        ArrayList<Integer> codigosVenda = bd.listarCodigosVenda();
+        ArrayList<Integer> codigosVenda = bd.listarEntregasFuturas();
         Log.d("CODIGOS DE VENDA", "Códigos de venda ao finalizar a atividade: " + codigosVenda.toString());
         //bd.close();
         super.onDestroy();

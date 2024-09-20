@@ -26,6 +26,14 @@ import retrofit2.Callback;
 import retrofit2.Response;
 
 public class EnviarDadosServidorCOPIA_SEGURANCA extends AppCompatActivity {
+    CreditoPrefs creditoPrefs = new CreditoPrefs(this);
+
+    // Recuperar o array de estados de entrega futura do SharedPreferences
+    ArrayList<Integer> estadosEntregaFutura = creditoPrefs.recuperarEstadosEntregaFutura();
+
+    // Converter o array para uma string, se necessário, para enviar à API
+    String entregaFuturaString = estadosEntregaFutura.toString(); // Ajuste a formatação conforme necessário
+
 
     //
     private SharedPreferences prefs;
@@ -99,7 +107,8 @@ public class EnviarDadosServidorCOPIA_SEGURANCA extends AppCompatActivity {
                 "" + dadosFin[4],
                 "" + dadosFin[5],
                 "" + dadosFin[6],
-                "" + dadosFin[7]
+                "" + dadosFin[7],
+                entregaFuturaString
         );
 
         call.enqueue(new Callback<ArrayList<EnviarDados>>() {

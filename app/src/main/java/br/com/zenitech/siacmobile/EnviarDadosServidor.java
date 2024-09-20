@@ -6,6 +6,8 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
+import android.text.TextUtils;
+import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Toast;
@@ -27,6 +29,8 @@ import retrofit2.Response;
 
 public class EnviarDadosServidor extends AppCompatActivity {
 
+    private String entregaFuturaString;
+
     //
     private SharedPreferences prefs;
     ClassAuxiliar classAuxiliar;
@@ -44,6 +48,23 @@ public class EnviarDadosServidor extends AppCompatActivity {
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         Objects.requireNonNull(getSupportActionBar()).setDisplayHomeAsUpEnabled(true);
+
+        /************* RECUPERANDO DADOS PRA ENVIO SERVIDOR ENTREGA-FUTURA *********/
+
+        bd = new DatabaseHelper(this);
+        bd.listarEntregasFuturas();
+
+        Log.d( "SERVIDOR CLASS ", "onCreate: ENVIO DA SRING PHP" );
+        ArrayList<Integer> registrosEntregaFutura = bd.listarEntregasFuturas();
+        // Converter a lista de inteiros em uma string separada por vírgulas e adicionar aspas duplas ao redor
+        entregaFuturaString = "," + registrosEntregaFutura.toString()
+                .replace("[", "")  // Remover o colchete de abertura
+                .replace("]", "")  // Remover o colchete de fechamento
+                .replace(" ", "");  // Remover espaços em branco
+
+        // Logs para verificar os dados recebidos
+        Log.d("RECEBENDO NO ENVIAR !", "Registros de entrega_futura_venda: " + entregaFuturaString);
+        /************************************************/
 
         //
         context = this;
@@ -78,6 +99,26 @@ public class EnviarDadosServidor extends AppCompatActivity {
         //
         final IEnviarDados iEnviarDados = IEnviarDados.retrofit.create(IEnviarDados.class);
 
+        // Logando os dados antes de enviar para a API
+        Log.d("EnvioDados", "TELA: 850");
+        Log.d("EnvioDados", "SERIAL: " + prefs.getString("serial", ""));
+        Log.d("EnvioDados", "VENDAS: " + dados[0]);
+        Log.d("EnvioDados", "CLIENTES: " + dados[1]);
+        Log.d("EnvioDados", "PRODUTOS: " + dados[2]);
+        Log.d("EnvioDados", "QUANTIDADES: " + dados[3]);
+        Log.d("EnvioDados", "DATAS: " + dados[4]);
+        Log.d("EnvioDados", "VALORES: " + dados[5]);
+        Log.d("EnvioDados", "FINANCEIROS: " + dadosFin[0]);
+        Log.d("EnvioDados", "FINVEN: " + dadosFin[1]);
+        Log.d("EnvioDados", "VENCIMENTOS: " + dadosFin[2]);
+        Log.d("EnvioDados", "VALORESFIN: " + dadosFin[3]);
+        Log.d("EnvioDados", "FPAGAMENTOS: " + dadosFin[4]);
+        Log.d("EnvioDados", "DOCUMENTOS: " + dadosFin[5]);
+        Log.d("EnvioDados", "NOTASFISCAIS: " + dadosFin[6]);
+        Log.d("EnvioDados", "CODALIQUOTAS: " + dadosFin[7]);
+        Log.d("EnvioDados", "ENTFUTURA: " + entregaFuturaString); // Logando a string de entrega futura
+
+
         final Call<ArrayList<EnviarDados>> call = iEnviarDados.enviarDados(
                 "850",
                 prefs.getString("serial", ""),
@@ -94,7 +135,9 @@ public class EnviarDadosServidor extends AppCompatActivity {
                 "" + dadosFin[4],
                 "" + dadosFin[5],
                 "" + dadosFin[6],
-                "" + dadosFin[7]
+                "" + dadosFin[7],
+                "" + entregaFuturaString
+
         );
 
         call.enqueue(new Callback<ArrayList<EnviarDados>>() {
