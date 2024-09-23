@@ -13,6 +13,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
@@ -30,6 +31,9 @@ import retrofit2.Callback;
 import retrofit2.Response;
 
 public class AtualizacaoApp extends AppCompatActivity {
+
+    private String entregaFuturaString;
+
 
     //
     private SharedPreferences prefs;
@@ -51,6 +55,22 @@ public class AtualizacaoApp extends AppCompatActivity {
         /*Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         Objects.requireNonNull(getSupportActionBar()).setDisplayHomeAsUpEnabled(true);*/
+
+
+
+
+
+        bd = new DatabaseHelper(this);
+        bd.listarEntregasFuturas();
+
+        Log.d( "SERVIDOR CLASS ", "onCreate: ENVIO DA SRING PHP" );
+        ArrayList<Integer> registrosEntregaFutura = bd.listarEntregasFuturas();
+        // Converter a lista de inteiros em uma string separada por vírgulas e adicionar aspas duplas ao redor
+        entregaFuturaString = "," + registrosEntregaFutura.toString()
+                .replace("[", "")  // Remover o colchete de abertura
+                .replace("]", "")  // Remover o colchete de fechamento
+                .replace(" ", "");  // Remover espaços em branco
+
 
         //
         context = this;
@@ -129,6 +149,8 @@ public class AtualizacaoApp extends AppCompatActivity {
     void enviarDados() {
         findViewById(R.id.cv_btn_enviar_dados).setVisibility(View.GONE);
         //
+        // Exibir o valor da string convertida no log
+        Log.d("EntregaFutura", "String de entrega futura enviada: " + entregaFuturaString);
         final IEnviarDados iEnviarDados = IEnviarDados.retrofit.create(IEnviarDados.class);
 
         final Call<ArrayList<EnviarDados>> call = iEnviarDados.enviarDados(
@@ -147,7 +169,8 @@ public class AtualizacaoApp extends AppCompatActivity {
                 "" + dadosFin[4],
                 "" + dadosFin[5],
                 "" + dadosFin[6],
-                "" + dadosFin[7]
+                "" + dadosFin[7],
+                entregaFuturaString
         );
 
         call.enqueue(new Callback<ArrayList<EnviarDados>>() {

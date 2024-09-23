@@ -389,7 +389,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     }
 
 
-    /************ METODO DE LOG TEMPORARIO *************/
+    /************ METODO DE LISTAGEM DE VENDAS FUTURAS *************/
     @SuppressLint("Range")
     public ArrayList<String> listarCodigosEntregaFutura() {
         ArrayList<String> lista = new ArrayList<>();
@@ -959,7 +959,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     }
 
 
-    /***************** METODO DA IDENTIFICAR VENDA FUTURA ******************/
+    /***************** METODO DA IDENTIFICAR PARAMETRO VENDA FUTURA ******************/
 
     public boolean VendaFuturaAtiva() {
         int vendaFutura = 0;  // Valor padrão para inativo (0 = não é venda futura)
@@ -1029,7 +1029,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     }
 
 
-    /*************** CONSULTAR CODIGO VENDA ***********************/
+    /*************** CONSULTAR E LISTAR APENAS O CAMPO ENTREGA_FUTURA _VENDA ***********************/
 
     public ArrayList<Integer> listarEntregasFuturas() {
         SQLiteDatabase db = this.getReadableDatabase();
