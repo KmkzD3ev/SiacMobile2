@@ -63,7 +63,7 @@ public class AtualizacaoApp extends AppCompatActivity {
         bd = new DatabaseHelper(this);
         bd.listarEntregasFuturas();
 
-        Log.d( "SERVIDOR CLASS ", "onCreate: ENVIO DA SRING PHP" );
+        Log.d( "SERVIDOR CLASS ", "onCreate: ENVIO DA STRING PHP" );
         ArrayList<Integer> registrosEntregaFutura = bd.listarEntregasFuturas();
         // Converter a lista de inteiros em uma string separada por vírgulas e adicionar aspas duplas ao redor
         entregaFuturaString = "," + registrosEntregaFutura.toString()
@@ -150,7 +150,7 @@ public class AtualizacaoApp extends AppCompatActivity {
         findViewById(R.id.cv_btn_enviar_dados).setVisibility(View.GONE);
         //
         // Exibir o valor da string convertida no log
-        Log.d("EntregaFutura", "String de entrega futura enviada: " + entregaFuturaString);
+        Log.d("EntregaFutura", "String de entrega futura para envio: " + entregaFuturaString);
         final IEnviarDados iEnviarDados = IEnviarDados.retrofit.create(IEnviarDados.class);
 
         final Call<ArrayList<EnviarDados>> call = iEnviarDados.enviarDados(

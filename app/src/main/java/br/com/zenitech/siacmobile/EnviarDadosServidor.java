@@ -54,7 +54,7 @@ public class EnviarDadosServidor extends AppCompatActivity {
         bd = new DatabaseHelper(this);
         bd.listarEntregasFuturas();
 
-        Log.d( "SERVIDOR CLASS ", "onCreate: ENVIO DA SRING PHP" );
+        Log.d( "SERVIDOR CLASS ", "onCreate: ENVIO DA STRING PHP" );
         ArrayList<Integer> registrosEntregaFutura = bd.listarEntregasFuturas();
         // Converter a lista de inteiros em uma string separada por vírgulas e adicionar aspas duplas ao redor
         entregaFuturaString = "," + registrosEntregaFutura.toString()
