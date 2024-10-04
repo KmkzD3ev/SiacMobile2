@@ -349,6 +349,48 @@ public class FinanceiroDaVenda extends AppCompatActivity implements AdapterView.
         btnPagamento = findViewById(R.id.btnPagamento);
         btnPagamento.setOnClickListener(v -> {
 
+            // Verifica se a venda foi editada
+            if (vendaEditada) {
+                Log.d("VENDA EDITADA", "Venda está sendo editada.");
+
+                // Verifica se as formas de pagamento foram alteradas
+                if (!formasPagamento.isEmpty()) {
+                    // Caso tenha formas de pagamento, percorre para ver se algo mudou
+                    BigDecimal totalValoresCompraPrazo = BigDecimal.ZERO;
+                    boolean temFormaAPrazo = false;
+
+                    for (int i = 0; i < formasPagamento.size(); i++) {
+                        String formaPagamento = formasPagamento.get(i);
+                        Log.d("FORMA PAGAMENTO", "Forma de pagamento: " + formaPagamento);
+
+                        // Verifica se a forma de pagamento é "A PRAZO"
+                        if (formaPagamento.contains("A PRAZO")) {
+                            if (!valoresCompra.isEmpty()) {
+                                BigDecimal valorFormaPrazo = new BigDecimal(valoresCompra.get(0));
+                                totalValoresCompraPrazo = totalValoresCompraPrazo.add(valorFormaPrazo);
+                                temFormaAPrazo = true;
+                            } else {
+                                Toast.makeText(context, "Insira as Informações corretamente!", Toast.LENGTH_SHORT).show();
+                            }
+                        }
+                    }
+
+                    if (temFormaAPrazo) {
+                        // Se houver uma forma "A PRAZO", pular verificação de limite de crédito
+                        Log.d("VENDA EDITADA", "Venda editada, pulando a verificação do limite de crédito.");
+                    }
+
+                } else {
+                    // Se não houve alteração nas formas de pagamento
+                    Log.d("VENDA EDITADA", "Venda editada sem alterações, concluindo sem verificar limite.");
+                }
+
+                // Conclui o processo de salvar, pois a venda está sendo editada
+                _salvarFinanceiro();
+                return;
+            }
+
+            // Verificação normal de formas de pagamento para novas vendas
             if (!formasPagamento.isEmpty()) {
                 BigDecimal totalValoresCompraPrazo = BigDecimal.ZERO;
                 boolean temFormaAPrazo = false;
@@ -361,60 +403,52 @@ public class FinanceiroDaVenda extends AppCompatActivity implements AdapterView.
                     // Verifica se a forma de pagamento é "A PRAZO"
                     if (formaPagamento.contains("A PRAZO")) {
                         if (!valoresCompra.isEmpty()) {
-                            // Obter o valor associado a essa forma de pagamento
                             BigDecimal valorFormaPrazo = new BigDecimal(valoresCompra.get(0));
                             totalValoresCompraPrazo = totalValoresCompraPrazo.add(valorFormaPrazo);
-                            temFormaAPrazo = true; // Indica que há uma forma de pagamento "A PRAZO"
+                            temFormaAPrazo = true;
                         } else {
-                            Toast.makeText(context, "Insira as Informaçoes corretamente!", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(context, "Insira as Informações corretamente!", Toast.LENGTH_SHORT).show();
                         }
                     }
                 }
 
                 // Se houver pelo menos uma forma de pagamento "A PRAZO"
-                if (temFormaAPrazo == true ) {
+                if (temFormaAPrazo) {
+                    Log.d("VERIFICANDO LIMITE", "Verificando limite de crédito para formas de pagamento a prazo.");
 
-                    // Se a venda foi editada, pular a verificação do limite de crédito
-                    if (vendaEditada) {
-                        Log.d("VENDA EDITADA", "Venda editada, pulando a verificação do limite de crédito.");
+                    creditoPrefs.setValorAprazo(totalValoresCompraPrazo.toString());
+                    creditoPrefs.setIdCliente(codigo_cliente);
+
+                    // Verifica o limite de crédito disponível
+                    DatabaseHelper dbHelper = new DatabaseHelper(this);
+                    int limiteCreditoCliente = dbHelper.getLimiteCreditoCliente(codigo_cliente);
+                    Log.d("Limite Crédito Cliente", "O limite de crédito do cliente é: " + limiteCreditoCliente);
+
+                    BigDecimal limiteCreditoBigDecimal = BigDecimal.valueOf(limiteCreditoCliente);
+
+                    // Bloquear venda a prazo se o limite for zero
+                    if (limiteCreditoBigDecimal.compareTo(BigDecimal.ZERO) == 0) {
+                        Log.d("LIMITE ZERADO", "Limite de crédito é zero. Bloqueando venda a prazo.");
+                        formasPagamento.clear();
+                        new AlertDialog.Builder(this)
+                                .setTitle("Limite de Crédito Indisponível")
+                                .setMessage("Não há limite de crédito disponível para realizar compras a prazo.")
+                                .setPositiveButton(android.R.string.ok, null)
+                                .show();
+                        return;
+                    } else if (totalValoresCompraPrazo.compareTo(limiteCreditoBigDecimal) > 0) {
+                        Log.d("LIMITE EXCEDIDO", "O valor da compra a prazo excede o limite de crédito.");
+                        String mensagem = String.format("O valor da compra excede o limite de crédito disponível.\nCrédito disponível: R$ %.2f", limiteCreditoBigDecimal);
+                        formasPagamento.clear();
+                        new AlertDialog.Builder(this)
+                                .setTitle("Limite de Crédito Excedido")
+                                .setMessage(mensagem)
+                                .setPositiveButton(android.R.string.ok, null)
+                                .show();
+                        return;
                     } else {
-                        // Consulta do limite de crédito apenas se a venda não for editada
-                        Log.d("VERIFICANDO LIMITE", "Verificando limite de crédito para formas de pagamento a prazo.");
-
-                        creditoPrefs.setValorAprazo(totalValoresCompraPrazo.toString());
-                        creditoPrefs.setIdCliente(codigo_cliente);
-
-                        // Verifica o limite de crédito disponível
-                        DatabaseHelper dbHelper = new DatabaseHelper(this);
-                        int limiteCreditoCliente = dbHelper.getLimiteCreditoCliente(codigo_cliente);
-                        Log.d("Limite Crédito Cliente", "O limite de crédito do cliente é: " + limiteCreditoCliente);
-
-                        BigDecimal limiteCreditoBigDecimal = BigDecimal.valueOf(limiteCreditoCliente);
-
-                        // Bloquear venda a prazo se o limite for zero
-                        if (limiteCreditoBigDecimal.compareTo(BigDecimal.ZERO) == 0) {
-                            Log.d("LIMITE ZERADO", "Limite de crédito é zero. Bloqueando venda a prazo.");
-                            formasPagamento.clear();
-                            new AlertDialog.Builder(this)
-                                    .setTitle("Limite de Crédito Indisponível")
-                                    .setMessage("Não há limite de crédito disponível para realizar compras a prazo.")
-                                    .setPositiveButton(android.R.string.ok, null)
-                                    .show();
-                            return;
-                        } else if (totalValoresCompraPrazo.compareTo(limiteCreditoBigDecimal) > 0) {
-                            Log.d("LIMITE EXCEDIDO", "O valor da compra a prazo excede o limite de crédito.");
-                            String mensagem = String.format("O valor da compra excede o limite de crédito disponível.\nCrédito disponível: R$ %.2f", limiteCreditoBigDecimal);
-                            formasPagamento.clear();
-                            new AlertDialog.Builder(this)
-                                    .setTitle("Limite de Crédito Excedido")
-                                    .setMessage(mensagem)
-                                    .setPositiveButton(android.R.string.ok, null)
-                                    .show();
-                            return;
-                        } else {
-                            // Atualiza o limite de crédito do cliente após a venda
-                            atualizarLimiteCreditoCliente(codigo_cliente, totalValoresCompraPrazo);
-                        }
+                        // Atualiza o limite de crédito do cliente após a venda
+                        atualizarLimiteCreditoCliente(codigo_cliente, totalValoresCompraPrazo);
                     }
                 }
 
@@ -424,7 +458,6 @@ public class FinanceiroDaVenda extends AppCompatActivity implements AdapterView.
                 Log.d("VERIFICAÇAO", "onCreate: VERIFICAÇAO NAO CONCLUIDA");
             }
         });
-
 
 
 

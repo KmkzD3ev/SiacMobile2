@@ -8,12 +8,12 @@ import android.content.pm.PackageManager;
 import android.util.Log;
 import androidx.core.content.ContextCompat;
 
-class AtivarDesativarBluetooth {
+public class AtivarDesativarBluetooth {
 
     private static final String TAG = "AtivarDesativarBluetooth";
 
     @SuppressLint("LongLogTag")
-    void enableBT(Context context) {
+    public void enableBT(Context context) {
         BluetoothAdapter mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
         if (ContextCompat.checkSelfPermission(context, Manifest.permission.BLUETOOTH_CONNECT) == PackageManager.PERMISSION_GRANTED) {
             if (!mBluetoothAdapter.isEnabled()) {
