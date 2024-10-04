@@ -2044,6 +2044,26 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         return i;
     }
 
+    /******************** ATUALIZAR CAMPO **************/
+    public int updateFormaPagamentoFinanceiro(int id_financeiro_app, String novaFormaPagamento) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues values = new ContentValues();
+
+        // Atualiza apenas o campo da forma de pagamento (fpagamento_financeiro)
+        values.put("fpagamento_financeiro", novaFormaPagamento);
+
+        // Atualiza o registro da tabela financeiro, onde id_financeiro_app corresponde ao da venda
+        int result = db.update(
+                TABELA_FINANCEIRO, // Nome da tabela
+                values, // Os valores que serão atualizados
+                "id_financeiro_app = ?", // Condição para encontrar o registro correto
+                new String[]{String.valueOf(id_financeiro_app)} // Argumentos da condição
+        );
+        db.close(); // Fecha a conexão com o banco de dados
+        return result; // Retorna o número de linhas atualizadas
+    }
+
+
 
     //LISTAR TODOS OS ITENS DO FINANCEIRO
     public ArrayList<FinanceiroVendasDomain> getFinanceiroCliente(int id_financeiro_app) {

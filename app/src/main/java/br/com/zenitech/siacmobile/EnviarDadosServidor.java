@@ -56,7 +56,7 @@ public class EnviarDadosServidor extends AppCompatActivity {
 
         Log.d( "SERVIDOR CLASS ", "onCreate: ENVIO DA STRING PHP" );
         ArrayList<Integer> registrosEntregaFutura = bd.listarEntregasFuturas();
-        // Converter a lista de inteiros em uma string separada por vírgulas e adicionar aspas duplas ao redor
+        // Converter a lista de inteiros em uma string separada por vírgulas
         entregaFuturaString = "," + registrosEntregaFutura.toString()
                 .replace("[", "")  // Remover o colchete de abertura
                 .replace("]", "")  // Remover o colchete de fechamento

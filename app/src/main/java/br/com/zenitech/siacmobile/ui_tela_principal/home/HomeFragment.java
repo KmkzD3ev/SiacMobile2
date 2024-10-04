@@ -21,8 +21,10 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Objects;
 
+import br.com.zenitech.siacmobile.AtivarDesativarBluetooth;
 import br.com.zenitech.siacmobile.BuildConfig;
 import br.com.zenitech.siacmobile.ClassAuxiliar;
+import br.com.zenitech.siacmobile.Configuracoes;
 import br.com.zenitech.siacmobile.ContasReceberConsultarCliente;
 import br.com.zenitech.siacmobile.CreditoPrefs;
 import br.com.zenitech.siacmobile.DatabaseHelper;
@@ -47,6 +49,10 @@ public class HomeFragment extends Fragment {
     private AlertDialog alerta;
     Context context;
 
+   /* private AtivarDesativarBluetooth bluetoothHelper; // Instância para Bluetooth
+    private Configuracoes configuracoes; // Instância para verificar o tipo de dispositivo
+    private boolean isBluetoothAtivado = false; // Verifica se o Bluetooth foi ativado*/
+
     TextView textView, txtTransmitida, txtContigencia, txtStatusTransmissao, txtVersao, txtEmpresa, txtCodUnidade, txtDataUltimoSinc;
     PosApp posApp;
     ArrayList<UnidadesDomain> elementosUnidades;
@@ -69,6 +75,24 @@ public class HomeFragment extends Fragment {
         creditoPrefs = new CreditoPrefs(context);
         aux = new ClassAuxiliar();
 
+        /* Inicializar as instâncias de Configuracoes e Bluetooth
+        configuracoes = new Configuracoes();
+        bluetoothHelper = new AtivarDesativarBluetooth();
+
+        // Verificar se o dispositivo é móvel e tratar o Bluetooth
+        if (!configuracoes.GetDevice()) {  // Se for um smartphone
+            try {
+                bluetoothHelper.enableBT(getContext(), getActivity()); // Tentar ativar o Bluetooth
+
+                isBluetoothAtivado = true;
+                Log.d("Bluetooth", "Bluetooth ativado com sucesso.");
+            } catch (SecurityException e) {
+                // Tratamento caso a permissão não seja concedida
+                isBluetoothAtivado = false;
+                Log.e("Bluetooth", "Erro ao ativar Bluetooth: " + e.getMessage());
+                Toast.makeText(context, "Permissão para ativar Bluetooth não concedida.", Toast.LENGTH_SHORT).show();
+            }
+        }*/
 
         try {
             String[] dados_venda = bd.getUltimaVendasCliente();
@@ -89,6 +113,9 @@ public class HomeFragment extends Fragment {
                 try {
                     //CONSULTAR DADOS DA VENDA
                     String[] dados_venda = bd.getUltimaVendasCliente();
+                    // Logar os dados da venda
+                    Log.d("ULTIMAVENDA", "ID: " + dados_venda[0] + ", ID App: " + dados_venda[1] + ", Código Cliente: " + dados_venda[2] + ", Nome Cliente: " + dados_venda[3]);
+
                     //CONSULTAR DADOS DA VENDA
                     String[] dados_cli_venda = bd.getClienteUltimaVendas(dados_venda[2]);
 
