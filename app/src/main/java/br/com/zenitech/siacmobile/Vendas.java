@@ -117,6 +117,12 @@ public class Vendas extends AppCompatActivity {
 
         //
         bd = new DatabaseHelper(this);
+        bd.VendaFuturaAtiva();
+
+        boolean vendaFuturaAtiva = bd.VendaFuturaAtiva();
+
+        // Loga o valor retornado pelo método
+        Log.d("VENDAS", "Venda Futura Ativa: " + vendaFuturaAtiva);
 
        /************* LISTNER DO CHECBOX *****************/
         // Inicializa o CheckBox
@@ -224,6 +230,8 @@ public class Vendas extends AppCompatActivity {
                     latitude_cliente = params.getString("latitude_cliente");
                     longitude_cliente = params.getString("longitude_cliente");
                     saldo = params.getString("saldo");
+                    Log.d("DESCOBRIR", "Valor de saldo recebido: " + saldo);
+
                     cpfcnpj = params.getString("cpfcnpj");
                     endereco = params.getString("endereco");
                     editandoVenda = "";
@@ -240,6 +248,8 @@ public class Vendas extends AppCompatActivity {
                     latitude_cliente = params.getString("latitude_cliente");
                     longitude_cliente = params.getString("longitude_cliente");
                     saldo = params.getString("saldo");
+                    Log.d("DESCOBRIR", "Valor de saldo recebido: " + saldo);
+
                     cpfcnpj = params.getString("cpfcnpj");
                     endereco = params.getString("endereco");
                     editandoVenda = params.getString("editar");
@@ -277,6 +287,8 @@ public class Vendas extends AppCompatActivity {
                 //
                 intent1.putExtra("cpfcnpj", cpfcnpj);
                 intent1.putExtra("endereco", endereco);
+                intent1.putExtra("editandoVenda", editandoVenda);
+                Log.d("ENVIANDO FINANCEIRO", "Enviando 'editandoVenda': " + editandoVenda);
 
                 startActivity(intent1);
 

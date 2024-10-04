@@ -352,12 +352,11 @@ public class FinanceiroDaVenda extends AppCompatActivity implements AdapterView.
             if (!formasPagamento.isEmpty()) {
                 BigDecimal totalValoresCompraPrazo = BigDecimal.ZERO;
                 boolean temFormaAPrazo = false;
-                boolean mudouParaAvista = false;
 
                 // Percorre todas as formas de pagamento no array
                 for (int i = 0; i < formasPagamento.size(); i++) {
                     String formaPagamento = formasPagamento.get(i);
-                    Log.d("FORMA_PAGAMENTO", "Forma de pagamento: " + formaPagamento);
+                    Log.d("FORMA PAGAMENTO", "Forma de pagamento: " + formaPagamento);
 
                     // Verifica se a forma de pagamento é "A PRAZO"
                     if (formaPagamento.contains("A PRAZO")) {
@@ -367,22 +366,20 @@ public class FinanceiroDaVenda extends AppCompatActivity implements AdapterView.
                             totalValoresCompraPrazo = totalValoresCompraPrazo.add(valorFormaPrazo);
                             temFormaAPrazo = true; // Indica que há uma forma de pagamento "A PRAZO"
                         } else {
-                            Toast.makeText(context, "Insira as Informações corretamente!", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(context, "Insira as Informaçoes corretamente!", Toast.LENGTH_SHORT).show();
                         }
-                    } else if (vendaEditada && formaPagamento.contains("A VISTA")) {
-                        // Verifica se mudou de "A PRAZO" para "À VISTA"
-                        mudouParaAvista = true;
                     }
                 }
 
                 // Se houver pelo menos uma forma de pagamento "A PRAZO"
-                if (temFormaAPrazo) {
+                if (temFormaAPrazo == true ) {
+
                     // Se a venda foi editada, pular a verificação do limite de crédito
                     if (vendaEditada) {
-                        Log.d("VENDA_EDITADA", "Venda editada, pulando a verificação do limite de crédito.");
+                        Log.d("VENDA EDITADA", "Venda editada, pulando a verificação do limite de crédito.");
                     } else {
                         // Consulta do limite de crédito apenas se a venda não for editada
-                        Log.d("VERIFICANDO_LIMITE", "Verificando limite de crédito para formas de pagamento a prazo.");
+                        Log.d("VERIFICANDO LIMITE", "Verificando limite de crédito para formas de pagamento a prazo.");
 
                         creditoPrefs.setValorAprazo(totalValoresCompraPrazo.toString());
                         creditoPrefs.setIdCliente(codigo_cliente);
@@ -390,13 +387,13 @@ public class FinanceiroDaVenda extends AppCompatActivity implements AdapterView.
                         // Verifica o limite de crédito disponível
                         DatabaseHelper dbHelper = new DatabaseHelper(this);
                         int limiteCreditoCliente = dbHelper.getLimiteCreditoCliente(codigo_cliente);
-                        Log.d("LIMITE_CREDITO_CLIENTE", "O limite de crédito do cliente é: " + limiteCreditoCliente);
+                        Log.d("Limite Crédito Cliente", "O limite de crédito do cliente é: " + limiteCreditoCliente);
 
                         BigDecimal limiteCreditoBigDecimal = BigDecimal.valueOf(limiteCreditoCliente);
 
                         // Bloquear venda a prazo se o limite for zero
                         if (limiteCreditoBigDecimal.compareTo(BigDecimal.ZERO) == 0) {
-                            Log.d("LIMITE_ZERADO", "Limite de crédito é zero. Bloqueando venda a prazo.");
+                            Log.d("LIMITE ZERADO", "Limite de crédito é zero. Bloqueando venda a prazo.");
                             formasPagamento.clear();
                             new AlertDialog.Builder(this)
                                     .setTitle("Limite de Crédito Indisponível")
@@ -405,7 +402,7 @@ public class FinanceiroDaVenda extends AppCompatActivity implements AdapterView.
                                     .show();
                             return;
                         } else if (totalValoresCompraPrazo.compareTo(limiteCreditoBigDecimal) > 0) {
-                            Log.d("LIMITE_EXCEDIDO", "O valor da compra a prazo excede o limite de crédito.");
+                            Log.d("LIMITE EXCEDIDO", "O valor da compra a prazo excede o limite de crédito.");
                             String mensagem = String.format("O valor da compra excede o limite de crédito disponível.\nCrédito disponível: R$ %.2f", limiteCreditoBigDecimal);
                             formasPagamento.clear();
                             new AlertDialog.Builder(this)
@@ -421,28 +418,15 @@ public class FinanceiroDaVenda extends AppCompatActivity implements AdapterView.
                     }
                 }
 
-                // Se a venda foi editada e mudou de "A PRAZO" para "À VISTA", restituir o limite de crédito
-                if (mudouParaAvista && vendaEditada) {
-                    Log.d("RESTITUIR_LIMITE", "Restituindo limite de crédito, pois mudou de 'A PRAZO' para 'À VISTA'.");
-
-                    // Restituir o limite de crédito do cliente
-                    DatabaseHelper dbHelper = new DatabaseHelper(this);
-                    BigDecimal valorRestituir = somarValoresCompra();
-
-                    // Adicionar log para verificar o valor que está sendo restituído
-                    Log.d("VALOR_RESTITUIR", "Valor a ser restituído: " + valorRestituir);// Soma os valores a prazo no array valoresCompra
-                    dbHelper.restituirLimiteCreditoCliente(codigo_cliente, valorRestituir);
-
-                    // Limpar as informações de pagamento a prazo armazenadas no CreditPrefs
-                    creditoPrefs.clear();
-                }
-
                 // Se a verificação do limite for bem-sucedida ou não for "A PRAZO", salvar o financeiro
                 _salvarFinanceiro();
             } else {
-                Log.d("VERIFICACAO", "Verificação não concluída. Nenhuma forma de pagamento selecionada.");
+                Log.d("VERIFICAÇAO", "onCreate: VERIFICAÇAO NAO CONCLUIDA");
             }
         });
+
+
+
 
 
 
@@ -494,12 +478,12 @@ public class FinanceiroDaVenda extends AppCompatActivity implements AdapterView.
                 String editandoVenda = intent.getStringExtra("editandoVenda");
                 Log.d("RECEBIDO_editandoVenda", "Valor recebido: " + editandoVenda);
 
-                 // Se o valor de editandoVenda for "sim", definimos vendaEditada como true
+                // Se o valor de editandoVenda for "sim", definimos vendaEditada como true
                 if ("sim".equalsIgnoreCase(editandoVenda)) {
                     vendaEditada = true;
                 }
 
-                     // Log para verificar o valor final de vendaEditada
+                // Log para verificar o valor final de vendaEditada
                 Log.d("VENDA_EDITADA", "Flag vendaEditada marcada como: " + vendaEditada);
 
 
