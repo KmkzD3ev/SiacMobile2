@@ -935,6 +935,31 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         db.close();
     }
 
+    /****************** RECUPERAÇAO ENTREGA FUTURA PARA EDIÇAO ******************/
+    public int getEntregaFuturaVenda(int codigoVenda) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        int entregaFutura = 0;
+
+        // Consulta o campo 'entrega_futura_venda' com base no 'codigo_venda'
+        Cursor cursor = db.rawQuery("SELECT entrega_futura_venda FROM vendas_app WHERE codigo_venda = ?", new String[] { String.valueOf(codigoVenda) });
+
+        // Se houver um resultado, atribui o valor ao 'entregaFutura'
+        if (cursor.moveToFirst()) {
+            @SuppressLint("Range") int entregaFuturaVenda = cursor.getInt(cursor.getColumnIndex("entrega_futura_venda"));
+            entregaFutura = entregaFuturaVenda;
+            Log.d("DatabaseHelper", "Entrega futura encontrada para codigo_venda " + codigoVenda + ": " + entregaFutura);
+        } else {
+            Log.d("DatabaseHelper", "Nenhuma venda encontrada com codigo_venda " + codigoVenda);
+        }
+
+        cursor.close();
+        db.close();
+
+        return entregaFutura;
+    }
+
+
+
     /**************** METODO PARA CONSULTA PARAMETRO BLOQUEIO EDIÇAO DE PREÇOS ***************/
 
     public boolean BloqueioEdicaoPreco() {

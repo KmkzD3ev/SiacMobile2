@@ -86,6 +86,9 @@ public class Vendas extends AppCompatActivity {
     private String valor_unit_emissor;
     private String editandoVenda = "";
     private boolean isPrecoFixo = false; // PARAMETRO PARA VERIFICAÇO E EDIÇAO DE PREÇO PRE-DEFINIDO
+    private int estadoEntregaFuturaOriginal;
+
+
 
 
     @Override
@@ -118,6 +121,8 @@ public class Vendas extends AppCompatActivity {
         //
         bd = new DatabaseHelper(this);
         bd.VendaFuturaAtiva();
+
+
 
         boolean vendaFuturaAtiva = bd.VendaFuturaAtiva();
 
@@ -219,6 +224,7 @@ public class Vendas extends AppCompatActivity {
 
                 //SE A VENDA FOR NOVA
                 if (params.getString("id_venda").equals("")) {
+
                     //
                     id = prefs.getInt("id_venda", 1);
 
@@ -230,11 +236,10 @@ public class Vendas extends AppCompatActivity {
                     latitude_cliente = params.getString("latitude_cliente");
                     longitude_cliente = params.getString("longitude_cliente");
                     saldo = params.getString("saldo");
-                    Log.d("DESCOBRIR", "Valor de saldo recebido: " + saldo);
-
                     cpfcnpj = params.getString("cpfcnpj");
                     endereco = params.getString("endereco");
                     editandoVenda = "";
+
                 }
                 //SE FOR EDITAR A ÚLTIMA VENDA REALIZADA
                 else {
@@ -243,17 +248,42 @@ public class Vendas extends AppCompatActivity {
                     id_venda_app = Integer.parseInt(params.getString("id_venda_app"));
                     ed.putInt("id_venda_app", id_venda_app).apply();
 
+
                     id_cliente = params.getString("codigo");
                     nome_cliente = params.getString("nome");
                     latitude_cliente = params.getString("latitude_cliente");
                     longitude_cliente = params.getString("longitude_cliente");
                     saldo = params.getString("saldo");
-                    Log.d("DESCOBRIR", "Valor de saldo recebido: " + saldo);
-
                     cpfcnpj = params.getString("cpfcnpj");
                     endereco = params.getString("endereco");
                     editandoVenda = params.getString("editar");
+
+                    // Aqui chamamos o método para verificar se a venda é futura e armazenamos o estado original
+                    int entregaFutura = bd.getEntregaFuturaVenda(id_venda_app);
+                    estadoEntregaFuturaOriginal = entregaFutura; // Armazena o estado original
+                    Log.d("VENDA RECUPERADA", "onCreate: recebendo entrega futura " + entregaFutura);
+                    // Atualiza o estado do CheckBox de acordo
+                    checkBoxConfirmar.setChecked(entregaFutura == 1);  // Marca o CheckBox se for venda futura
+
+                    // Adiciona o listener de mudança de estado do CheckBox
+                    checkBoxConfirmar.setOnCheckedChangeListener((buttonView, isChecked) -> {
+                        // Se o checkbox for marcado, definimos entrega_futura_venda para 1, caso contrário permanece 0
+                        int entregaFuturaAtual = isChecked ? 1 : 0;
+
+                        // Compara o novo estado com o estado original
+                        if (entregaFuturaAtual != estadoEntregaFuturaOriginal) {
+                            // Se houve mudança, atualizamos o estado no banco de dados
+                            bd.atualizarEntregaFutura(entregaFuturaAtual, id_venda_app);
+                            Log.d("CheckBox", "Estado de entrega futura alterado e atualizado para: " + entregaFuturaAtual);
+                        } else {
+                            Log.d("CheckBox", "Nenhuma mudança no estado de entrega futura.");
+                        }
+
+                        // Atualiza o SharedPreferences (ou outra ação necessária)
+                        ed.putInt("entrega_futura_venda", entregaFuturaAtual).apply();
+                    });
                 }
+
 
                 //
                 getSupportActionBar().setTitle("Data Mov. " + classAuxiliar.exibirDataAtual());

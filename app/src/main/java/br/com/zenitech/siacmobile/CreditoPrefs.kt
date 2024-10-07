@@ -39,6 +39,15 @@ class CreditoPrefs(context: Context) {
         }
 
 
+    var limiteCreditoOriginal: String?
+        // Armazena e obtém o limite de crédito original do cliente
+        get() = prefs.getString("limiteCreditoOriginal", "")
+        set(limiteCreditoOriginal) {
+            prefs.edit().putString("limiteCreditoOriginal", limiteCreditoOriginal).apply()
+        }
+
+
+
     // Método para salvar o array estadosEntregaFutura
     fun salvarEstadosEntregaFutura(estadosEntregaFutura: ArrayList<Int>) {
         val json = gson.toJson(estadosEntregaFutura) // Converter ArrayList para JSON

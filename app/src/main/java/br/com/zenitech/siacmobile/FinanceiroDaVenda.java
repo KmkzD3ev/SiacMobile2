@@ -422,6 +422,11 @@ public class FinanceiroDaVenda extends AppCompatActivity implements AdapterView.
                     // Verifica o limite de crédito disponível
                     DatabaseHelper dbHelper = new DatabaseHelper(this);
                     int limiteCreditoCliente = dbHelper.getLimiteCreditoCliente(codigo_cliente);
+                    creditoPrefs.setLimiteCreditoOriginal(String.valueOf(limiteCreditoCliente));
+                    // Log para depuração
+                    Log.d("LIMITE ORIGINAL", "Limite original de crédito para o cliente " + codigo_cliente + ": " + limiteCreditoCliente);
+
+                    //
                     Log.d("Limite Crédito Cliente", "O limite de crédito do cliente é: " + limiteCreditoCliente);
 
                     BigDecimal limiteCreditoBigDecimal = BigDecimal.valueOf(limiteCreditoCliente);
@@ -458,8 +463,6 @@ public class FinanceiroDaVenda extends AppCompatActivity implements AdapterView.
                 Log.d("VERIFICAÇAO", "onCreate: VERIFICAÇAO NAO CONCLUIDA");
             }
         });
-
-
 
 
 
