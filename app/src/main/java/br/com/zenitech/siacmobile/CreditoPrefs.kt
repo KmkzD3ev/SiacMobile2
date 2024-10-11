@@ -54,6 +54,23 @@ class CreditoPrefs(context: Context) {
             prefs.edit().putString("limiteCreditoAtual", limiteCreditoAtual).apply()
         }
 
+
+    var limitePrimario: String?
+        // Armazena e obtém o limite de crédito primário (referência para resetar o limite)
+        get() = prefs.getString("limitePrimario", "")
+        set(limitePrimario) {
+            prefs.edit().putString("limitePrimario", limitePrimario).apply()
+        }
+
+    // Adicionando os métodos get/set para o limite primário
+    fun getLimiteCreditoPrimario(): String? {
+        return prefs.getString("limitePrimario", "")
+    }
+
+    fun setLimiteCreditoPrimario(limitePrimario: String) {
+        prefs.edit().putString("limitePrimario", limitePrimario).apply()
+    }
+
     fun setVendaEditada(vendaEditada: Boolean) {
         prefs.edit().putBoolean("vendaEditada", vendaEditada).apply()
     }

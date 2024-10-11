@@ -240,6 +240,15 @@ public class Vendas extends AppCompatActivity {
                     endereco = params.getString("endereco");
                     editandoVenda = "";
 
+                    // **Aqui inserimos a verificação e o armazenamento do limite de crédito**
+                    DatabaseHelper dbHelper = new DatabaseHelper(this);
+                    int limiteCreditoPrimario = dbHelper.getLimiteCreditoCliente(id_cliente);
+                    creditoPrefs.setLimitePrimario(String.valueOf(limiteCreditoPrimario));
+
+                    // Log para depuração
+                    Log.d("LIMITE ORIGINAL", "Limite original de crédito para o cliente " + id_cliente + ": " + limiteCreditoPrimario);
+
+
                 }
                 //SE FOR EDITAR A ÚLTIMA VENDA REALIZADA
                 else {
