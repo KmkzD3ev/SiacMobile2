@@ -236,7 +236,7 @@ public class Impressora extends AppCompatActivity {
             waitForConnection();
         }
         //// Remover a verificação inicial e tentar sempre estabelecer conexão
-       // establishBluetoothConnection(prefs.getString("enderecoBlt", ""));*/
+        // establishBluetoothConnection(prefs.getString("enderecoBlt", ""));*/
 
 
         // BOLETO
@@ -917,7 +917,7 @@ public class Impressora extends AppCompatActivity {
                     Log.d(LOG_TAG, "Conexão Bluetooth estabelecida com sucesso");
                 } catch (IOException e) {
 
-                   // error("Falhou ao conectar: " + e.getMessage());
+                    // error("Falhou ao conectar: " + e.getMessage());
                     waitForConnection();
                     return;
                 }
@@ -1045,7 +1045,7 @@ public class Impressora extends AppCompatActivity {
 
 
 
-     synchronized void closeBluetoothConnection() {
+    synchronized void closeBluetoothConnection() {
         // Close Bluetooth connection
         BluetoothSocket s = mBtSocket;
         mBtSocket = null;
@@ -1653,7 +1653,7 @@ public class Impressora extends AppCompatActivity {
         }, R.string.msg_printing_relatorio);
     }
 
-/******* FORMATAÇAO PARA TODOS OS VALORES DE FORMAS DE PAGAMENTO RELATORIOS  *******/
+    /******* FORMATAÇAO PARA TODOS OS VALORES DE FORMAS DE PAGAMENTO RELATORIOS  *******/
 
     private String formatarFormasPagamento(String strFormPags) {
         StringBuilder formattedFormPags = new StringBuilder();

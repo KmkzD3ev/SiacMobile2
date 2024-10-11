@@ -75,6 +75,8 @@ public class HomeFragment extends Fragment {
         creditoPrefs = new CreditoPrefs(context);
         aux = new ClassAuxiliar();
 
+
+
         /* Inicializar as instâncias de Configuracoes e Bluetooth
         configuracoes = new Configuracoes();
         bluetoothHelper = new AtivarDesativarBluetooth();

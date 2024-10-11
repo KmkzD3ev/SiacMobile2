@@ -5,8 +5,20 @@ import static br.com.zenitech.siacmobile.NumeroPorExtenso.valorPorExtenso;
 public class DataPorExtenso {
 
     public static String dataPorExtenso(String data) {
+        String[] dataF;
 
-        String[] dataF = data.split("/");
+        // Tenta dividir pelo formato "dd/MM/yyyy"
+        if (data.contains("/")) {
+            dataF = data.split("/");
+        }
+        // Caso contrário, assume que está no formato "yyyy-MM-dd"
+        else if (data.contains("-")) {
+            dataF = data.split("-");
+            // Reorganiza para "dd/MM/yyyy"
+            dataF = new String[] {dataF[2], dataF[1], dataF[0]}; // "dia", "mes", "ano"
+        } else {
+            throw new IllegalArgumentException("Formato de data inválido. Use 'dd/MM/yyyy' ou 'yyyy-MM-dd'");
+        }
 
         String[] dia = {"zero", "um", "dois", "tres", "quatro", "cinco", "seis", "sete", "oito", "nove",
                 "dez", "onze", "doze", "treze", "quatorze", "quinze", "dezesseis", "dezessete", "dezoito",

@@ -116,6 +116,7 @@ public class FinanceiroDaVenda extends AppCompatActivity implements AdapterView.
 
 
 
+
     //LISTAR VENDAS
     private ArrayList<FinanceiroVendasDomain> listaFinanceiroCliente;
     private FinanceiroVendasAdapter adapter;
@@ -154,6 +155,8 @@ public class FinanceiroDaVenda extends AppCompatActivity implements AdapterView.
 
     private VerificarOnline verificarOnline;
 
+
+
     private String vencimentoTemp;
 
     //UnidadesDomain unidades;
@@ -178,7 +181,6 @@ public class FinanceiroDaVenda extends AppCompatActivity implements AdapterView.
         setSupportActionBar(toolbar);
         Objects.requireNonNull(getSupportActionBar()).setDisplayHomeAsUpEnabled(true);
 
-
         // Inicialize o DatabaseHelper
         bd = new DatabaseHelper(this);
         // Inicializando o CheckBox
@@ -186,12 +188,21 @@ public class FinanceiroDaVenda extends AppCompatActivity implements AdapterView.
         creditoPrefs = new CreditoPrefs(this);
         vendaEditada = false;
 
+       /* // Verifica o limite de crédito disponível
+        DatabaseHelper dbHelper1 = new DatabaseHelper(this);
+        int limiteCreditoCliente1 = dbHelper1.getLimiteCreditoCliente(codigo_cliente);*/
+
+        //Log.d("QANTES DE TUDO", "onCreate: LIMITE ORIGINAL ANTEES DE TUDO" +limiteCreditoCliente1);
+
 
         // Inicializações e configurações
         spFormasPagamentoCliente = findViewById(R.id.spFormasPagamentoCliente);
         codigo_cliente = getIntent().getStringExtra("codigo_cliente");
 
         carregarFormasDePagamento();
+
+
+
 
 
         //
@@ -288,6 +299,7 @@ public class FinanceiroDaVenda extends AppCompatActivity implements AdapterView.
                 creditoPrefs.setFormaPagamentoPrazo(spFormasPagamentoCliente.getSelectedItem().toString());
                 creditoPrefs.setValorAprazo(valorInserido);
                 creditoPrefs.setIdCliente(codigo_cliente);
+
 
                 // Logando as informações salvas no CreditoPrefs
                 Log.d("CREDITOPREFS", "Forma de pagamento a prazo salva: " + creditoPrefs.getFormaPagamentoPrazo());
@@ -466,6 +478,9 @@ public class FinanceiroDaVenda extends AppCompatActivity implements AdapterView.
 
 
 
+
+
+
         //unidades = bd.getUnidade();
 
 
@@ -513,6 +528,18 @@ public class FinanceiroDaVenda extends AppCompatActivity implements AdapterView.
                 // Verifica se o valor de "editandoVenda" foi passado pelo Intent
                 String editandoVenda = intent.getStringExtra("editandoVenda");
                 Log.d("RECEBIDO_editandoVenda", "Valor recebido: " + editandoVenda);
+
+                // Inicializar a instância de CreditoPrefs
+                creditoPrefs = new CreditoPrefs(this);
+
+                // Se o valor de editandoVenda for "sim", definimos vendaEditada como true e salvamos no SharedPreferences
+                if ("sim".equalsIgnoreCase(editandoVenda)) {
+                    vendaEditada = true;
+                    creditoPrefs.setVendaEditada(true); // Salvando no SharedPreferences
+                } else {
+                    creditoPrefs.setVendaEditada(false); // Garante que é false se não for edição
+                }
+
 
                 // Se o valor de editandoVenda for "sim", definimos vendaEditada como true
                 if ("sim".equalsIgnoreCase(editandoVenda)) {
@@ -602,58 +629,75 @@ public class FinanceiroDaVenda extends AppCompatActivity implements AdapterView.
         }
     }
 
-   /* public void listagem (){
-        // Recupera a forma de pagamento selecionada no Spinner
-        String[] fPag = spFormasPagamentoCliente.getSelectedItem().toString().split(" _ ");
-        String selectedItem = spFormasPagamentoCliente.getSelectedItem().toString();
 
-        // Recupera as formas de pagamento já salvas no banco de dados
-        listaFinanceiroCliente = bd.getFinanceiroCliente(prefs.getInt("id_venda_app", 1));
-        String ultimaFormaPagamento = null;
-        BigDecimal valorRestituir = BigDecimal.ZERO; // Para armazenar o valor que precisa ser restituído
 
-        // Verifica se há formas de pagamento recuperadas da venda
-        if (listaFinanceiroCliente != null && !listaFinanceiroCliente.isEmpty()) {
-            for (FinanceiroVendasDomain item : listaFinanceiroCliente) {
-                ultimaFormaPagamento = item.getFpagamento_financeiro();
-                valorRestituir = valorRestituir.add(new BigDecimal(item.getValor_financeiro()));
-                Log.d("FORMA PAGAMENTO", "Forma de pagamento recuperada: " + ultimaFormaPagamento);
-            }
+
+    /*private void verificarLimiteCredito(BigDecimal totalValoresCompraPrazo) {
+        Log.d("VERIFICANDO LIMITE", "Verificando limite de crédito para formas de pagamento a prazo.");
+
+        creditoPrefs.setValorAprazo(totalValoresCompraPrazo.toString());
+        creditoPrefs.setIdCliente(codigo_cliente);
+
+        // Verifica o limite de crédito disponível
+        DatabaseHelper dbHelper = new DatabaseHelper(this);
+        int limiteCreditoCliente = dbHelper.getLimiteCreditoCliente(codigo_cliente);
+        //creditoPrefs.setLimiteCreditoOriginal(String.valueOf(limiteCreditoCliente));
+        Log.d("QANTES DE TUDO", "onCreate: LIMITE ORIGINAL ANTEES DE TUDO" + limiteCreditoCliente);
+
+        BigDecimal limiteCreditoBigDecimal = BigDecimal.valueOf(limiteCreditoCliente);
+
+        // Bloquear venda a prazo se o limite for zero
+        if (limiteCreditoBigDecimal.compareTo(BigDecimal.ZERO) == 0) {
+            Log.d("LIMITE ZERADO", "Limite de crédito é zero. Bloqueando venda a prazo.");
+            formasPagamento.clear();
+             boolean limiteBloqueado = true;
+            new AlertDialog.Builder(this)
+                    .setTitle("Limite de Crédito Indisponível")
+                    .setMessage("Não há limite de crédito disponível para realizar compras a prazo.")
+                    .setPositiveButton(android.R.string.ok, null)
+                    .show();
+        } else if (totalValoresCompraPrazo.compareTo(limiteCreditoBigDecimal) > 0) {
+            Log.d("LIMITE EXCEDIDO", "O valor da compra a prazo excede o limite de crédito.");
+            String mensagem = String.format("O valor da compra excede o limite de crédito disponível.\nCrédito disponível: R$ %.2f", limiteCreditoBigDecimal);
+            formasPagamento.clear();
+            limiteBloqueado = true;
+
+            new AlertDialog.Builder(this)
+                    .setTitle("Limite de Crédito Excedido")
+                    .setMessage(mensagem)
+                    .setPositiveButton(android.R.string.ok, null)
+                    .show();
+        } else {
+            // Atualiza o limite de crédito do cliente após a venda
+            atualizarLimiteCreditoCliente(codigo_cliente, totalValoresCompraPrazo);
+            _salvarFinanceiro(); // Finaliza a venda
         }
-
-        // Se houver uma forma de pagamento recuperada, finaliza a venda diretamente
-        if (ultimaFormaPagamento != null && !ultimaFormaPagamento.isEmpty()) {
-            Log.d("FINALIZANDO", "Finalizando venda com a forma de pagamento já recuperada: " + ultimaFormaPagamento);
-
-            // Se a forma de pagamento foi alterada, restituir o limite de crédito e realizar a validação
-            if (!selectedItem.equals(ultimaFormaPagamento)) {
-                Log.d("FORMA ALTERADA", "Forma de pagamento alterada de " + ultimaFormaPagamento + " para " + selectedItem);
-
-                // Restituir o limite de crédito do cliente antes de prosseguir
-                bd.restituirLimiteCreditoCliente(codigo_cliente, valorRestituir);
-
-                // Aqui, atualiza a nova forma de pagamento no banco de dados
-                int resultado = bd.updateFormaPagamentoFinanceiro(prefs.getInt("id_venda_app", 1), selectedItem);
-                if (resultado > 0) {
-                    Log.d("ATUALIZANDO", "Forma de pagamento atualizada para: " + selectedItem);
-                } else {
-                    Log.e("ERRO ATUALIZACAO", "Falha ao atualizar a forma de pagamento.");
-                }
-            }
-        }
-
     }*/
+
+
 
     /**************** BLOQUEAR PAGAMENTO A PRAZO PARA INADIMPLENCIA *******************/
     // Carrega formas de pagamento no spinner com base na inadimplência
-    public void carregarFormasDePagamento () {
+    public void carregarFormasDePagamento() {
         Log.d("FinanceiroDaVenda", "Iniciando carregamento das formas de pagamento para o cliente: " + codigo_cliente);
 
-        ArrayList<String> formasDePagamento;
+        ArrayList<String> formasDePagamento = new ArrayList<>();
+
         if (verificarInadimplencia(codigo_cliente)) {
-            Log.d("FinanceiroDaVenda", "Cliente está inadimplente. Carregando apenas 'DINHEIRO _ À VISTA'.");
-            formasDePagamento = new ArrayList<>();
+            Log.d("FinanceiroDaVenda", "Cliente está inadimplente. Carregando apenas 'DINHEIRO _ A VISTA' e outras formas 'A VISTA'.");
+
+            // Adiciona a forma padrão "DINHEIRO _ A VISTA"
             formasDePagamento.add("DINHEIRO _ A VISTA");
+
+            // Carregar todas as formas de pagamento disponíveis
+            ArrayList<String> todasFormas = bd.getFormasPagamentoCliente(codigo_cliente);
+
+            // Verifica todas as formas "A VISTA" e as adiciona
+            for (String forma : todasFormas) {
+                if (forma.contains("A VISTA")) {
+                    formasDePagamento.add(forma); // Adiciona todas as formas que contenham "A VISTA"
+                }
+            }
         } else {
             Log.d("FinanceiroDaVenda", "Cliente não está inadimplente. Carregando todas as formas de pagamento disponíveis.");
             formasDePagamento = bd.getFormasPagamentoCliente(codigo_cliente);
@@ -665,6 +709,7 @@ public class FinanceiroDaVenda extends AppCompatActivity implements AdapterView.
 
         Log.d("FinanceiroDaVenda", "Formas de pagamento configuradas no spinner.");
     }
+
 
     /****************** METODO PARA VERIFICAR INADIMPLENCIA  ***************/
     private boolean verificarInadimplencia(String clienteId) {
@@ -706,6 +751,10 @@ public class FinanceiroDaVenda extends AppCompatActivity implements AdapterView.
 
         // Atualiza o limite no banco de dados
         dbHelper.updateLimiteCreditoCliente(codigo_cliente, novoLimite);
+
+        // Salvar o novo limite nos SharedPreferences usando CreditoPrefs
+        CreditoPrefs creditoPrefs = new CreditoPrefs(this);
+        creditoPrefs.setLimiteCreditoAtual(novoLimite.toString());
 
         Log.d("AtualizarLimiteCredito", "Novo limite de crédito do cliente: " + novoLimite);
     }
@@ -775,7 +824,7 @@ public class FinanceiroDaVenda extends AppCompatActivity implements AdapterView.
                     if (configuracoes.GetDevice()) {
                         i = new Intent(context, ImpressoraPOS.class);
                     } else {
-                        i = new Intent(context, Impressora.class);
+                        i = new Intent(context, BluetoothPrintActivity.class);
                     }
 
                     //
@@ -790,6 +839,7 @@ public class FinanceiroDaVenda extends AppCompatActivity implements AdapterView.
                     i.putExtra("cpfcnpj", cpfcnpjCliente);
                     i.putExtra("endereco", enderecoCliente);
                     i.putExtra("imprimir", "Promissoria");
+
 
                     i.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_CLEAR_TASK);
                     startActivity(i);
@@ -1182,7 +1232,7 @@ public class FinanceiroDaVenda extends AppCompatActivity implements AdapterView.
             iSPromissoria = true;
             BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
 
-            // Verificar se o dispositivo é um smartphone
+            /*Verificar se o dispositivo é um smartphone
             Configuracoes configuracoes = new Configuracoes();
             if (!configuracoes.GetDevice()) { // Se for um smartphone
                 if (!bluetoothAdapter.isEnabled()) {
@@ -1196,7 +1246,7 @@ public class FinanceiroDaVenda extends AppCompatActivity implements AdapterView.
                             .setCancelable(false) // Impede que o alerta seja fechado sem ação do usuário
                             .show();
                 }
-            }
+            }*/
         }
 
 
@@ -1247,7 +1297,7 @@ public class FinanceiroDaVenda extends AppCompatActivity implements AdapterView.
                     }
 
                     txtDocumentoFormaPagamento.setText(nDoc);
-                    txtDocumentoFormaPagamento.setEnabled(false);
+                    //  txtDocumentoFormaPagamento.setEnabled(false);
                 } else if (!bd.getContaBancariaFormaPagamento(fPag[0]).equalsIgnoreCase("0") &&
                         !bd.getContaBancariaFormaPagamento(fPag[0]).equalsIgnoreCase("")) {
                     //else if (fPag[0].equalsIgnoreCase("BOLETO")) {
@@ -1265,7 +1315,7 @@ public class FinanceiroDaVenda extends AppCompatActivity implements AdapterView.
                     }
 
                     txtDocumentoFormaPagamento.setText(nDoc);
-                    txtDocumentoFormaPagamento.setEnabled(false);
+                    // txtDocumentoFormaPagamento.setEnabled(false);
                     tilNotaFiscal.setVisibility(View.VISIBLE);
                 } else {
                     txtDocumentoFormaPagamento.setEnabled(true);
@@ -1668,21 +1718,47 @@ public class FinanceiroDaVenda extends AppCompatActivity implements AdapterView.
 
     private void finalizarFinanceiroVenda() {
         bd.updateFinalizarVenda(String.valueOf(prefs.getInt("id_venda_app", 1)));
-
-        //msg("Venda Finalizada Com Sucesso.");
-
-        // Uso da função
         showSequentialToasts("Venda Finalizada Com Sucesso...", "Aguarde a impressão da promissória.");
 
-        /*Intent intent = new Intent(FinanceiroDaVenda.this, Principal2.class);
-        //intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK);
-        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-        startActivity(intent);
+        // Verifica se o Bluetooth foi negado pelo menos duas vezes
+        int negativasBluetooth = prefs.getInt("negativas_bt", 0);
 
-        super.finish();*/
-
-        _verificarFPgVenda();
+        // Verifica se a venda está sendo editada
+        if (vendaEditada) {
+            // Venda está sendo editada, verificar se precisa ativar Bluetooth ou não
+            if (iSPromissoria && negativasBluetooth < 2) {
+                // Se é uma promissória e ainda não houve duas negativas, tenta ativar o Bluetooth
+                runOnUiThread(() -> {
+                    Intent intent = new Intent(FinanceiroDaVenda.this, BluetoothPrintActivity.class);
+                    startActivity(intent);
+                });
+            } else {
+                // Se já houve duas negativas ou não é uma promissória, não ativa o Bluetooth
+                //Toast.makeText(this, "Impressão não necessária ou Bluetooth desativado anteriormente.", Toast.LENGTH_SHORT).show();
+                finalizarAcaoPosVenda(); // Chama método para finalizar outras ações de pós-venda
+            }
+        } else {
+            // Para vendas que não estão sendo editadas, prossegue com a verificação normal
+            if (iSPromissoria && negativasBluetooth < 2) {
+                runOnUiThread(() -> {
+                    Intent intent = new Intent(FinanceiroDaVenda.this, BluetoothPrintActivity.class);
+                    startActivity(intent);
+                });
+            } else {
+                // Toast.makeText(this, "Impressão cancelada. Venda finalizada sem impressão.", Toast.LENGTH_SHORT).show();
+                finalizarAcaoPosVenda();
+            }
+        }
     }
+
+    private void finalizarAcaoPosVenda() {
+        // Método para realizar ações finais após a venda, como retornar à tela principal
+        Intent intent = new Intent(this, Principal2.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+        startActivity(intent);
+    }
+
+
 
     private void enviarLog(String posCli, String posVen, String raio, String precisao) {
         //
@@ -1824,4 +1900,4 @@ public class FinanceiroDaVenda extends AppCompatActivity implements AdapterView.
                 break;
         }
     }*/
-}
+} 

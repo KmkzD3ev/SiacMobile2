@@ -47,6 +47,20 @@ class CreditoPrefs(context: Context) {
         }
 
 
+    var limiteCreditoAtual: String?
+        // Armazena e obtém o limite de crédito atual do cliente
+        get() = prefs.getString("limiteCreditoAtual", "")
+        set(limiteCreditoAtual) {
+            prefs.edit().putString("limiteCreditoAtual", limiteCreditoAtual).apply()
+        }
+
+    fun setVendaEditada(vendaEditada: Boolean) {
+        prefs.edit().putBoolean("vendaEditada", vendaEditada).apply()
+    }
+
+    fun isVendaEditada(): Boolean {
+        return prefs.getBoolean("vendaEditada", false)
+    }
 
     // Método para salvar o array estadosEntregaFutura
     fun salvarEstadosEntregaFutura(estadosEntregaFutura: ArrayList<Int>) {
