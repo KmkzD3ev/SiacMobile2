@@ -377,7 +377,7 @@ public class FinanceiroDaVenda extends AppCompatActivity implements AdapterView.
             _salvarFinanceiro();
 
 
-    });
+        });
 
         //LINHA FINAL
 
@@ -548,7 +548,7 @@ public class FinanceiroDaVenda extends AppCompatActivity implements AdapterView.
                         totalValoresCompraPrazo = totalValoresCompraPrazo.add(valorFormaPrazo);
                         temFormaAPrazo = true;
                     } else {
-                        Toast.makeText(context, "Insira as Informações corretamente!", Toast.LENGTH_SHORT).show();
+                        Log.d("VERIFICAÇAO FORMA_PRAZO", "verificarLimiteCreditoPrazo: Verificaçao concluida,Liberando a venda A_PRAZO");
                     }
                 }
             }
@@ -573,7 +573,7 @@ public class FinanceiroDaVenda extends AppCompatActivity implements AdapterView.
                     Log.d("LIMITE EXCEDIDO", "O valor da compra a prazo excede o limite de crédito.");
                     String mensagem = String.format("O valor da compra excede o limite de crédito disponível.\nCrédito disponível: R$ %.2f", limiteCreditoBigDecimal);
                     formasPagamento.clear();
-                   valoresCompra.clear();
+                    valoresCompra.clear();
                     new AlertDialog.Builder(this)
                             .setTitle("Limite de Crédito Excedido")
                             .setMessage(mensagem)
@@ -590,14 +590,6 @@ public class FinanceiroDaVenda extends AppCompatActivity implements AdapterView.
                     BigDecimal novoLimite = limiteCreditoBigDecimal.subtract(totalValoresCompraPrazo);
                     bd.updateLimiteCreditoCliente(codigo_cliente, novoLimite);
 
-                    String mensagem = String.format("Limite de crédito atualizado. Novo limite disponível: R$ %.2f", novoLimite);
-
-                    new AlertDialog.Builder(this)
-                            .setTitle("Limite de Crédito Atualizado")
-                            .setMessage(mensagem)
-                            .setPositiveButton(android.R.string.ok, null)
-                            .show();
-
                     return true; // <-- Transação concluída com sucesso
                 }
             }
@@ -607,7 +599,7 @@ public class FinanceiroDaVenda extends AppCompatActivity implements AdapterView.
 
 
     /**************** BLOQUEAR PAGAMENTO A PRAZO PARA INADIMPLENCIA *******************/
-    // Carrega formas de pagamento no spinner com base na inadimplência
+// Carrega formas de pagamento no spinner com base na inadimplência
     public void carregarFormasDePagamento() {
         Log.d("FinanceiroDaVenda", "Iniciando carregamento das formas de pagamento para o cliente: " + codigo_cliente);
 
@@ -617,14 +609,14 @@ public class FinanceiroDaVenda extends AppCompatActivity implements AdapterView.
             Log.d("FinanceiroDaVenda", "Cliente está inadimplente. Carregando apenas 'DINHEIRO _ A VISTA' e outras formas 'A VISTA'.");
 
             // Adiciona a forma padrão "DINHEIRO _ A VISTA"
-            formasDePagamento.add("DINHEIRO _ A VISTA");
+          //  formasDePagamento.add("DINHEIRO _ A VISTA");
 
             // Carregar todas as formas de pagamento disponíveis
             ArrayList<String> todasFormas = bd.getFormasPagamentoCliente(codigo_cliente);
 
             // Verifica todas as formas "A VISTA" e as adiciona
             for (String forma : todasFormas) {
-                if (forma.contains("A VISTA")) {
+                if (forma.contains("A VISTA") && !formasDePagamento.contains(forma)) {
                     formasDePagamento.add(forma); // Adiciona todas as formas que contenham "A VISTA"
                 }
             }
@@ -633,11 +625,12 @@ public class FinanceiroDaVenda extends AppCompatActivity implements AdapterView.
             formasDePagamento = bd.getFormasPagamentoCliente(codigo_cliente);
         }
 
-        ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, formasDePagamento);
+        // Usando o CustomSpinnerAdapter para mostrar apenas a primeira parte das formas de pagamento
+        CustomSpinnerAdapter adapter = new CustomSpinnerAdapter(this, android.R.layout.simple_spinner_item, formasDePagamento);
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         spFormasPagamentoCliente.setAdapter(adapter);
 
-        Log.d("FinanceiroDaVenda", "Formas de pagamento configuradas no spinner.");
+        Log.d("FinanceiroDaVenda", "Formas de pagamento configuradas no spinner." + formasDePagamento);
     }
 
 

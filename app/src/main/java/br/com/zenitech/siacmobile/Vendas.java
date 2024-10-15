@@ -691,7 +691,7 @@ public class Vendas extends AppCompatActivity {
                 AlertDialog alerta = builder.create();
                 alerta.setCancelable(false);
                 alerta.show();
-                builder.show();
+               // builder.show();
             } else {
                 Log.d("Inadimplencia", "O cliente está inadimplente, mas o bloqueio por inadimplência não está ativo.");
                 // Segue o fluxo normal se o bloqueio não está ativo
