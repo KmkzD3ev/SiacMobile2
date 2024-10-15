@@ -114,15 +114,18 @@ public class FinanceiroReceberRepositorio {
             if (cursor.getCount() > 0) {
                 while (cursor.moveToNext()) {
                     String pagamento_cliente = cursor.getString(cursor.getColumnIndexOrThrow("descricao_forma_pagamento"));
+                    list.add(pagamento_cliente);
+
+                   /* String pagamento_cliente = cursor.getString(cursor.getColumnIndexOrThrow("descricao_forma_pagamento"));
                     String tipo_pagamento = cursor.getString(cursor.getColumnIndexOrThrow("tipo_forma_pagamento"));
                     /*list.add(
                             pagamento_cliente + " _ " +
                                     tipo_pagamento + " _ " +
                                     cursor.getString(cursor.getColumnIndexOrThrow("auto_num_pagamento")) + " _ " +
                                     cursor.getString(cursor.getColumnIndexOrThrow("baixa_forma_pagamento"))
-                    );*/
+                    );
 
-                    list.add(pagamento_cliente);
+                    list.add(pagamento_cliente);*/
                 }
             }
         } catch (Exception e) {

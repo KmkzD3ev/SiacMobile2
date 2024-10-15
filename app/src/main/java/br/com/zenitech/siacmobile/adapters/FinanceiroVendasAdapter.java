@@ -149,75 +149,92 @@ public class FinanceiroVendasAdapter extends RecyclerView.Adapter<FinanceiroVend
             btnExcluirFinanceiro = (ImageButton) itemView.findViewById(R.id.btnExcluirFinanceiro);
         }
     }
+
     public void excluirItem(String codigo, String codigo_financeiro_app, String totalVenda, int position, String fpagamento_financeiro) {
         FinanceiroVendasDomain financeiroVendasDomain = new FinanceiroVendasDomain(codigo, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null);
 
         DatabaseHelper bd = new DatabaseHelper(context);
         bd.deleteItemFinanceiro(financeiroVendasDomain);
 
-        // Verificar se é uma venda editada
-        if (creditoPrefs.isVendaEditada()) {
-            // Reduzir o contador de promissórias ou boletos, se aplicável
-            if (fpagamento_financeiro.equalsIgnoreCase("PROMISSORIA")) {
-                PosApp posApp = bd.getPos();
-                bd.updatePosApp(String.valueOf(Integer.parseInt(posApp.getUltpromissoria()) - 1));
-            } else if (fpagamento_financeiro.equalsIgnoreCase("BOLETO")) {
-                PosApp posApp = bd.getPos();
-                bd.updateUltimoBoleto(String.valueOf(Integer.parseInt(posApp.getUltboleto()) - 1));
-            }
+        // Reduzir o contador de promissórias ou boletos, se aplicável
+        if (fpagamento_financeiro.equalsIgnoreCase("PROMISSORIA")) {
+            PosApp posApp = bd.getPos();
+            bd.updatePosApp(String.valueOf(Integer.parseInt(posApp.getUltpromissoria()) - 1));
+        } else if (fpagamento_financeiro.equalsIgnoreCase("BOLETO")) {
+            PosApp posApp = bd.getPos();
+            bd.updateUltimoBoleto(String.valueOf(Integer.parseInt(posApp.getUltboleto()) - 1));
+        }
 
-            // Verificar as formas de pagamento para restituir o limite de crédito
-            if (fpagamento_financeiro.equalsIgnoreCase("PROMISSORIA") ||
-                    fpagamento_financeiro.equalsIgnoreCase("VALE CONVENIO") ||
-                    fpagamento_financeiro.equalsIgnoreCase("CARTAO DEBITO") ||
-                    fpagamento_financeiro.equalsIgnoreCase("CARTAO CREDITO")) {
+        // Verificar as formas de pagamento para restituir o limite de credito
+        if (fpagamento_financeiro.equalsIgnoreCase("PROMISSORIA") ||
+                fpagamento_financeiro.equalsIgnoreCase("VALE CONVENIO") ||
+                fpagamento_financeiro.equalsIgnoreCase("CARTAO DEBITO") ||
+                fpagamento_financeiro.equalsIgnoreCase("CARTAO CREDITO")) {
 
-                Log.d("RESTITUIR LIMITE", "Forma de pagamento identificada. Restituindo limite de crédito.");
-                if (!restituicaoRealizada) {
-                    // Obter o ID do cliente do CreditoPrefs
-                    String codigoCliente = creditoPrefs.getIdCliente();
+            Log.d("RESTITUIR LIMITE", "Forma de pagamento identificada. Restituindo limite de crédito.");
+            if (!restituicaoRealizada) {
+                // Obter o ID do cliente do CreditoPrefs
+                String codigoCliente = creditoPrefs.getIdCliente();
 
-                    // Obter o limite original do cliente do CreditoPrefs
-                    BigDecimal limiteOriginal = new BigDecimal(creditoPrefs.getLimiteCreditoOriginal());
-                    Log.d("limite originalEX", "excluirItem: limite original" + limiteOriginal);
+                // Obter o limite original do cliente do CreditoPrefs
+                BigDecimal limiteOriginal = new BigDecimal(creditoPrefs.getLimiteCreditoPrimario());
+                Log.d("limite originalEX", "excluirItem: limite original" + limiteOriginal);
 
-                    // Verifica o limite de crédito disponível (limite atual)
-                    BigDecimal limiteAtual = new BigDecimal(creditoPrefs.getLimiteCreditoAtual());
-                    Log.d("limiteAtual", "excluirItem: limite atual" + limiteAtual);
+                // Verifica o limite de crédito disponível
+                BigDecimal limiteAtual = new BigDecimal(bd.getLimiteCreditoCliente(codigoCliente));
 
-                    // Formatar o valor da venda para usar na restituição
-                    BigDecimal valorFormaPagamento = new BigDecimal(totalVenda.replaceAll("[^\\d.,]", "").replace(",", ".").trim());
+                // Formatar o valor da venda para usar na restituição
+                BigDecimal valorFormaPagamento = new BigDecimal(totalVenda.replaceAll("[^\\d.,]", "").replace(",", ".").trim());
 
-                    // Calcular o novo limite após a restituição
-                    BigDecimal novoLimite = limiteAtual.add(valorFormaPagamento);
+                // Calcular o novo limite após a restituição
+                BigDecimal novoLimite = limiteAtual.add(valorFormaPagamento);
 
-                    // Verificar se o novo limite excede o limite original
-                    if (novoLimite.compareTo(limiteOriginal) > 0) {
-                        // Se exceder, ajustar o valor a ser restituído para não ultrapassar o limite original
-                        BigDecimal valorRestituir = limiteOriginal.subtract(limiteAtual);
-                        Log.d("RESTITUIR LIMITE", "Valor ajustado para restituição: " + valorRestituir);
+                // Verificar se o novo limite excede o limite original
+                if (novoLimite.compareTo(limiteOriginal) > 0) {
+                    // Se exceder, ajustar o valor a ser restituído
+                    BigDecimal valorRestituir = limiteOriginal.subtract(limiteAtual);
+                    Log.d("RESTITUIR LIMITE", "Valor ajustado para restituição: " + valorRestituir);
 
-                        if (valorRestituir.compareTo(BigDecimal.ZERO) > 0) {
-                            // Restituir o limite de crédito ajustado
-                            bd.restituirLimiteCreditoCliente(codigoCliente, valorRestituir);
-                            Toast.makeText(context, "Limite de crédito restituído com sucesso!", Toast.LENGTH_SHORT).show();
-                            // Marcar a restituição como realizada
-                            restituicaoRealizada = true;
-                        } else {
-                            Log.d("RESTITUIR LIMITE", "Nenhuma restituição foi feita, o limite já atingiu o valor original.");
-                        }
-                    } else {
-                        // Restituir normalmente, sem ultrapassar o limite original
-                        bd.restituirLimiteCreditoCliente(codigoCliente, valorFormaPagamento);
+                    if (valorRestituir.compareTo(BigDecimal.ZERO) > 0) {
+                        // Restituir o limite de crédito ajustado
+                        bd.restituirLimiteCreditoCliente(codigoCliente, valorRestituir);
                         Toast.makeText(context, "Limite de crédito restituído com sucesso!", Toast.LENGTH_SHORT).show();
                         // Marcar a restituição como realizada
                         restituicaoRealizada = true;
+                        creditoPrefs.setRestituicaoRealizada(true);
+
+
+                    } else {
+                        Log.d("RESTITUIR LIMITE", "Nenhuma restituição foi feita, o limite já atingiu o valor original.");
                     }
                 } else {
-                    Log.d("RESTITUIR LIMITE", "Restituição já foi realizada para essa venda. Nenhuma ação adicional necessária.");
+                    // Restituir normalmente, sem ultrapassar o limite original
+                    bd.restituirLimiteCreditoCliente(codigoCliente, valorFormaPagamento);
+                    Toast.makeText(context, "Limite de crédito restituído com sucesso!", Toast.LENGTH_SHORT).show();
+                    // Marcar a restituição como realizada
+                    restituicaoRealizada = true;
                 }
+            } else {
+                Log.d("RESTITUIR LIMITE", "Restituição já foi realizada para essa venda. Nenhuma ação adicional necessária.");
             }
         }
+
+        // Log antes da tentativa de remoção
+        Log.d("ValoresCompra", "Array antes da remoção: " + valoresCompra.toString());
+
+        // Formatar o valor antes de tentar removê-lo do array valoresCompra
+        BigDecimal valorFormatadoBD = new BigDecimal(totalVenda.replaceAll("[^\\d.,]", "").replace(",", ".").trim());
+        String valorFormatado = String.format("%.2f", valorFormatadoBD).replace(",", ".");
+
+        if (valoresCompra.contains(valorFormatado)) {
+            valoresCompra.remove(valorFormatado);
+            Log.d("ValoresCompra", "Valor removido: " + valorFormatado);
+        } else {
+            Log.d("ValoresCompra", "Valor não encontrado no array: " + valorFormatado);
+        }
+
+        // Log após a tentativa de remoção
+        Log.d("ValoresCompra", "Array após remoção: " + valoresCompra.toString());
 
         // Remover o item da lista e atualizar o RecyclerView
         elementos.remove(position);
@@ -246,6 +263,16 @@ public class FinanceiroVendasAdapter extends RecyclerView.Adapter<FinanceiroVend
             txtValorFormaPagamento.setText("0,00");
         } else {
             bgTotal.setBackgroundColor(ContextCompat.getColor(context, R.color.transparente));
+        }
+        try {
+            if (valoresCompra.size() > 1) {  // Supondo que valoresCompra é a lista que está sendo acessada
+                BigDecimal valorFormaPrazo = new BigDecimal(valoresCompra.get(1));  // Acessa o segundo elemento
+                // Resto do código que usa valorFormaPrazo
+            } else {
+                Log.e("ERRO", "A lista valoresCompra não tem índices suficientes para acesso.");
+            }
+        } catch (IndexOutOfBoundsException e) {
+            Log.e("IndexOutOfBoundsExcepT", "Tentativa de acesso a índice que não existe: " + e.getMessage());
         }
     }
 

@@ -61,6 +61,13 @@ class CreditoPrefs(context: Context) {
         set(limitePrimario) {
             prefs.edit().putString("limitePrimario", limitePrimario).apply()
         }
+    // Armazena e obtém o estado de restituição realizada
+    var restituicaoRealizada: Boolean
+        get() = prefs.getBoolean("restituicaoRealizada", false)
+        set(value) {
+            prefs.edit().putBoolean("restituicaoRealizada", value).apply()
+        }
+
 
     // Adicionando os métodos get/set para o limite primário
     fun getLimiteCreditoPrimario(): String? {

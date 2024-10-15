@@ -346,233 +346,38 @@ public class FinanceiroDaVenda extends AppCompatActivity implements AdapterView.
                         if (txtVencimentoFormaPagamento.getText().toString().equals("") || txtVencimentoFormaPagamento.getText().toString().equals("00/00/0000")) {
                             //
                             Toast.makeText(FinanceiroDaVenda.this, "Data do vencimento é obrigatório.", Toast.LENGTH_LONG).show();
-                        }
-                        //ADICIONA VALOR AO FINANCEIRO
+                        } //ADICIONA VALOR AO FINANCEIRO
                         else {
+
                             if (!verificarLimiteCreditoPrazo()) {
-                                // Se o limite for insuficiente, interrompe o processo e exibe a mensagem
-                                //Toast.makeText(FinanceiroDaVenda.this, "BLOQUEANDO ADIÇAO 1", Toast.LENGTH_LONG).show();
-                                return; // Bloqueia a adição e o envio
+                                Toast.makeText(FinanceiroDaVenda.this, "Limite de crédito insuficiente.", Toast.LENGTH_LONG).show();
+                                return;
                             }
                             addFinanceiro();
                         }
                     }
                     //ADICIONA VALOR AO FINANCEIRO
-                    if (!verificarLimiteCreditoPrazo()) {
-                        // Se o limite for insuficiente, interrompe o processo e exibe a mensagem
-                        Toast.makeText(FinanceiroDaVenda.this, "BLOQUEANDO ADIÇAO 2", Toast.LENGTH_LONG).show();
-                        return; // Bloqueia a adição e o envio
-                    }
                     else {
-                        if (!verificarLimiteCreditoPrazo()) {
-                            // Se o limite for insuficiente, interrompe o processo e exibe a mensagem
-                            Toast.makeText(FinanceiroDaVenda.this, "BLOQUEANDO ADIÇAO 3", Toast.LENGTH_LONG).show();
-                            return; // Bloqueia a adição e o envio
-                        }
                         addFinanceiro();
                     }
                 }
                 //ADICIONA VALOR AO FINANCEIRO
                 else {
-
                     addFinanceiro();
                 }
             }
         });
         //
-        /******************* Verifica se o valor da compra a prazo excede o limite de crédito disponível ************/
+
         btnPagamento = findViewById(R.id.btnPagamento);
         btnPagamento.setOnClickListener(v -> {
 
-            /*// Verifica se a venda foi editada
-            if (vendaEditada) {
-                Log.d("VENDA EDITADA", "Venda está sendo editada.");
-
-                // Verifica se as formas de pagamento foram alteradas
-                if (!formasPagamento.isEmpty()) {
-                    // Caso tenha formas de pagamento, percorre para ver se algo mudou
-                    BigDecimal totalValoresCompraPrazo = BigDecimal.ZERO;
-                    boolean temFormaAPrazo = false;
-
-                    for (int i = 0; i < formasPagamento.size(); i++) {
-                        String formaPagamento = formasPagamento.get(i);
-                        Log.d("FORMA PAGAMENTO", "Forma de pagamento: " + formaPagamento);
-
-                        // Verifica se a forma de pagamento é "A PRAZO"
-                        if (formaPagamento.contains("A PRAZO")) {
-                            if (!valoresCompra.isEmpty()) {
-                                BigDecimal valorFormaPrazo = new BigDecimal(valoresCompra.get(0));
-                                totalValoresCompraPrazo = totalValoresCompraPrazo.add(valorFormaPrazo);
-                                temFormaAPrazo = true;
-                            } else {
-                                Toast.makeText(context, "Insira as Informações corretamente!", Toast.LENGTH_SHORT).show();
-                            }
-                        }
-                    }
-
-                    if (temFormaAPrazo)  {
-                        // Se houver uma forma "A PRAZO", verifica o limite de crédito
-                        Log.d("VERIFICANDO LIMITE EDITADO", "Verificando limite de crédito para formas de pagamento a prazo (venda editada).");
-
-                        creditoPrefs.setValorAprazo(totalValoresCompraPrazo.toString());
-                        creditoPrefs.setIdCliente(codigo_cliente);
-
-                        // Verifica o limite de crédito disponível
-                        DatabaseHelper dbHelper = new DatabaseHelper(this);
-                        int limiteCreditoCliente = dbHelper.getLimiteCreditoCliente(codigo_cliente);
-                        creditoPrefs.setLimiteCreditoOriginal(String.valueOf(limiteCreditoCliente));
-                        Log.d("LIMITE ORIGINAL", "Limite original de crédito para o cliente " + codigo_cliente + ": " + limiteCreditoCliente);
-
-                        BigDecimal limiteCreditoBigDecimal = BigDecimal.valueOf(limiteCreditoCliente);
-
-                        // Bloquear venda a prazo se o limite for zero
-                        if (limiteCreditoBigDecimal.compareTo(BigDecimal.ZERO) == 0) {
-                            Log.d("LIMITE ZERADO", "Limite de crédito é zero. Bloqueando venda a prazo." + totalValoresCompraPrazo);
-                            formasPagamento.clear();
-                            new AlertDialog.Builder(this)
-                                    .setTitle("Limite de Crédito Indisponível")
-                                    .setMessage("Não há limite de crédito disponível para realizar compras a prazo.")
-                                    .setPositiveButton(android.R.string.ok, null)
-                                    .show();
-                            return;
-                        } else if (totalValoresCompraPrazo.compareTo(limiteCreditoBigDecimal) <= 0) {
-                            // Se o valor da compra é igual ou menor que o limite disponível
-                            Log.d("LIMITE OK", "O valor da compra é igual ou menor que o limite de crédito disponível." + totalValoresCompraPrazo);
-
-                            // Atualiza o limite de crédito do cliente após a venda
-                            limiteCreditoBigDecimal = limiteCreditoBigDecimal.subtract(totalValoresCompraPrazo);
-                            Log.d("LIMITE ATUALIZADO", "Novo limite de crédito após a transação: " + limiteCreditoBigDecimal);
-
-                            // Atualizar o limite de crédito no banco de dados
-                            bd.updateLimiteCreditoCliente(codigo_cliente, limiteCreditoBigDecimal);
-                            Log.d("FINAL SALE", "LIMITE ATT APOS TRANSAÇAO " + limiteCreditoBigDecimal);
-
-                            // Prosseguir para salvar o financeiro e finalizar a venda
-                            _salvarFinanceiro();
-                        } else {
-                            Log.d("LIMITE EXCEDIDO", "O valor da compra a prazo excede o limite de crédito." + totalValoresCompraPrazo);
-                            String mensagem = String.format("O valor da compra excede o limite de crédito disponível.\nCrédito disponível: R$ %.2f", limiteCreditoBigDecimal);
-                            formasPagamento.clear();
-                            new AlertDialog.Builder(this)
-                                    .setTitle("Limite de Crédito Excedido")
-                                    .setMessage(mensagem)
-                                    .setPositiveButton(android.R.string.ok, null)
-                                    .show();
-                            return;
-                        }
-                    }
-                }
 
 
-                else {
-                    // Se não houve alteração nas formas de pagamento
-                    Log.d("VENDA EDITADA", "Venda editada sem alterações, concluindo sem verificar limite.");
-                }
-
-                // Conclui o processo de salvar, pois a venda está sendo editada
-                _salvarFinanceiro();
-                return;
-            }
-
-            // Verificação normal de formas de pagamento para novas vendas
-            if (!formasPagamento.isEmpty()) {
-                BigDecimal totalValoresCompraPrazo = BigDecimal.ZERO;
-                boolean temFormaAPrazo = false;
-
-                // Percorre todas as formas de pagamento no array
-                for (int i = 0; i < formasPagamento.size(); i++) {
-                    String formaPagamento = formasPagamento.get(i);
-                    Log.d("FORMA PAGAMENTO", "Forma de pagamento: " + formaPagamento);
-
-                    // Verifica se a forma de pagamento é "A PRAZO"
-                    if (formaPagamento.contains("A PRAZO")) {
-                        if (!valoresCompra.isEmpty()) {
-                            BigDecimal valorFormaPrazo = new BigDecimal(valoresCompra.get(0));
-                            totalValoresCompraPrazo = totalValoresCompraPrazo.add(valorFormaPrazo);
-                            temFormaAPrazo = true;
-                        } else {
-                            Toast.makeText(context, "Insira as Informações corretamente!", Toast.LENGTH_SHORT).show();
-                        }
-                    }
-                }
-
-                // Se houver pelo menos uma forma de pagamento "A PRAZO"
-                if (temFormaAPrazo) {
-                    Log.d("VERIFICANDO LIMITE", "Verificando limite de crédito para formas de pagamento a prazo.");
-
-                    creditoPrefs.setValorAprazo(totalValoresCompraPrazo.toString());
-                    creditoPrefs.setIdCliente(codigo_cliente);
-
-                    // Verifica o limite de crédito disponível
-                    DatabaseHelper dbHelper = new DatabaseHelper(this);
-                    int limiteCreditoCliente = dbHelper.getLimiteCreditoCliente(codigo_cliente);
-                    creditoPrefs.setLimiteCreditoOriginal(String.valueOf(limiteCreditoCliente));
-                    // Log para depuração
-                    Log.d("LIMITE ORIGINAL", "Limite original de crédito para o cliente " + codigo_cliente + ": " + limiteCreditoCliente);
-
-                    //
-                    Log.d("Limite Crédito Cliente", "O limite de crédito do cliente é: " + limiteCreditoCliente);
-
-                    BigDecimal limiteCreditoBigDecimal = BigDecimal.valueOf(limiteCreditoCliente);
-
-                    // Bloquear venda a prazo se o limite for zero
-                    if (limiteCreditoBigDecimal.compareTo(BigDecimal.ZERO) == 0) {
-                        Log.d("LIMITE ZERADO", "Limite de crédito é zero. Bloqueando venda a prazo." + totalValoresCompraPrazo);
-                        formasPagamento.clear();
-                        // totalValoresCompraPrazo.clear();
-                        new AlertDialog.Builder(this)
-                                .setTitle("Limite de Crédito Indisponível")
-                                .setMessage("Não há limite de crédito disponível para realizar compras a prazo.")
-                                .setPositiveButton(android.R.string.ok, null)
-                                .show();
-                        return;
-                    }else if (totalValoresCompraPrazo.compareTo(limiteCreditoBigDecimal) <= 0) {
-                        // Se o valor da compra é igual ou menor que o limite disponível
-                        Log.d("LIMITE OK", "O valor da compra é igual ou menor que o limite de crédito disponível." + totalValoresCompraPrazo);
-
-                        // Atualiza o limite de crédito do cliente após a venda
-                        limiteCreditoBigDecimal = limiteCreditoBigDecimal.subtract(totalValoresCompraPrazo);
-                        Log.d("LIMITE ATUALIZADO", "Novo limite de crédito após a transação: " + limiteCreditoBigDecimal);
-
-                        // Atualizar o limite de crédito no banco de dados
-                        bd.updateLimiteCreditoCliente(codigo_cliente, limiteCreditoBigDecimal);
-                        Log.d("FINAL SALE", "LIMITE ATT APOS TRANSAÇAO " + limiteCreditoBigDecimal);
-
-                        // Prosseguir para salvar o financeiro e finalizar a venda
-                        _salvarFinanceiro();
-                    }
+            _salvarFinanceiro();
 
 
-
-                    else if (totalValoresCompraPrazo.compareTo(limiteCreditoBigDecimal) > 0) {
-                        Log.d("LIMITE EXCEDIDO", "O valor da compra a prazo excede o limite de crédito." + totalValoresCompraPrazo);
-                        String mensagem = String.format("O valor da compra excede o limite de crédito disponível.\nCrédito disponível: R$ %.2f", limiteCreditoBigDecimal);
-                        formasPagamento.clear();
-                        new AlertDialog.Builder(this)
-                                .setTitle("Limite de Crédito Excedido")
-                                .setMessage(mensagem)
-                                .setPositiveButton(android.R.string.ok, null)
-                                .show();
-                        return;
-                    } else {
-                        // Atualiza o limite de crédito do cliente após a venda
-                        atualizarLimiteCreditoCliente(codigo_cliente, totalValoresCompraPrazo);
-                    }
-                }
-
-                // Se a verificação do limite for bem-sucedida ou não for "A PRAZO", salvar o financeiro
-                _salvarFinanceiro();
-            } else {
-                Log.d("VERIFICAÇAO", "onCreate: VERIFICAÇAO NAO CONCLUIDA");
-            }*/
-            if(verificarLimiteCreditoPrazo() == true){
-                _salvarFinanceiro();
-            }
-            else{
-                Toast.makeText(FinanceiroDaVenda.this, "Limite de crédito insuficiente para adicionar esta forma de pagamento a prazo.", Toast.LENGTH_LONG).show();
-            }
-
-        });
+    });
 
         //LINHA FINAL
 
@@ -724,106 +529,81 @@ public class FinanceiroDaVenda extends AppCompatActivity implements AdapterView.
         }
     }
 
-/********************* verificar limite **************************/
-private boolean verificarLimiteCreditoPrazo() {
-    if (!formasPagamento.isEmpty()) {
-        BigDecimal totalValoresCompraPrazo = BigDecimal.ZERO;
-        boolean temFormaAPrazo = false;
+    /********************* verificar limite **************************/
+    /********************* verificar limite **************************/
+    private boolean verificarLimiteCreditoPrazo() {
+        if (!formasPagamento.isEmpty()) {
+            BigDecimal totalValoresCompraPrazo = BigDecimal.ZERO;
+            boolean temFormaAPrazo = false;
 
-        // Percorre todas as formas de pagamento no array
-        for (int i = 0; i < formasPagamento.size(); i++) {
-            String formaPagamento = formasPagamento.get(i);
-            Log.d("FORMA PAGAMENTO", "Forma de pagamento: " + formaPagamento);
+            // Percorre todas as formas de pagamento no array
+            for (int i = 0; i < formasPagamento.size(); i++) {
+                String formaPagamento = formasPagamento.get(i);
+                Log.d("FORMA PAGAMENTO", "Forma de pagamento: " + formaPagamento);
 
-            // Verifica se a forma de pagamento é "A PRAZO"
-            if (formaPagamento.contains("A PRAZO")) {
-                if (!valoresCompra.isEmpty()) {
-                    BigDecimal valorFormaPrazo = new BigDecimal(valoresCompra.get(i));
-                    totalValoresCompraPrazo = totalValoresCompraPrazo.add(valorFormaPrazo);
-                    temFormaAPrazo = true;
-                } else {
-                    Toast.makeText(context, "Insira as Informações corretamente!", Toast.LENGTH_SHORT).show();
+                // Verifica se a forma de pagamento é "A PRAZO"
+                if (formaPagamento.contains("A PRAZO")) {
+                    if (!valoresCompra.isEmpty()) {
+                        BigDecimal valorFormaPrazo = new BigDecimal(valoresCompra.get(i));
+                        totalValoresCompraPrazo = totalValoresCompraPrazo.add(valorFormaPrazo);
+                        temFormaAPrazo = true;
+                    } else {
+                        Toast.makeText(context, "Insira as Informações corretamente!", Toast.LENGTH_SHORT).show();
+                    }
+                }
+            }
+
+            // Se houver pelo menos uma forma de pagamento "A PRAZO"
+            if (temFormaAPrazo) {
+                Log.d("VERIFICANDO LIMITE", "Verificando limite de crédito para formas de pagamento a prazo.");
+
+                creditoPrefs.setValorAprazo(totalValoresCompraPrazo.toString());
+                creditoPrefs.setIdCliente(codigo_cliente);
+
+                // Verifica o limite de crédito original **antes da transação**
+                DatabaseHelper dbHelper = new DatabaseHelper(this);
+                int limiteCreditoCliente = dbHelper.getLimiteCreditoCliente(codigo_cliente);
+                creditoPrefs.setLimiteCreditoOriginal(String.valueOf(limiteCreditoCliente));
+                Log.d("LIMITE ORIGINAL", "Limite original de crédito para o cliente " + codigo_cliente + ": " + limiteCreditoCliente);
+
+                BigDecimal limiteCreditoBigDecimal = BigDecimal.valueOf(limiteCreditoCliente);
+
+                // Se o valor da compra a prazo for maior que o limite disponível
+                if (totalValoresCompraPrazo.compareTo(limiteCreditoBigDecimal) > 0) {
+                    Log.d("LIMITE EXCEDIDO", "O valor da compra a prazo excede o limite de crédito.");
+                    String mensagem = String.format("O valor da compra excede o limite de crédito disponível.\nCrédito disponível: R$ %.2f", limiteCreditoBigDecimal);
+                    formasPagamento.clear();
+                   valoresCompra.clear();
+                    new AlertDialog.Builder(this)
+                            .setTitle("Limite de Crédito Excedido")
+                            .setMessage(mensagem)
+                            .setPositiveButton(android.R.string.ok, null)
+                            .show();
+                    return false; // <-- Interrompe a execução
+                }
+
+                // Se o valor da compra a prazo for menor ou igual ao limite disponível
+                else {
+                    Log.d("782 LANÇANDO VENDA ", "Atualizando limite de crédito após a transação.");
+
+                    // Atualiza o limite de crédito no banco de dados **apenas após a verificação**
+                    BigDecimal novoLimite = limiteCreditoBigDecimal.subtract(totalValoresCompraPrazo);
+                    bd.updateLimiteCreditoCliente(codigo_cliente, novoLimite);
+
+                    String mensagem = String.format("Limite de crédito atualizado. Novo limite disponível: R$ %.2f", novoLimite);
+
+                    new AlertDialog.Builder(this)
+                            .setTitle("Limite de Crédito Atualizado")
+                            .setMessage(mensagem)
+                            .setPositiveButton(android.R.string.ok, null)
+                            .show();
+
+                    return true; // <-- Transação concluída com sucesso
                 }
             }
         }
-
-        // Se houver pelo menos uma forma de pagamento "A PRAZO"
-        if (temFormaAPrazo) {
-            Log.d("VERIFICANDO LIMITE", "Verificando limite de crédito para formas de pagamento a prazo.");
-
-            creditoPrefs.setValorAprazo(totalValoresCompraPrazo.toString());
-            creditoPrefs.setIdCliente(codigo_cliente);
-
-            // Verifica o limite de crédito disponível
-            DatabaseHelper dbHelper = new DatabaseHelper(this);
-            int limiteCreditoCliente = dbHelper.getLimiteCreditoCliente(codigo_cliente);
-            creditoPrefs.setLimiteCreditoOriginal(String.valueOf(limiteCreditoCliente));
-            Log.d("LIMITE ORIGINAL", "Limite original de crédito para o cliente " + codigo_cliente + ": " + limiteCreditoCliente);
-
-            BigDecimal limiteCreditoBigDecimal = BigDecimal.valueOf(limiteCreditoCliente);
-
-            // Caso o valor da compra consuma completamente o limite
-            if (totalValoresCompraPrazo.compareTo(limiteCreditoBigDecimal) == 0) {
-               /* Log.d("LIMITE CONSUMIDO", "O limite de crédito foi consumido completamente.");
-                new AlertDialog.Builder(this)
-                        .setTitle("Limite de Crédito Consumido")
-                        .setMessage("Todo o seu limite de crédito foi utilizado.")
-                        .setPositiveButton(android.R.string.ok, null)
-                        .show();
-
-                // Atualiza o limite de crédito no banco de dados
-                bd.updateLimiteCreditoCliente(codigo_cliente, BigDecimal.ZERO);*/
-                return true; // <-- Interrompe a execução
-            }
-
-            // Caso o limite seja 0, exibe mensagem e interrompe
-            else if (limiteCreditoBigDecimal.compareTo(BigDecimal.ZERO) == 0) {
-                Log.d("LIMITE ZERADO", "Limite de crédito é zero. Bloqueando venda a prazo.");
-                formasPagamento.clear();
-                valoresCompra.clear();
-                new AlertDialog.Builder(this)
-                        .setTitle("Limite de Crédito Indisponível")
-                        .setMessage("Você não possui limite de crédito disponível.")
-                        .setPositiveButton(android.R.string.ok, null)
-                        .show();
-                return false; // <-- Interrompe a execução
-            }
-
-            // Caso o valor da compra exceda o limite, exibe mensagem e interrompe
-            else if (totalValoresCompraPrazo.compareTo(limiteCreditoBigDecimal) > 0) {
-                Log.d("LIMITE EXCEDIDO", "O valor da compra a prazo excede o limite de crédito.");
-                String mensagem = String.format("O valor da compra excede o limite de crédito disponível.\nCrédito disponível: R$ %.2f", limiteCreditoBigDecimal);
-                formasPagamento.clear();
-                valoresCompra.clear();
-                new AlertDialog.Builder(this)
-                        .setTitle("Limite de Crédito Excedido")
-                        .setMessage(mensagem)
-                        .setPositiveButton(android.R.string.ok, null)
-                        .show();
-                return false; // <-- Interrompe a execução
-            }
-
-            // Caso o valor da compra consuma parcialmente o limite
-            else {
-                Log.d("LIMITE PARCIAL", "Limite de crédito disponível após a transação.");
-                BigDecimal novoLimite = limiteCreditoBigDecimal.subtract(totalValoresCompraPrazo);
-                String mensagem = String.format("Limite de crédito consumido parcialmente.\nNovo limite disponível: R$ %.2f", novoLimite);
-
-                // Atualiza o limite de crédito no banco de dados
-                bd.updateLimiteCreditoCliente(codigo_cliente, novoLimite);
-
-                new AlertDialog.Builder(this)
-                        .setTitle("Limite de Crédito Atualizado")
-                        .setMessage(mensagem)
-                        .setPositiveButton(android.R.string.ok, null)
-                        .show();
-                return true; // <-- Interrompe a execução
-            }
-        }
+        return true; // Caso não haja formas de pagamento a prazo, continua normalmente
     }
-    return true; // Caso não haja formas de pagamento a prazo, continua normalmente
-}
-
 
 
     /**************** BLOQUEAR PAGAMENTO A PRAZO PARA INADIMPLENCIA *******************/
@@ -1629,8 +1409,10 @@ private boolean verificarLimiteCreditoPrazo() {
             // Restaurar limite de crédito ao cancelar uma venda a prazo
             String valorAprazo = creditoPrefs.getValorAprazo();
             String codigoCliente = creditoPrefs.getIdCliente();
+            Boolean restituicaoRealizada = creditoPrefs.getRestituicaoRealizada();
+            Log.d("CANCELAR", "cancelarVenda: vneda ja restiuida" + restituicaoRealizada);
 
-            if (valorAprazo != null && !valorAprazo.isEmpty() && !codigoCliente.isEmpty()) {
+            if(valorAprazo != null && !valorAprazo.isEmpty() && !codigoCliente.isEmpty() && !restituicaoRealizada)  {
                 // Lógica de restituição do limite de crédito
                 BigDecimal valorRestituido = new BigDecimal(valorAprazo);
                 DatabaseHelper dbHelper = new DatabaseHelper(context);
@@ -1646,7 +1428,6 @@ private boolean verificarLimiteCreditoPrazo() {
                 } else {
                     Log.d("RESTITUIR LIMITE", "Limite já está zerado. Não será feita restituição.");
                 }
-
                 // Limpa as informações armazenadas após o cancelamento
                 creditoPrefs.clear();
             }

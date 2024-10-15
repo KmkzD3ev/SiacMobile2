@@ -522,7 +522,6 @@ public class SincronizarBancoDados extends AppCompatActivity {
     public void startDownloadZip(final String serial) {
         txt_msg_sincronizando.setText(R.string.fazendo_dowloand_do_banco);
 
-
         if (Build.VERSION.SDK_INT >= 33) {
             String url = new Configuracoes().GetUrlServer() + "/POSSIACN/bancos/banco_siac_" + serial + ".db";
             Uri uri = Uri.parse(url);
@@ -553,8 +552,24 @@ public class SincronizarBancoDados extends AppCompatActivity {
                     .setDescription("BD SIAC MOBILE.")
                     .setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS,
                             "siacmobileDBZip.zip"));
+
+            Looper mainLooper = Looper.getMainLooper();
+            new Handler(mainLooper).postDelayed(this::GetBataZip, 60000);
             // kleilson
             //importarBD();
+        }
+    }
+
+    private void GetBataZip(){
+        try {
+            //PEGA O CAMINHO DA PASTA DOWNLOAD DO APARELHO PARA VERIFICAR SE O BANCO EXISTE
+            File path = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
+            //
+            File arquivo = new File(path + "/siacmobileDBZip.zip");
+
+            unzip(arquivo, path);
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 
