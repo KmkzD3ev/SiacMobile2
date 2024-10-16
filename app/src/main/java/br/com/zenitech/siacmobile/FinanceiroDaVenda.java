@@ -528,8 +528,7 @@ public class FinanceiroDaVenda extends AppCompatActivity implements AdapterView.
             iniciarStone();
         }
     }
-
-    /********************* verificar limite **************************/
+    
     /********************* verificar limite **************************/
     private boolean verificarLimiteCreditoPrazo() {
         if (!formasPagamento.isEmpty()) {
@@ -544,7 +543,7 @@ public class FinanceiroDaVenda extends AppCompatActivity implements AdapterView.
                 // Verifica se a forma de pagamento é "A PRAZO"
                 if (formaPagamento.contains("A PRAZO")) {
                     if (!valoresCompra.isEmpty()) {
-                        BigDecimal valorFormaPrazo = new BigDecimal(valoresCompra.get(i));
+                        BigDecimal valorFormaPrazo = new BigDecimal(valoresCompra.get(0));
                         totalValoresCompraPrazo = totalValoresCompraPrazo.add(valorFormaPrazo);
                         temFormaAPrazo = true;
                     } else {
@@ -552,7 +551,6 @@ public class FinanceiroDaVenda extends AppCompatActivity implements AdapterView.
                     }
                 }
             }
-
             // Se houver pelo menos uma forma de pagamento "A PRAZO"
             if (temFormaAPrazo) {
                 Log.d("VERIFICANDO LIMITE", "Verificando limite de crédito para formas de pagamento a prazo.");
@@ -1403,24 +1401,38 @@ public class FinanceiroDaVenda extends AppCompatActivity implements AdapterView.
             String valorAprazo = creditoPrefs.getValorAprazo();
             String codigoCliente = creditoPrefs.getIdCliente();
             Boolean restituicaoRealizada = creditoPrefs.getRestituicaoRealizada();
-            Log.d("CANCELAR", "cancelarVenda: vneda ja restiuida" + restituicaoRealizada);
+            Log.d("CANCELAR", "cancelarVenda: venda já restituída " + restituicaoRealizada);
 
-            if(valorAprazo != null && !valorAprazo.isEmpty() && !codigoCliente.isEmpty() && !restituicaoRealizada)  {
-                // Lógica de restituição do limite de crédito
+            if (valorAprazo != null && !valorAprazo.isEmpty() && !codigoCliente.isEmpty() && !restituicaoRealizada) {
                 BigDecimal valorRestituido = new BigDecimal(valorAprazo);
                 DatabaseHelper dbHelper = new DatabaseHelper(context);
 
-                // Verificar o limite atual do cliente antes de fazer a restituição
+                // Verificar o limite atual e o limite primário do cliente
                 int limiteAtual = dbHelper.getLimiteCreditoCliente(codigoCliente);
+                BigDecimal limiteOriginal = new BigDecimal(creditoPrefs.getLimiteCreditoPrimario()); // Limite original para não ultrapassar
+                BigDecimal limiteCreditoDisponivel = new BigDecimal(limiteAtual);
                 Log.d("RESTITUIR LIMITE", "Limite atual antes da restituição: " + limiteAtual);
 
-                // Só fazer a restituição se o limite não for zero ou negativo
-                if (limiteAtual > 0) {
-                    dbHelper.restituirLimiteCreditoCliente(codigoCliente, valorRestituido);
-                    Log.d("RESTITUIR LIMITE", "Restituindo limite de crédito. Valor: " + valorRestituido + " para o cliente: " + codigoCliente);
+                // Só restituir se o limite de crédito foi utilizado (limite atual menor que o original)
+                if (limiteCreditoDisponivel.compareTo(limiteOriginal) < 0) {
+                    // Calcular o valor a ser restituído sem ultrapassar o limite original
+                    BigDecimal valorRestituir = valorRestituido.min(limiteOriginal.subtract(limiteCreditoDisponivel));
+
+                    if (valorRestituir.compareTo(BigDecimal.ZERO) > 0) {
+                        // Restituir o limite de crédito ajustado
+                        dbHelper.restituirLimiteCreditoCliente(codigoCliente, valorRestituir);
+                        Log.d("RESTITUIR LIMITE", "Restituindo limite de crédito: " + valorRestituir + " para o cliente: " + codigoCliente);
+
+                        // Marcar a restituição como realizada
+                        restituicaoRealizada = true;
+                        creditoPrefs.setRestituicaoRealizada(true);
+                    } else {
+                        Log.d("RESTITUIR LIMITE", "Nenhuma restituição foi feita, o limite já atingiu o valor original.");
+                    }
                 } else {
-                    Log.d("RESTITUIR LIMITE", "Limite já está zerado. Não será feita restituição.");
+                    Log.d("RESTITUIR LIMITE", "Limite de crédito já está completo. Não será feita restituição.");
                 }
+
                 // Limpa as informações armazenadas após o cancelamento
                 creditoPrefs.clear();
             }

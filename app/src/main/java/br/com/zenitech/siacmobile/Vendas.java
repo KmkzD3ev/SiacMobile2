@@ -246,7 +246,7 @@ public class Vendas extends AppCompatActivity {
                     creditoPrefs.setLimitePrimario(String.valueOf(limiteCreditoPrimario));
 
                     // Log para depuração
-                    Log.d("LIMITE ORIGINAL", "Limite original de crédito para o cliente " + id_cliente + ": " + limiteCreditoPrimario);
+                    Log.d("LIMite PRIMARIO", "Limite PRIMARIO de crédito para o cliente " + id_cliente + ": " + limiteCreditoPrimario);
 
 
                 }
