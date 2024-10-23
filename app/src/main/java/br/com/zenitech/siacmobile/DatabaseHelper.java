@@ -391,6 +391,67 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
     /************ METODO DE LISTAGEM DE VENDAS FUTURAS *************/
     @SuppressLint("Range")
+    public ArrayList<ListarVendasDomain> listarDetalhesCompletosVendasFuturasReais() {
+        ArrayList<ListarVendasDomain> lista = new ArrayList<>();
+        SQLiteDatabase db = this.getReadableDatabase();
+
+        // Ajuste a consulta para incluir o nome do cliente com um JOIN
+        String query = "SELECT v.codigo_venda, v.entrega_futura_venda, v.codigo_cliente, c.nome_cliente, " +
+                "v.produto_venda, v.quantidade_venda, v.valor_total, v.unidade_venda, v.preco_unitario " +
+                "FROM vendas_app v " +
+                "JOIN clientes c ON v.codigo_cliente = c.codigo_cliente " +
+                "WHERE v.entrega_futura_venda = 1";
+
+        Cursor cursor = db.rawQuery(query, null);
+
+        if (cursor.moveToFirst()) {
+            do {
+                int codigoVenda = cursor.getInt(cursor.getColumnIndex("codigo_venda"));
+                int codigoCliente = cursor.getInt(cursor.getColumnIndex("codigo_cliente"));
+                String nomeCliente = cursor.getString(cursor.getColumnIndex("nome_cliente")); // Nome do cliente
+                String produtoVenda = cursor.getString(cursor.getColumnIndex("produto_venda"));
+                int quantidadeVenda = cursor.getInt(cursor.getColumnIndex("quantidade_venda"));
+                double valorTotal = cursor.getDouble(cursor.getColumnIndex("valor_total"));
+                String unidadeVenda = cursor.getString(cursor.getColumnIndex("unidade_venda"));
+                double precoUnitario = cursor.getDouble(cursor.getColumnIndex("preco_unitario"));
+
+                // Log para verificar o nome do cliente
+                Log.d("DatabaseHelper", "Nome do Cliente: " + nomeCliente);
+
+                // Adiciona o nome do cliente ao construtor da lista
+                lista.add(new ListarVendasDomain(codigoVenda, codigoCliente, nomeCliente, produtoVenda, quantidadeVenda, valorTotal, unidadeVenda, precoUnitario));
+            } while (cursor.moveToNext());
+        } else {
+            // Log se nenhum dado for retornado
+            Log.d("DatabaseHelper", "Nenhuma venda futura encontrada.");
+        }
+        cursor.close();
+        return lista;
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   /* @SuppressLint("Range")
     public ArrayList<String> listarCodigosEntregaFutura() {
         ArrayList<String> lista = new ArrayList<>();
         SQLiteDatabase db = this.getReadableDatabase();
@@ -405,7 +466,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         }
         cursor.close();
         return lista;
-    }
+    }*/
 
 
     //########## PRODUTOS ############

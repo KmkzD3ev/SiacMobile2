@@ -1,0 +1,169 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_margin="8dp"
+    app:cardElevation="4dp"
+    app:cardCornerRadius="18dp">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@drawable/border_card"
+        android:padding="16dp">
+
+        <!-- Nome do Cliente (primeiro a ser exibido) -->
+        <TextView
+            android:id="@+id/labelNomeCliente"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Nome do Cliente:"
+            android:textStyle="bold"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+        <TextView
+            android:id="@+id/txtNomeCliente"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            app:layout_constraintStart_toEndOf="@+id/labelNomeCliente"
+            app:layout_constraintTop_toTopOf="@+id/labelNomeCliente"
+            tools:text="Empresa X" />
+
+        <!-- Código da Venda -->
+        <TextView
+            android:id="@+id/labelCodigoVenda"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Código da venda:"
+            android:textStyle="bold"
+            app:layout_constraintStart_toStartOf="@+id/labelNomeCliente"
+            app:layout_constraintTop_toBottomOf="@+id/txtNomeCliente" />
+        <TextView
+            android:id="@+id/txtCodigoVenda"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            app:layout_constraintStart_toEndOf="@+id/labelCodigoVenda"
+            app:layout_constraintTop_toTopOf="@+id/labelCodigoVenda"
+            tools:text="12345" />
+
+        <!-- Código do Cliente -->
+        <TextView
+            android:id="@+id/labelCliente"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Código do Cliente:"
+            android:textStyle="bold"
+            app:layout_constraintStart_toStartOf="@+id/labelCodigoVenda"
+            app:layout_constraintTop_toBottomOf="@+id/txtCodigoVenda" />
+        <TextView
+            android:id="@+id/txtCliente"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:layout_marginStart="8dp"
+            app:layout_constraintStart_toEndOf="@+id/labelCliente"
+            app:layout_constraintTop_toTopOf="@+id/labelCliente"
+            tools:text="Código Cliente" />
+
+        <!-- Produto -->
+        <TextView
+            android:id="@+id/labelProduto"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Produto:"
+            android:textStyle="bold"
+            app:layout_constraintStart_toStartOf="@+id/labelCliente"
+            app:layout_constraintTop_toBottomOf="@+id/txtCliente" />
+        <TextView
+            android:id="@+id/txtProduto"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:layout_marginStart="8dp"
+            app:layout_constraintStart_toEndOf="@+id/labelProduto"
+            app:layout_constraintTop_toTopOf="@+id/labelProduto"
+            tools:text="Produto Y" />
+
+        <!-- Quantidade -->
+        <TextView
+            android:id="@+id/labelQuantidade"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Quantidade:"
+            android:textStyle="bold"
+            app:layout_constraintStart_toStartOf="@+id/labelProduto"
+            app:layout_constraintTop_toBottomOf="@+id/txtProduto" />
+        <TextView
+            android:id="@+id/txtQuantidade"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:layout_marginStart="8dp"
+            app:layout_constraintStart_toEndOf="@+id/labelQuantidade"
+            app:layout_constraintTop_toTopOf="@+id/labelQuantidade"
+            tools:text="150" />
+
+        <!-- Valor Total -->
+        <TextView
+            android:id="@+id/labelValorTotal"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Valor Total:"
+            android:textStyle="bold"
+            app:layout_constraintStart_toStartOf="@+id/labelQuantidade"
+            app:layout_constraintTop_toBottomOf="@+id/txtQuantidade" />
+        <TextView
+            android:id="@+id/txtValorTotal"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:layout_marginStart="8dp"
+            app:layout_constraintStart_toEndOf="@+id/labelValorTotal"
+            app:layout_constraintTop_toTopOf="@+id/labelValorTotal"
+            tools:text="R$ 450.00" />
+
+        <!-- Unidade -->
+        <TextView
+            android:id="@+id/labelUnidade"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Unidade:"
+            android:textStyle="bold"
+            app:layout_constraintStart_toStartOf="@+id/labelValorTotal"
+            app:layout_constraintTop_toBottomOf="@+id/txtValorTotal" />
+        <TextView
+            android:id="@+id/txtUnidade"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:layout_marginStart="8dp"
+            app:layout_constraintStart_toEndOf="@+id/labelUnidade"
+            app:layout_constraintTop_toTopOf="@+id/labelUnidade"
+            tools:text="Peças" />
+
+        <!-- Preço Unitário -->
+        <TextView
+            android:id="@+id/labelPrecoUnitario"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Preço Unitário:"
+            android:textStyle="bold"
+            app:layout_constraintStart_toStartOf="@+id/labelUnidade"
+            app:layout_constraintTop_toBottomOf="@+id/txtUnidade" />
+        <TextView
+            android:id="@+id/txtPrecoUnitario"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:layout_marginStart="8dp"
+            app:layout_constraintStart_toEndOf="@+id/labelPrecoUnitario"
+            app:layout_constraintTop_toTopOf="@+id/labelPrecoUnitario"
+            tools:text="R$ 3.00" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+</androidx.cardview.widget.CardView>

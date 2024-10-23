@@ -14,6 +14,7 @@ import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.util.Log;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -35,6 +36,11 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
+import android.Manifest;
+import android.content.pm.PackageManager;
+import androidx.core.app.ActivityCompat;
+
+
 /**
  * This Activity appears as a dialog. It lists any paired devices and
  * devices detected in the area after discovery. When a device is chosen
@@ -47,6 +53,8 @@ public class DeviceListActivity extends Activity {
 
     // Address preference name 
     public static String PREF_DEVICE_ADDRESS = "device_address";
+
+
 
     // Class that explain bluetooth device node
     private class DeviceNode {
@@ -210,6 +218,18 @@ public class DeviceListActivity extends Activity {
         // Setup the window
         requestWindowFeature(Window.FEATURE_INDETERMINATE_PROGRESS);
         setContentView(R.layout.device_list);
+
+       // Verifica a versão do Android e registra no log
+        int sdkVersion = Build.VERSION.SDK_INT;
+        if (sdkVersion >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) { // Android 14 ou superior
+            Log.d("DeviceListActivity", "Rodando no Android 14 ou superior. Versão SDK: " + sdkVersion);
+        } else {
+            Log.d("DeviceListActivity", "Rodando em uma versão anterior ao Android 14. Versão SDK: " + sdkVersion);
+        }
+
+
+
+
 
         // Set result CANCELED in case the user backs out
         setResult(Activity.RESULT_CANCELED);

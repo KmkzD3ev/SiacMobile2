@@ -300,10 +300,16 @@
                             android:text="Emitir notas"
                             android:textSize="16sp" />
 
+
                     </LinearLayout>
+
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
 
+
+
         </LinearLayout>
+
     </androidx.core.widget.NestedScrollView>
+
 </androidx.appcompat.widget.LinearLayoutCompat>

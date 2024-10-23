@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shape xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- Cor de fundo do Card -->
+    <solid android:color="#FFFFFF" />
+
+    <!-- Borda do Card -->
+    <stroke
+        android:width="2dp"
+        android:color="?attr/colorPrimary" /> <!-- Define a espessura e a cor da borda -->
+
+    <!-- Canto arredondado -->
+    <corners android:radius="16dp" /> <!-- Define o raio de arredondamento dos cantos -->
+
+    <!-- Margem interna (opcional) -->
+    <padding
+        android:left="8dp"
+        android:top="8dp"
+        android:right="8dp"
+        android:bottom="8dp" />
+</shape>

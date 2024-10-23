@@ -88,12 +88,17 @@ dependencies {
     implementation 'androidx.navigation:navigation-ui-ktx:2.7.7'
     implementation 'androidx.navigation:navigation-fragment-ktx:2.7.7'
     implementation 'androidx.navigation:navigation-ui-ktx:2.7.7'
+    implementation 'androidx.activity:activity:1.9.2'
     androidTestImplementation('androidx.test.espresso:espresso-core:3.5.1', {
         exclude group: 'com.android.support', module: 'support-annotations'
     })
     //
     implementation files('libs/printerlibs.jar')
     implementation files('libs/commons-net-3.3.jar')
+
+    //
+    implementation 'androidx.cardview:cardview:1.0.0'
+
 
     //
     implementation files('libs/commons-net-3.3.jar')
@@ -137,4 +142,6 @@ dependencies {
 
     // Multidex **
     implementation 'androidx.multidex:multidex:2.0.1'
+    implementation 'com.google.code.gson:gson:2.8.6'
+
 }

@@ -29,4 +29,23 @@
         app:layout_constraintTop_toTopOf="parent"
         app:navGraph="@navigation/mobile_navigation" />
 
+    <Button
+        android:id="@+id/fab_venda"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_margin="16dp"
+        android:layout_marginEnd="16dp"
+        android:layout_marginBottom="28dp"
+        android:backgroundTint="?attr/colorPrimary"
+        android:drawableStart="@drawable/ic_saida_futura"
+        android:drawablePadding="8dp"
+        android:gravity="center_vertical"
+        android:minWidth="180dp"
+        android:minHeight="56dp"
+        android:padding="16dp"
+        android:text="Saída Futura"
+        android:textColor="@android:color/white"
+        app:layout_constraintBottom_toTopOf="@id/nav_view"
+        app:layout_constraintEnd_toEndOf="parent" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>
