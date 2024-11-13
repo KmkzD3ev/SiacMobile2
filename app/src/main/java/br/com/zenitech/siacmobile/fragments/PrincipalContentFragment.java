@@ -60,7 +60,7 @@ public class PrincipalContentFragment extends Fragment {
                 in.putExtra("id_venda_app", dados_venda[1]);
                 in.putExtra("codigo", dados_venda[2]);
                 in.putExtra("nome", dados_venda[3]);
-                //in.putExtra("editar", "sim");
+                in.putExtra("editar", "sim");
                 requireContext().startActivity(in);
             } catch (Exception ignored) {
 

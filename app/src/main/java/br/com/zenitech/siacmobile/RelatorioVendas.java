@@ -61,7 +61,7 @@ public class RelatorioVendas extends AppCompatActivity {
 
         rvRelatorioVendas = findViewById(R.id.rvRelatorioVendas);
         rvRelatorioVendas.setLayoutManager(new LinearLayoutManager(context));
-        vendasDomains = bd.getRelatorioVendas();
+        //vendasDomains = bd.getRelatorioVendas();
         adapter = new RelatorioVendasAdapter(this, vendasDomains);
         rvRelatorioVendas.setAdapter(adapter);
 

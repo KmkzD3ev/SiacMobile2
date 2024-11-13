@@ -9,6 +9,7 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
@@ -27,6 +28,7 @@ import java.util.ArrayList;
 import java.util.Objects;
 
 import br.com.zenitech.siacmobile.adapters.RelatorioVendasPedidosAdapter;
+import br.com.zenitech.siacmobile.domains.ProdutoEmissor;
 import br.com.zenitech.siacmobile.domains.VendasPedidosDomain;
 import stone.application.StoneStart;
 import stone.utils.Stone;
@@ -56,6 +58,7 @@ public class RelatorioVendasPedido extends AppCompatActivity {
         setContentView(R.layout.activity_relatorio_vendas_pedido);
         Objects.requireNonNull(getSupportActionBar()).setDisplayHomeAsUpEnabled(true);
 
+
         context = this;
         prefs = getSharedPreferences("preferencias", MODE_PRIVATE);
         ed = prefs.edit();
@@ -73,7 +76,21 @@ public class RelatorioVendasPedido extends AppCompatActivity {
         txtQuantidadeRelatorioVendas = findViewById(R.id.txtQuantidadeRelatorioVendas);
         txtTotalRelatorioVendas = findViewById(R.id.txtTotalRelatorioVendas);
 
-        if (vendasDomains.size() == 0) {
+        // Iterando sobre cada venda para logar os produtos associados
+        for (VendasPedidosDomain venda : vendasDomains) {
+            String codigoVendaApp = venda.getCodigo_venda_app();  // Pega o ID da venda atual
+
+            // Chama a função getProdutosVenda para buscar os produtos relacionados a essa venda
+            ArrayList<ProdutoEmissor> produtosVenda = bd.getProdutosVenda(codigoVendaApp);
+
+            // Loga os produtos dessa venda para verificar a correspondência
+            Log.d("ProdutosVenda", "Produtos para código de venda: " + codigoVendaApp);
+            for (ProdutoEmissor produto : produtosVenda) {
+                Log.d("ProdutosVenda", produto.toString());
+            }
+        }
+
+        if (vendasDomains.isEmpty()) {
             erroRelatorio = findViewById(R.id.erroRelatorio);
             erroRelatorio.setVisibility(View.VISIBLE);
             venderProdutos = findViewById(R.id.venderProdutos);
@@ -92,14 +109,20 @@ public class RelatorioVendasPedido extends AppCompatActivity {
                 String[] somarValTot = {valTotalPed, pedidos.getValor_total()};
                 valTotalPed = String.valueOf(classAuxiliar.somar(somarValTot));
             }
+            int totalQuantidadeProdutos = bd.getTotalQuantidadeProdutos();
+            Log.d("RelatorioVendasPedido", "Quantidade total de produtos: " + totalQuantidadeProdutos);
 
             txtProdutoRelatorioVendas.setText(String.valueOf(vendasDomains.size()));
-            Double s = Double.parseDouble(quantItens);
-            txtQuantidadeRelatorioVendas.setText(String.valueOf(s.intValue()));
-            txtTotalRelatorioVendas.setText(String.valueOf(classAuxiliar.maskMoney(new BigDecimal(valTotalPed))));
+            double s = Double.parseDouble(quantItens);
+            txtQuantidadeRelatorioVendas.setText(String.valueOf(totalQuantidadeProdutos));
+           // txtTotalRelatorioVendas.setText(String.valueOf(classAuxiliar.maskMoney(new BigDecimal(valTotalPed))));
         }
 
+
+
+
         /**
+
          * ********* Caso Usuario realise uma venda sem impressao **************
          * ********* SOLICITA NOVAMENTE AS PERMISSOES NESSA TELA  **************/
 
@@ -119,10 +142,23 @@ public class RelatorioVendasPedido extends AppCompatActivity {
             }
         });
 
+        logTotalDeVendas();
+
         if (configuracoes.GetDevice()) {
             iniciarStone();
         }
     }
+
+    private void logTotalDeVendas() {
+        BigDecimal totalDeVendas = bd.calcularTotalVendas();
+        Log.d("RelatorioVendasPEDIDO", "Total de vendas: " + totalDeVendas.toPlainString());
+
+        // Atualiza o TextView com o valor total das vendas
+        runOnUiThread(() -> {
+            txtTotalRelatorioVendas.setText(classAuxiliar.maskMoney(totalDeVendas));
+        });
+    }
+
 
     void iniciarStone() {
         StoneStart.init(context);

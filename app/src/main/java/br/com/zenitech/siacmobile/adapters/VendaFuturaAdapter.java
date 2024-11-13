@@ -1,5 +1,6 @@
 package br.com.zenitech.siacmobile.adapters;
 
+import android.annotation.SuppressLint;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -14,7 +15,7 @@ import java.util.List;
 import br.com.zenitech.siacmobile.R;
 import br.com.zenitech.siacmobile.domains.ListarVendasDomain;
 
-public class VendaFuturaAdapter extends RecyclerView.Adapter<VendaFuturaAdapter.VendaFuturaViewHolder> {
+public class   VendaFuturaAdapter extends RecyclerView.Adapter<VendaFuturaAdapter.VendaFuturaViewHolder> {
     private List<ListarVendasDomain> listaVendasFuturas;
 
     // Construtor
@@ -30,6 +31,7 @@ public class VendaFuturaAdapter extends RecyclerView.Adapter<VendaFuturaAdapter.
     }
 
 
+    @SuppressLint("DefaultLocale")
     @Override
     public void onBindViewHolder(@NonNull VendaFuturaViewHolder holder, int position) {
         ListarVendasDomain venda = listaVendasFuturas.get(position);

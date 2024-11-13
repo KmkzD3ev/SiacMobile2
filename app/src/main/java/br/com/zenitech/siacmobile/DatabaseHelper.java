@@ -10,7 +10,6 @@ import android.database.Cursor;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
-import android.os.Build;
 import android.os.Environment;
 import android.util.Log;
 
@@ -20,6 +19,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.math.BigDecimal;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Objects;
 
@@ -429,28 +429,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         return lista;
     }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
    /* @SuppressLint("Range")
     public ArrayList<String> listarCodigosEntregaFutura() {
         ArrayList<String> lista = new ArrayList<>();
@@ -729,6 +707,150 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         return listaVendas;
     }
 
+    /************* listar nova tabela ****************/
+    @SuppressLint("Range")
+    public ArrayList<ProdutoEmissor> getProdutosVenda(String codigoVendaApp) {
+        ArrayList<ProdutoEmissor> listaProdutos = new ArrayList<>();
+
+        String query = "SELECT produto, quantidade, preco_unitario FROM produtos_vendas_app WHERE codigo_venda_app = ?";
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = db.rawQuery(query, new String[]{codigoVendaApp});
+
+        if (cursor.moveToFirst()) {
+            do {
+                // Certifique-se de que cada campo corresponde ao tipo esperado em ProdutoEmissor
+                String produtoNome = cursor.getString(cursor.getColumnIndexOrThrow("produto"));
+                String quantidade = cursor.getString(cursor.getColumnIndexOrThrow("quantidade"));
+                String valorUnitario = cursor.getString(cursor.getColumnIndexOrThrow("preco_unitario"));
+
+                // Cria uma instância de ProdutoEmissor com os dados do cursor
+                ProdutoEmissor produto = new ProdutoEmissor(produtoNome, quantidade, valorUnitario);
+                listaProdutos.add(produto);
+
+                Log.d("DatabaseHelper", produto.toString());
+            } while (cursor.moveToNext());
+        } else {
+            Log.d("DatabaseHelper", "Nenhum produto encontrado para o código de venda: " + codigoVendaApp);
+        }
+
+        cursor.close();
+        return listaProdutos;
+    }
+
+    /************* METODO PRA LISTA DE IMPRESSAO ********************/
+    public ArrayList<VendasPedidosComProdutosDomain> getRelatorioVendasComProdutos() {
+        Log.d("DatabaseHelper", "Executando getRelatorioVendasComProdutos()");
+
+        ArrayList<VendasPedidosComProdutosDomain> listaVendas = new ArrayList<>();
+
+        String query = "SELECT codigo_venda, nome_cliente AS codigo_cliente, unidade_venda, produto_venda, data_movimento, " +
+                "quantidade_venda, preco_unitario, (preco_unitario * quantidade_venda) valor_total, " +
+                "vendedor_venda, status_autorizacao_venda, entrega_futura_venda, " +
+                "entrega_futura_realizada, usuario_atual, data_cadastro, codigo_venda_app, " +
+                "venda_finalizada_app chave_importacao, " +
+                "(" +
+                "SELECT GROUP_CONCAT(fin.fpagamento_financeiro || ':  ' || REPLACE('R$ ' || printf('%.2f', fin.valor_financeiro),'.',','), '\n') " +
+                "FROM financeiro fin " +
+                "WHERE fin.id_financeiro_app = codigo_venda_app " +
+                ") formas_pagamento " +
+                "FROM " + TABELA_VENDAS + " " +
+                "INNER JOIN clientes ON clientes.codigo_cliente = vendas_app.codigo_cliente " +
+                "WHERE venda_finalizada_app = '1'" +
+                "ORDER BY produto_venda";
+
+        Log.e("SQL = ", query);
+
+        myDataBase = this.getReadableDatabase();
+        Cursor cursor = myDataBase.rawQuery(query, null);
+
+        if (cursor.getCount() > 0) {
+            cursor.moveToFirst();
+            do {
+                // Cria um objeto VendasPedidosComProdutosDomain com os dados do cursor
+                VendasPedidosComProdutosDomain venda = cursorToVendasComProdutos(cursor);
+
+                // Log dos dados principais da venda
+                Log.d("LOG_VENDA_IMPRESSAO", "Código: " + venda.getCodigo_venda() + ", Cliente: " + venda.getCodigo_cliente() +
+                        ", Produto: " + venda.getProduto_venda() + ", Valor Total: " + venda.getValor_total());
+
+                // Obtém o código de venda para buscar os produtos associados
+                String codigoVendaApp = venda.getCodigo_venda_app();
+                if (codigoVendaApp != null && !codigoVendaApp.isEmpty()) {
+                    // Busca produtos associados a esse código de venda
+                    ArrayList<ProdutoEmissor> produtos = getProdutosVenda(codigoVendaApp);
+                    venda.setListaProdutos(produtos); // Configura a lista de produtos na venda atual
+
+                    // Log dos produtos associados
+                    for (ProdutoEmissor produto : produtos) {
+                        Log.d("Produto_IMPRESSAO", "Nome: " + produto.getNome() + ", Quantidade: " + produto.getQuantidade() +
+                                ", Valor Unitário: " + produto.getValorUnitario());
+                    }
+                }
+
+                listaVendas.add(venda);
+            } while (cursor.moveToNext());
+        }
+
+        cursor.close();
+        myDataBase.close();
+        return listaVendas;
+    }
+
+    /************** QUANTIDADE TOTAL DE ITENS DA TABELA ************************/
+
+    @SuppressLint("Range")
+    public int getTotalQuantidadeProdutos() {
+        int totalQuantidade = 0;
+        String query = "SELECT SUM(quantidade) as TotalQuantidade FROM produtos_vendas_app";
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = db.rawQuery(query, null);
+
+        if (cursor.moveToFirst() && !cursor.isNull(cursor.getColumnIndex("TotalQuantidade"))) {
+            totalQuantidade = cursor.getInt(cursor.getColumnIndex("TotalQuantidade"));
+        }
+
+        Log.d("DatabaseHelper", "Total de quantidade de todos os produtos na tabela: " + totalQuantidade);
+        cursor.close();
+        db.close();
+        return totalQuantidade;
+    }
+
+
+
+    // Método auxiliar para converter o cursor em VendasPedidosComProdutosDomain
+
+
+    @SuppressLint("Range")
+    private VendasPedidosComProdutosDomain cursorToVendasComProdutos(Cursor cursor) {
+        DecimalFormat decimalFormat = new DecimalFormat("#0.00");
+
+        // Converte e formata os valores numéricos antes de passá-los para o construtor
+        String quantidadeVenda = decimalFormat.format(cursor.getDouble(cursor.getColumnIndex("quantidade_venda")));
+        String precoUnitario = decimalFormat.format(cursor.getDouble(cursor.getColumnIndex("preco_unitario")));
+        String valorTotal = decimalFormat.format(cursor.getDouble(cursor.getColumnIndex("valor_total")));
+
+        return new VendasPedidosComProdutosDomain(
+                cursor.getString(cursor.getColumnIndex("codigo_venda")),
+                cursor.getString(cursor.getColumnIndex("codigo_cliente")),
+                cursor.getString(cursor.getColumnIndex("unidade_venda")),
+                cursor.getString(cursor.getColumnIndex("produto_venda")),
+                cursor.getString(cursor.getColumnIndex("data_movimento")),
+                quantidadeVenda, // Formato como String para exibição, ou Double, se desejar para cálculos
+                precoUnitario,
+                valorTotal,
+                cursor.getString(cursor.getColumnIndex("vendedor_venda")),
+                cursor.getString(cursor.getColumnIndex("status_autorizacao_venda")),
+                cursor.getString(cursor.getColumnIndex("entrega_futura_venda")),
+                cursor.getString(cursor.getColumnIndex("entrega_futura_realizada")),
+                cursor.getString(cursor.getColumnIndex("usuario_atual")),
+                cursor.getString(cursor.getColumnIndex("data_cadastro")),
+                cursor.getString(cursor.getColumnIndex("codigo_venda_app")),
+                cursor.getString(cursor.getColumnIndex("chave_importacao")), // alias para venda_finalizada_app
+                cursor.getString(cursor.getColumnIndex("formas_pagamento"))
+        );
+    }
+
+
     //LISTAR TODOS OS ITENS DA VENDA
     public String[] getUltimaVendasCliente() {
 
@@ -761,6 +883,262 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         }
         return id;
     }
+    /************** METODO DE INSERÇAO PRODUTO_VENDA_APP ***********************/
+
+    public long addProdutoVenda(String produto, int quantidade, double precoUnitario, String codigoVendaApp) {
+        // Cria um objeto ContentValues para empacotar os valores a serem inseridos
+        ContentValues values = new ContentValues();
+        values.put("produto", produto);
+        values.put("quantidade", quantidade);
+        values.put("preco_unitario", precoUnitario);
+        values.put("codigo_venda_app", codigoVendaApp);
+
+        // Insere os dados na tabela e retorna o ID da nova linha inserida ou -1 em caso de erro
+        return this.getWritableDatabase().insert("produtos_vendas_app", null, values);
+    }
+
+
+    /************ EXCLUIR PRODUTO ********************************/
+
+   /* public int deleteProdutoVenda(String produto, String codigoVendaApp) {
+        // Log para verificar qual produto e código de venda estão sendo excluídos
+        Log.d("EXCLUIR PRODUTO", "Excluindo produto: " + produto + ", Código de venda: " + codigoVendaApp);
+
+        // Define a cláusula WHERE e os argumentos para identificar o produto específico
+        String whereClause = "produto = ? AND codigo_venda_app = ?";
+        String[] whereArgs = {produto, codigoVendaApp};
+
+        // Executa a exclusão e retorna o número de linhas afetadas
+        return this.getWritableDatabase().delete("produtos_vendas_app", whereClause, whereArgs);
+    }*/
+    public int deleteProdutoVenda(String produto, String codigoVendaApp) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        db.beginTransaction();  // Inicia uma transação para garantir a integridade dos dados
+
+        try {
+            // Log para verificar qual produto e código de venda estão sendo excluídos
+            Log.d("EXCLUIR PRODUTO", "Excluindo produto: " + produto + ", Código de venda: " + codigoVendaApp);
+
+            // Obtenha o valor do produto antes de excluí-lo
+            double valorProduto = getValorProduto(produto, codigoVendaApp);
+
+            // Define a cláusula WHERE e os argumentos para identificar o produto específico em produtos_vendas_app
+            String whereClauseProdutos = "produto = ? AND codigo_venda_app = ?";
+            String[] whereArgsProdutos = {produto, codigoVendaApp};
+
+            // Executa a exclusão na tabela produtos_vendas_app
+            int linhasAfetadasProdutos = db.delete("produtos_vendas_app", whereClauseProdutos, whereArgsProdutos);
+
+            int linhasAfetadasVendas = 0;
+            if (linhasAfetadasProdutos > 0) {
+                Log.d("EXCLUIR PRODUTO", "Produto excluído de produtos_vendas_app: " + produto);
+
+                // Executa a exclusão na tabela vendas_app
+                String whereClauseVendas = "produto_venda = ? AND codigo_venda_app = ?";
+                String[] whereArgsVendas = {produto, codigoVendaApp};
+
+                linhasAfetadasVendas = db.delete("vendas_app", whereClauseVendas, whereArgsVendas);
+                Log.d("EXCLUIR VENDA", "Produto excluído de vendas_app: " + produto);
+
+                // Subtrair o valor do produto do total da venda, se necessário
+                if (linhasAfetadasVendas > 0) {
+                    Log.d("ATUALIZAR VALOR", "Subtraindo do total da venda o valor: R$ " + valorProduto);
+                    //atualizarValorTotalVenda(codigoVendaApp, valorProduto);
+                }
+            }
+
+            db.setTransactionSuccessful();  // Marca a transação como bem sucedida
+            return linhasAfetadasProdutos + linhasAfetadasVendas;  // Retorna o total de linhas afetadas
+
+        } catch (Exception e) {
+            Log.e("DB ERROR", "Erro ao excluir produto: " + e.getMessage());
+            return 0;  // Em caso de erro retorna 0
+        } finally {
+            db.endTransaction();  // Finaliza a transação
+            db.close();  // Fecha a conexão com o banco de dados
+        }
+    }
+
+
+    // Método para obter o valor do produto a ser excluído
+    @SuppressLint("Range")
+    private double getValorProduto(String produto, String codigoVendaApp) {
+        double valorProduto = 0.0;
+        String query = "SELECT quantidade,  preco_unitario FROM produtos_vendas_app WHERE produto = ? AND codigo_venda_app = ?";
+        String[] whereArgs = {produto, codigoVendaApp};
+
+        Cursor cursor = this.getReadableDatabase().rawQuery(query, whereArgs);
+        if (cursor.moveToFirst()) {
+             int quantidade = cursor.getInt(cursor.getColumnIndex("quantidade"));
+            double valorUnitario = cursor.getDouble(cursor.getColumnIndex("preco_unitario"));
+            valorProduto = quantidade * valorUnitario;
+        }
+        cursor.close();
+
+        return valorProduto;
+    }
+
+/**************** OBTER TODOS OS DADOS PRA EDIÇAO ***************/
+
+public DadosCompletosDomain obterDadosCompletosVenda(int codigoVendaApp) {
+    DadosCompletosDomain dadosCompletos = new DadosCompletosDomain();
+
+    // 1. Obter dados da venda principal
+    String queryVenda = "SELECT " +
+            "ven." + CODIGO_VENDA + ", " +
+            "ven." + CODIGO_VENDA_APP + ", " +
+            "cli." + CODIGO_CLIENTE + ", " +
+            "cli." + NOME_CLIENTE + ", " +
+            "ven." + UNIDADE_VENDA + ", " +
+            "ven." + PRODUTO_VENDA + ", " +
+            "ven." + DATA_MOVIMENTO + ", " +
+            "ven." + QUANTIDADE_VENDA + ", " +
+            "ven." + PRECO_UNITARIO + ", " +
+            "ven." + VALOR_TOTAL + ", " +
+            "ven." + VENDEDOR_VENDA + ", " +
+            "ven." + STATUS_AUTORIZACAO_VENDA + ", " +
+            "ven." + ENTREGA_FUTURA_VENDA + ", " +
+            "ven." + ENTREGA_FUTURA_REALIZADA + ", " +
+            "ven." + USUARIO_ATUAL + ", " +
+            "ven." + DATA_CADASTRO + ", " +
+            "ven." + VENDA_FINALIZADA_APP + ", " +
+            "ven." + CHAVE_IMPORTACAO_APP +
+            " FROM " + TABELA_VENDAS + " ven" +
+            " INNER JOIN " + TABELA_CLIENTES + " cli ON cli." + CODIGO_CLIENTE + " = ven." + CODIGO_CLIENTE_VENDA +
+            " WHERE ven." + CODIGO_VENDA_APP + " = ?";
+
+    myDataBase = this.getReadableDatabase();
+    Cursor cursorVenda = myDataBase.rawQuery(queryVenda, new String[]{String.valueOf(codigoVendaApp)});
+
+    if (cursorVenda.moveToFirst()) {
+        dadosCompletos.setCodigoVenda(cursorVenda.getString(cursorVenda.getColumnIndexOrThrow(CODIGO_VENDA)));
+        dadosCompletos.setCodigoVendaApp(cursorVenda.getString(cursorVenda.getColumnIndexOrThrow(CODIGO_VENDA_APP)));
+        dadosCompletos.setCodigoCliente(cursorVenda.getString(cursorVenda.getColumnIndexOrThrow(CODIGO_CLIENTE)));
+        dadosCompletos.setNomeCliente(cursorVenda.getString(cursorVenda.getColumnIndexOrThrow(NOME_CLIENTE)));
+        dadosCompletos.setUnidadeVenda(cursorVenda.getString(cursorVenda.getColumnIndexOrThrow(UNIDADE_VENDA)));
+        dadosCompletos.setProdutoVenda(cursorVenda.getString(cursorVenda.getColumnIndexOrThrow(PRODUTO_VENDA)));
+        dadosCompletos.setDataMovimento(cursorVenda.getString(cursorVenda.getColumnIndexOrThrow(DATA_MOVIMENTO)));
+        dadosCompletos.setQuantidadeVenda(cursorVenda.getString(cursorVenda.getColumnIndexOrThrow(QUANTIDADE_VENDA)));
+        dadosCompletos.setPrecoUnitario(cursorVenda.getString(cursorVenda.getColumnIndexOrThrow(PRECO_UNITARIO)));
+        dadosCompletos.setValorTotal(cursorVenda.getString(cursorVenda.getColumnIndexOrThrow(VALOR_TOTAL)));
+        dadosCompletos.setVendedorVenda(cursorVenda.getString(cursorVenda.getColumnIndexOrThrow(VENDEDOR_VENDA)));
+        dadosCompletos.setStatusAutorizacaoVenda(cursorVenda.getString(cursorVenda.getColumnIndexOrThrow(STATUS_AUTORIZACAO_VENDA)));
+        dadosCompletos.setEntregaFuturaVenda(cursorVenda.getString(cursorVenda.getColumnIndexOrThrow(ENTREGA_FUTURA_VENDA)));
+        dadosCompletos.setEntregaFuturaRealizada(cursorVenda.getString(cursorVenda.getColumnIndexOrThrow(ENTREGA_FUTURA_REALIZADA)));
+        dadosCompletos.setUsuarioAtual(cursorVenda.getString(cursorVenda.getColumnIndexOrThrow(USUARIO_ATUAL)));
+        dadosCompletos.setDataCadastro(cursorVenda.getString(cursorVenda.getColumnIndexOrThrow(DATA_CADASTRO)));
+        dadosCompletos.setVendaFinalizadaApp(cursorVenda.getString(cursorVenda.getColumnIndexOrThrow(VENDA_FINALIZADA_APP)));
+        dadosCompletos.setChaveImportacao(cursorVenda.getString(cursorVenda.getColumnIndexOrThrow(CHAVE_IMPORTACAO_APP)));
+    }
+    cursorVenda.close();
+
+    // 2. Obter lista de produtos da venda
+    ArrayList<ProdutoEmissor> produtosVenda = getProdutosVenda(String.valueOf(codigoVendaApp));
+    dadosCompletos.setProdutosVenda(produtosVenda);
+
+    // 3. Calcular total de itens na venda
+    int totalItens = 0;
+    for (ProdutoEmissor produto : produtosVenda) {
+        try {
+            totalItens += Integer.parseInt(produto.getQuantidade());
+        } catch (NumberFormatException e) {
+            Log.e("DadosCompletosVenda", "Erro ao converter quantidade para inteiro: " + produto.getQuantidade(), e);
+        }
+    }
+    dadosCompletos.setTotalItens(totalItens);
+
+    Log.d("DadosCompletosVenda", "Dados completos da venda recuperados para o código: " + codigoVendaApp);
+
+    return dadosCompletos;
+}
+
+
+    /***************** METODO DE CONSULTA PRODUTO_VENDAS_APP ***********/
+
+    @SuppressLint("Range")
+    public double listarProdutosVendasApp(String codigoVendaApp) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        String query = "SELECT id, produto, quantidade, preco_unitario FROM produtos_vendas_app WHERE codigo_venda_app = ?";
+        Cursor cursor = db.rawQuery(query, new String[]{codigoVendaApp});
+
+        double totalVenda = 0.0;
+
+        if (cursor.moveToFirst()) {
+            do {
+                int id = cursor.getInt(cursor.getColumnIndex("id"));
+                String produto = cursor.getString(cursor.getColumnIndex("produto"));
+                int quantidade = cursor.getInt(cursor.getColumnIndex("quantidade"));
+                 double precoUnitario = cursor.getDouble(cursor.getColumnIndex("preco_unitario"));
+
+                double totalProduto = quantidade * precoUnitario;
+                totalVenda += totalProduto;
+
+                Log.d("DatabaseHelper", "Produto: " + produto + ", Quantidade: " + quantidade + ", Preço Unitário: " + precoUnitario + ", Total Produto: " + totalProduto);
+            } while (cursor.moveToNext());
+        } else {
+            Log.d("DatabaseHelper", "Nenhum produto encontrado para o código de venda: " + codigoVendaApp);
+        }
+        cursor.close();
+        return totalVenda;
+    }
+
+    /************** OBTER TOTAL DE VENDAS REGISTRADAS ****************/
+
+    public BigDecimal calcularTotalVendas() {
+        SQLiteDatabase db = this.getReadableDatabase();
+        BigDecimal totalVendas = BigDecimal.ZERO;
+
+        String query = "SELECT quantidade, preco_unitario FROM produtos_vendas_app";
+        Cursor cursor = db.rawQuery(query, null);
+
+        try {
+            while (cursor.moveToNext()) {
+                int quantidade = cursor.getInt(cursor.getColumnIndexOrThrow("quantidade"));
+                BigDecimal precoUnitario = BigDecimal.valueOf(cursor.getDouble(cursor.getColumnIndexOrThrow("preco_unitario")));
+                BigDecimal totalItem = precoUnitario.multiply(BigDecimal.valueOf(quantidade));
+
+                // Logs para verificação detalhada
+                Log.d("CalculoItemVenda", "Produto com quantidade: " + quantidade + ", Preço unitário: " + precoUnitario + ", Total item: " + totalItem);
+
+                // Acumula o total
+                totalVendas = totalVendas.add(totalItem);
+            }
+
+            // Log do total acumulado após a iteração
+            Log.d("CalculoTotalVendas", "Total acumulado das vendas: " + totalVendas);
+        } finally {
+            if (cursor != null && !cursor.isClosed()) {
+                cursor.close();
+            }
+        }
+
+        db.close();
+        return totalVendas;
+    }
+    /********** DELET GERAL VENDAS ******************/
+
+    public int deleteProdutosPorVenda(String codigoVendaApp) {
+        // Define a cláusula WHERE para remover todos os produtos com o mesmo código de venda
+        String whereClause = "codigo_venda_app = ?";
+        String[] whereArgs = {codigoVendaApp};
+
+        // Executa a exclusão e retorna o número de linhas afetadas
+        SQLiteDatabase db = this.getWritableDatabase();
+        int linhasAfetadas = db.delete("produtos_vendas_app", whereClause, whereArgs);
+        db.close();
+
+        // Log para verificar se a exclusão ocorreu corretamente
+        if (linhasAfetadas > 0) {
+            Log.d("DeleteProdutosPorVenda", "Excluídos " + linhasAfetadas + " produtos para a venda com código: " + codigoVendaApp);
+        } else {
+            Log.d("DeleteProdutosPorVenda", "Nenhum produto encontrado para exclusão com o código de venda: " + codigoVendaApp);
+        }
+
+        return linhasAfetadas;
+    }
+
+
+
 
     //LISTAR TODOS OS ITENS DA VENDA
     public String[] getClienteUltimaVendas(String id_cliente) {
@@ -1132,6 +1510,63 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         return listaEntregasFuturas;
     }
 
+
+    /************ ATUALIZAR DADOS DA VENDA APOS A CRIAÇÃO PRIMÁRIA ****************/
+    public void atualizarValoresVenda(int idVenda, double valorUnitario, double totalVenda, int quantidade) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues valores = new ContentValues();
+        valores.put("preco_unitario", valorUnitario); // Valor unitário em formato double
+        valores.put("valor_total", totalVenda);       // Valor total em formato double
+        valores.put("quantidade_venda", quantidade);  // Quantidade sem espaços extras
+
+        // Tentativa de atualização da venda no banco de dados
+        int resultado = db.update("vendas_app", valores, "codigo_venda = ?", new String[] { String.valueOf(idVenda) });
+
+        // Log para documentar a tentativa de atualização
+        if (resultado > 0) {
+            Log.d("DB Update", "Venda ID " + idVenda + " atualizada com sucesso. Preço Unitário: " + valorUnitario + ", Valor Total: " + totalVenda + ", Quantidade: " + quantidade);
+        } else {
+            Log.d("DB Update", "Falha ao atualizar a venda ID " + idVenda + ". Nenhuma linha afetada.");
+        }
+    }
+
+
+    /******************** ATUALIZAR VENDA FINALIZADA *****************/
+    public void marcarVendaComoFinalizada(int id_venda_app) {
+
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues values = new ContentValues();
+
+        // Define explicitamente o valor do campo venda_finalizada_app como '1'
+        values.put("venda_finalizada_app", "1");
+
+        // Atualiza o registro na tabela TABELA_VENDAS onde o ID corresponde ao codigoVendaApp
+        int rowsAffected = db.update(TABELA_VENDAS, values, "codigo_venda_app = ?", new String[]{String.valueOf(id_venda_app)});
+
+        if (rowsAffected > 0) {
+            Log.d("marcarVendaFinalizada", "Venda com ID " + id_venda_app + " marcada como finalizada.");
+        } else {
+            Log.e("marcarVendaFinalizada", "Falha ao marcar a venda com ID " + id_venda_app);
+        }
+
+        db.close();
+    }
+
+
+
+
+
+  /*  public int atualizarValoresVenda(int idVenda, double valorUnitario, double valorTotal) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues valores = new ContentValues();
+        valores.put("preco_unitario", valorUnitario);
+        valores.put("valor_total", valorTotal);
+
+        // Atualizando a linha
+        return db.update(TABELA_VENDAS, valores, "id_venda = ?", new String[] { String.valueOf(idVenda) });
+    }*/
+/**********************************************************************************/
+
     //########## RELATÓRIOS DE VENDA ############
     //LISTAR TODOS OS CLIENTES
     /*
@@ -1158,6 +1593,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     private static final String DATA_CADASTRO = "data_cadastro";
     private static final String CODIGO_VENDA_APP = "codigo_venda_app";
      */
+    @SuppressLint("Range")
     public ArrayList<VendasDomain> getRelatorioVendas() {
         ArrayList<VendasDomain> listaVendas = new ArrayList<>();
 
@@ -1177,7 +1613,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 "usuario_atual, " +
                 "data_cadastro, " +
                 "codigo_venda_app, " +
-                "venda_finalizada_app " +
+                "venda_finalizada_app, " +
                 "chave_importacao " +
                 "FROM " + TABELA_VENDAS + " WHERE venda_finalizada_app = '1' GROUP BY " + PRODUTO_VENDA;
 
@@ -1190,13 +1626,27 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         if (cursor.moveToFirst()) {
             do {
                 VendasDomain vendas = cursorToVendas(cursor);
+
+                // Logando os dados brutos
+                Log.d("DadosBrutos", "Código Venda: " + cursor.getString(cursor.getColumnIndex("codigo_venda")));
+                Log.d("DadosBrutos", "Código Cliente: " + cursor.getString(cursor.getColumnIndex("codigo_cliente")));
+                Log.d("DadosBrutos", "Produto Venda: " + cursor.getString(cursor.getColumnIndex("produto_venda")));
+                Log.d("DadosBrutos", "Quantidade: " + cursor.getString(cursor.getColumnIndex("quantidade_venda")));
+                Log.d("DadosBrutos", "Valor Total: " + cursor.getString(cursor.getColumnIndex("valor_total")));
+                Log.d("DadosBrutos", "Formas de Pagamento: " + cursor.getString(cursor.getColumnIndex("venda_finalizada_app")));
+
                 listaVendas.add(vendas);
             } while (cursor.moveToNext());
         }
 
+        Log.d("getRelatorioVendas", "Número de vendas retornadas: " + cursor.getCount());
+
         //myDataBase.close();
+        Log.d("LOG LISTA", "getRelatorioVendas: LISTA VENDAS" + listaVendas.toString());
         return listaVendas;
     }
+
+
 
     public ArrayList<VendasPedidosDomain> getRelatorioVendasPedidos() {
         ArrayList<VendasPedidosDomain> listaVendas = new ArrayList<>();
@@ -1284,6 +1734,36 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         return listaVendas;
     }
 
+    /*******************************************************************/
+    @SuppressLint("Range")
+    public ArrayList<ProdutoEmissor> getProdutosPorPedido(String codigoVendaApp) {
+        ArrayList<ProdutoEmissor> listaProdutos = new ArrayList<>();
+        SQLiteDatabase db = this.getReadableDatabase();
+
+        // Consulta usando os nomes corretos das colunas: 'produto', 'quantidade', 'preco_unitario'
+        Cursor cursor = db.rawQuery("SELECT produto, quantidade, preco_unitario FROM produtos_vendas_app WHERE codigo_venda_app = ?", new String[]{codigoVendaApp});
+
+        if (cursor.moveToFirst()) {
+            do {
+                // Obtendo o valor da coluna 'produto' e armazenando na variável para o nome do produto
+                String produto = cursor.getString(cursor.getColumnIndex("produto"));
+                String quantidade = cursor.getString(cursor.getColumnIndex("quantidade"));
+                String valorUnitario = cursor.getString(cursor.getColumnIndex("preco_unitario"));
+
+                // Criando o objeto ProdutoEmissor com os dados da linha atual
+                ProdutoEmissor Produto = new ProdutoEmissor(produto, quantidade, valorUnitario);
+                listaProdutos.add(Produto);
+            } while (cursor.moveToNext());
+        }
+
+        cursor.close();
+        db.close();
+        return listaProdutos;
+    }
+
+
+
+
     public String getFormPagRelatorioVendasPedidos() {
         //(sum(fin.valor_financeiro) * 100)
         StringBuilder formsP = new StringBuilder();
@@ -1320,6 +1800,74 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
         return formsP.toString();
     }
+    /********************************************************************/
+    public ArrayList<VendasPedidosDomain> getRelatorioUnificado() {
+        ArrayList<VendasPedidosDomain> listaVendas = new ArrayList<>();
+
+        // Consulta para obter todas as vendas que possuem correspondência na tabela produtos_vendas_app
+        String query = "SELECT " +
+                "vendas.codigo_venda, " +
+                "vendas.codigo_cliente, " +
+                "produtos.produto AS produto_venda, " +
+                "vendas.data_movimento, " +
+                "IFNULL(SUM(produtos.quantidade), 0) AS quantidade_venda, " +
+                "IFNULL(produtos.preco_unitario, 0) AS preco_unitario, " +
+                "IFNULL(SUM(produtos.preco_unitario * produtos.quantidade), 0) AS valor_total, " +
+                "vendas.vendedor_venda, " +
+                "vendas.status_autorizacao_venda, " +
+                "vendas.entrega_futura_venda, " +
+                "vendas.entrega_futura_realizada, " +
+                "vendas.usuario_atual, " +
+                "vendas.data_cadastro, " +
+                "vendas.codigo_venda_app, " +
+                "vendas.venda_finalizada_app, " +
+                "vendas.chave_importacao " +
+                "FROM " + TABELA_VENDAS + " AS vendas " +
+                "LEFT JOIN produtos_vendas_app AS produtos ON vendas.codigo_venda_app = produtos.codigo_venda_app " +
+                "GROUP BY vendas.codigo_venda_app " +
+
+                "UNION ALL " +
+
+                // Consulta para obter todas as vendas que estão apenas em produtos_vendas_app, sem correspondência em TABELA_VENDAS
+                "SELECT " +
+                "NULL AS codigo_venda, " +
+                "NULL AS codigo_cliente, " +
+                "produtos.produto AS produto_venda, " +
+                "NULL AS data_movimento, " +
+                "SUM(produtos.quantidade) AS quantidade_venda, " +
+                "produtos.preco_unitario, " +
+                "SUM(produtos.preco_unitario * produtos.quantidade) AS valor_total, " +
+                "NULL AS vendedor_venda, " +
+                "NULL AS status_autorizacao_venda, " +
+                "NULL AS entrega_futura_venda, " +
+                "NULL AS entrega_futura_realizada, " +
+                "NULL AS usuario_atual, " +
+                "NULL AS data_cadastro, " +
+                "produtos.codigo_venda_app, " +
+                "NULL AS venda_finalizada_app, " +
+                "NULL AS chave_importacao " +
+                "FROM produtos_vendas_app AS produtos " +
+                "LEFT JOIN " + TABELA_VENDAS + " AS vendas ON produtos.codigo_venda_app = vendas.codigo_venda_app " +
+                "WHERE vendas.codigo_venda_app IS NULL " +
+                "GROUP BY produtos.codigo_venda_app";
+
+        Log.d("SQL Query", "Query executada: " + query);
+
+        myDataBase = this.getReadableDatabase();
+        Cursor cursor = myDataBase.rawQuery(query, null);
+
+        if (cursor.moveToFirst()) {
+            do {
+                VendasPedidosDomain vendas = cursorToVendasPedidos(cursor);
+                listaVendas.add(vendas);
+            } while (cursor.moveToNext());
+        }
+
+        Log.d("getRelatorioVendas", "Número de vendas retornadas: " + cursor.getCount());
+
+        return listaVendas;
+    }
+/*******************************************************************/
 
     //
     public ArrayList<RelatorioVendasClientesDomain> getRelatorioVendasClientes(String produto) {

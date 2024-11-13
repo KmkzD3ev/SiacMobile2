@@ -4,6 +4,7 @@ import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.widget.Button;
 import android.widget.TextView;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
@@ -100,7 +101,18 @@ public class Principal2 extends AppCompatActivity {
 
         txtVersao.setText(BuildConfig.VERSION_NAME);
         txtDataUltimoSinc.setText(prefs.getString("data_sincronizado", ""));
+
+
+        Button fabVenda = findViewById(R.id.fab_venda);
+        if (fabVenda != null) {
+            fabVenda.setOnClickListener(view -> {
+                Intent intent1 = new Intent(this, Listar_venda_futura.class);
+                startActivity(intent1);
+            });
+        }
+
     }
+
 
     private void callDialog(String impressora) {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);

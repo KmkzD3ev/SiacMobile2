@@ -12,7 +12,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
-import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Bitmap;
 import android.graphics.drawable.Drawable;
 import android.os.Build;
@@ -31,7 +30,6 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
 
 import com.datecs.api.BuildInfo;
 import com.datecs.api.card.FinancialCard;
@@ -68,8 +66,9 @@ import br.com.zenitech.siacmobile.controller.PrintViewHelper;
 import br.com.zenitech.siacmobile.domains.Clientes;
 import br.com.zenitech.siacmobile.domains.ContasBancarias;
 import br.com.zenitech.siacmobile.domains.FinanceiroReceberDomain;
+import br.com.zenitech.siacmobile.domains.ProdutoEmissor;
 import br.com.zenitech.siacmobile.domains.UnidadesDomain;
-import br.com.zenitech.siacmobile.domains.VendasPedidosDomain;
+import br.com.zenitech.siacmobile.domains.VendasPedidosComProdutosDomain;
 import br.com.zenitech.siacmobile.network.PrinterServer;
 import br.com.zenitech.siacmobile.util.HexUtil;
 
@@ -127,8 +126,8 @@ public class Impressora extends AppCompatActivity {
     //PosApp posApp;
 
     //
-    ArrayList<VendasPedidosDomain> elementosPedidos;
-    VendasPedidosDomain pedidos;
+    ArrayList<VendasPedidosComProdutosDomain> elementosPedidos;
+    VendasPedidosComProdutosDomain pedidos;
 
     ArrayList<FinanceiroReceberDomain> elementosRecebidos;
     FinanceiroReceberDomain recebidos;
@@ -146,6 +145,7 @@ public class Impressora extends AppCompatActivity {
     String enderecoBlt = "";
     String tamFont = "";
     SharedPreferences prefs;
+    String valTotalPed;
 
     //
     String root = Environment.getExternalStorageDirectory().getAbsolutePath();
@@ -471,7 +471,12 @@ public class Impressora extends AppCompatActivity {
                     }
                     //printPage();
                 } else if (tipoImpressao.equals("relatorio")) {
-                    printRelatorioNFCE58mm();
+                    // Calcula o total de todas as vendas
+                    BigDecimal valorTotalVendas = bd.calcularTotalVendas();
+
+                    // Atribui o total calculado a valTotalPed em formato de string
+                    valTotalPed = valorTotalVendas.toString();
+                    printRelatorioNFCE58mm(valorTotalVendas);
                 } else if (tipoImpressao.equals("relatorioBaixa")) {
                     printRelatorioBaixas58mm();
                 } else if (tipoImpressao.equals("Boleto")) {
@@ -1389,7 +1394,7 @@ public class Impressora extends AppCompatActivity {
             String valorMascarado = cAux.formatarValorMonetario(valorFormatado); // Mudança aqui
             String txtValor = "VALOR: " + valorMascarado; // Mudança aqui
 
-            // Adicionar logs para verificar o valor formatado e mascarado
+            // Adicionar logs para verificar o valor formatado e mascaradoa
             Log.i("ValorFormatado", valorFormatado.toString());
             Log.i("ValorMascarado", valorMascarado);
 
@@ -1545,12 +1550,13 @@ public class Impressora extends AppCompatActivity {
 
     // ***************** RELATÓRIO 58mm **************************//
 
-    private void printRelatorioNFCE58mm() {
+    private void printRelatorioNFCE58mm(BigDecimal valorTotalVendas) {
         runTask((dialog, printer) -> {
+
             Log.d(LOG_TAG, "Print Relatório NFC-e");
             //printer.reset();
 
-            elementosPedidos = bd.getRelatorioVendasPedidos();
+            elementosPedidos = bd.getRelatorioVendasComProdutos();
 
             strFormPags = bd.getFormPagRelatorioVendasPedidos();
             /*String serie = bd.getSeriePOS();*/
@@ -1560,7 +1566,7 @@ public class Impressora extends AppCompatActivity {
             unidade = bd.getUnidade();
 
             String quantItens = "0";
-            String valTotalPed = "0";
+            valTotalPed = "0";
 
             StringBuilder textBuffer = new StringBuilder();
 
@@ -1575,7 +1581,7 @@ public class Impressora extends AppCompatActivity {
             textBuffer.append(tamFont).append("Data Movimento: ").append(cAux.exibirData(prefs.getString("data_movimento_atual", ""))).append("{br}");
 
             textBuffer.append(tamFont).append("{br}");
-            textBuffer.append(tamFont).append("{br}").append("         *** ITENS ***").append("{br}");
+            textBuffer.append(tamFont).append("{br}").append("     *** ITENS ***").append("{br}");
             textBuffer.append(tamFont).append("-------------------------------{br}");
 
             // TOTAL DE PRODUTOS
@@ -1583,55 +1589,57 @@ public class Impressora extends AppCompatActivity {
             int totalProdutosNFE = 0;
 
             //DADOS DAS NOTAS NFC-e
+            // Itera sobre os elementos de pedidos para exibir detalhes de cada pedido
+            String valTotal = null;
             if (elementosPedidos.size() > 0) {
                 for (int n = 0; n < elementosPedidos.size(); n++) {
 
-                    //DADOS DOS PEDIDO
+                    // Dados do pedido atual
                     pedidos = elementosPedidos.get(n);
 
-                    // SOMA A QUANTIDADE DE ITENS
-                    String[] somarItens = {quantItens, pedidos.getQuantidade_venda()};
+                    // Soma a quantidade de itens e valor total dos pedidos
+                    String[] somarItens = {quantItens, String.valueOf(pedidos.getQuantidade_venda())};
                     quantItens = String.valueOf(cAux.somar(somarItens));
 
-                    // SOMA O VALOR TOTAL DOS PEDIDOS
-                    String[] somarValTot = {valTotalPed, pedidos.getValor_total()};
-                    valTotalPed = String.valueOf(cAux.somar(somarValTot));
+                    String[] somarValTot = {valTotalPed, String.valueOf(pedidos.getValor_total())};
+                    // valTotalPed = String.valueOf(cAux.somar(somarValTot));
+                    valTotal = cAux.formatarValorMonetario(valorTotalVendas);
 
-                    //IMPRIMIR TEXTO
-                    //textBuffer.append(tamFont).append("PRODUTO | QTDE. | VL.UNIT | VL.TOTAL{br}");
-                    textBuffer.append(tamFont).append("PRODUTO: ").append(pedidos.getProduto_venda()).append("{br}");
+                    // Adiciona o cabeçalho do produto atual
+                   // textBuffer.append(tamFont).append("PRODUTOS: ").append(pedidos.getProduto_venda()).append("{br}");
+                    textBuffer.append(tamFont).append("PRODUTOS").append("{br}");
                     textBuffer.append(tamFont).append("QTDE.: ").append(" | VL.UNIT: ").append(" | VL.TOTAL: ").append("{br}");
-                    textBuffer.append(tamFont).append(pedidos.getQuantidade_venda()).append("       | ").append(cAux.formatarValorMonetario(new BigDecimal(pedidos.getPreco_unitario()))).append("    | ").append(cAux.formatarValorMonetario(new BigDecimal(pedidos.getValor_total()))).append("{br}");
+
+                    // Itera sobre a lista de produtos associados ao pedido atual
+                    for (ProdutoEmissor produto : pedidos.getListaProdutos()) {
+                        Log.d("VER LISTA", "Quantidade de produtos no pedido: " + pedidos.getListaProdutos().size());
+
+                        textBuffer.append(tamFont)
+                                .append(produto.getNome()).append(" | ")
+                                .append(produto.getQuantidade()).append(" | ")
+                                .append(cAux.formatarValorMonetario(new BigDecimal(produto.getValorUnitario()))).append(" | ")
+                                .append("{br}");
+                    }
 
                     textBuffer.append(tamFont).append("FORMA(S) PAGAMENTO: ").append("{br}");
                     textBuffer.append(tamFont).append(pedidos.getFormas_pagamento()).append("{br}");
-
                     textBuffer.append(tamFont).append("CLIENTE: ").append(pedidos.getCodigo_cliente()).append("{br}");
                     textBuffer.append(tamFont).append("-------------------------------").append("{br}");
-
-                    /*try {
-                        String[] sum = {String.valueOf(n), "1"};
-                        imprimindo.setText(String.valueOf(cAux.somar(sum)));
-                    } catch (Exception ignored) {
-
-                    }*/
-                    //totalProdutos += Integer.parseInt(itensPedidos.getQuantidade());
                 }
             }
 
+            // Exibe os totais conforme o padrão já estabelecido
             textBuffer.append(tamFont).append("{br}").append("         *** TOTAIS ***").append("{br}{br}");
-
-            /*textBuffer.append(tamFont).append("Quant. P13: ").append(totalProdutos).append(" Total: R$ ").append(totalProdutos).append("{br}");
-            textBuffer.append(tamFont).append("Quant. P20: ").append(totalProdutosNFE).append(" Total: R$ ").append("{br}");*/
-            String[] somar = {String.valueOf(totalProdutos), String.valueOf(totalProdutosNFE)};
-            //textBuffer.append(tamFont).append("-------------------------------").append("{br}");
-            Double s = Double.parseDouble(quantItens);
             textBuffer.append(tamFont).append("TOTAL DE VENDAS: ").append(elementosPedidos.size()).append("{br}");
-            textBuffer.append(tamFont).append("TOTAL DE ITENS: ").append(s.intValue()).append("{br}");
-            textBuffer.append(tamFont).append("FORMAS PAGAMENTO: ").append("{br}").append(formatarFormasPagamento(strFormPags)).append("{br}");
-            textBuffer.append(tamFont).append("VALOR TOTAL: ").append(cAux.formatarValorMonetario(new BigDecimal(valTotalPed))).append("{br}");
-
+            textBuffer.append(tamFont).append("TOTAL DE ITENS: ").append((int) Double.parseDouble(quantItens)).append("{br}");
+            //textBuffer.append(tamFont).append("TOTAL DE ITENS: ").append(Integer.parseInt(quantItens)).append("{br}");
+            //textBuffer.append(tamFont).append("VALOR TOTAL: ").append(cAux.formatarValorMonetario(new BigDecimal(valTotalPed))).append("{br}");
+            textBuffer.append(tamFont).append("VALOR TOTAL: ").append(valTotal).append("{br}");
             textBuffer.append("{br}{br}");
+
+            // Log do conteúdo final para impressão
+            Log.d("CONTEUDO IMPRESSAO", "Conteúdo final para impressão: \n" + textBuffer.toString());
+
 
             //printer.reset();
             printer.selectPageMode();
@@ -1653,31 +1661,6 @@ public class Impressora extends AppCompatActivity {
         }, R.string.msg_printing_relatorio);
     }
 
-    /******* FORMATAÇAO PARA TODOS OS VALORES DE FORMAS DE PAGAMENTO RELATORIOS  *******/
-
-    private String formatarFormasPagamento(String strFormPags) {
-        StringBuilder formattedFormPags = new StringBuilder();
-        String[] formasPagamento = strFormPags.split("\\r?\\n");
-        for (String forma : formasPagamento) {
-            if (forma.contains(":")) {
-                String[] parts = forma.split(":");
-                String descricao = parts[0].trim();
-                try {
-                    // Retira os caracteres não numéricos, exceto ponto e vírgula
-                    String valorStr = parts[1].replaceAll("[^\\d,]", "").replace(",", ".");
-                    BigDecimal valor = new BigDecimal(valorStr);
-                    formattedFormPags.append(descricao).append(": ")
-                            .append(cAux.formatarValorMonetario(valor)).append("{br}");
-                } catch (NumberFormatException e) {
-                    formattedFormPags.append(forma).append("{br}"); // Caso ocorra um erro na conversão
-                }
-            } else {
-                formattedFormPags.append(forma).append("{br}");
-            }
-        }
-        return formattedFormPags.toString();
-    }
-
 
     private void printRelatorioBaixas58mm() {
         runTask((dialog, printer) -> {
@@ -1686,7 +1669,7 @@ public class Impressora extends AppCompatActivity {
             unidade = bd.getUnidade();
 
             String quantItens = "0";
-            String valTotalPed = "0";
+            valTotalPed = "0";
 
             StringBuilder textBuffer = new StringBuilder();
 
@@ -1725,6 +1708,8 @@ public class Impressora extends AppCompatActivity {
             textBuffer.append(tamFont).append("VALOR TOTAL: R$ ").append(cAux.formatarValorMonetario(new BigDecimal(valTotalPed))).append("{br}");
 
             textBuffer.append("{br}{br}");
+
+
 
             //printer.reset();
             printer.selectPageMode();

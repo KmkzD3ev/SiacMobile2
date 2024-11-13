@@ -112,18 +112,34 @@ public class ClassAuxiliar {
         return horaAtual;
     }
 
-    //SOMAR VALORES
+
+    // SOMAR VALORES
     public BigDecimal somar(String[] args) {
         BigDecimal valor = new BigDecimal("0.0");
 
-        //
         for (String v : args) {
-            valor = new BigDecimal(String.valueOf(valor)).add(new BigDecimal(v));
-            //
-            Log.e("TOTAL", "SOMAR" + valor);
+            try {
+                if (v == null || v.trim().isEmpty()) {
+                    Log.e("ERRO_SOMAR", "Valor nulo ou vazio ignorado");
+                    continue;
+                }
+
+                // Converte vírgulas para pontos e remove espaços em branco extras
+                v = v.replace(",", ".").trim();
+
+                // Tenta converter para BigDecimal e somar
+                BigDecimal valorConvertido = new BigDecimal(v);
+                valor = valor.add(valorConvertido);
+
+                Log.e("TOTAL", "SOMAR " + valor); // Log com o valor atualizado após cada soma
+            } catch (NumberFormatException e) {
+                Log.e("ERRO_SOMAR", "Erro ao formatar valor: '" + v + "'", e); // Log de erro detalhado
+            }
         }
         return valor;
     }
+
+
 
     //SUBTRAIR VALORES
     public BigDecimal subitrair(String[] args) {

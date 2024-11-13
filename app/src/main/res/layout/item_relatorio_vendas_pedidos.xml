@@ -10,6 +10,7 @@
     android:layout_marginStart="16dp"
     android:layout_marginTop="8dp"
     android:gravity="center"
+    app:cardCornerRadius="8dp"
     android:orientation="vertical">
 
     <LinearLayout
@@ -19,13 +20,49 @@
         android:background="?android:attr/selectableItemBackground"
         android:orientation="vertical">
 
+        <!-- Seção Produto, Quantidade e Valor Unitário -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:gravity="right|center"
             android:orientation="horizontal"
-            android:padding="7dp">
+            android:paddingVertical="8dp"
+            android:gravity="center_horizontal">
 
+            <!-- Seção Produto -->
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:paddingEnd="8dp">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Produto:"
+                    android:textColor="@color/colorPrimaryDark"
+                    android:textStyle="bold" />
+
+            </LinearLayout>
+
+            <!-- Seção Quantidade -->
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:paddingEnd="8dp">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Quantidade:"
+                    android:textColor="@color/colorPrimaryDark"
+                    android:textStyle="bold" />
+
+            </LinearLayout>
+
+            <!-- Seção Valor Unitário -->
             <LinearLayout
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
@@ -35,108 +72,71 @@
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Produto:" />
-
-                <TextView
-                    android:id="@+id/txtProduto"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="Botijão - P2"
-                    android:textAppearance="?android:attr/textAppearanceMedium"
+                    android:text="Valor Unitário:"
                     android:textColor="@color/colorPrimaryDark"
-                    android:textSize="14sp" />
+                    android:textStyle="bold" />
+
+
             </LinearLayout>
-
-            <LinearLayout
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:orientation="vertical">
-
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="Quant.:" />
-
-                <TextView
-                    android:id="@+id/txtQuantidade"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="2"
-                    android:textAppearance="?android:attr/textAppearanceMedium"
-                    android:textColor="@color/colorPrimaryDark"
-                    android:textSize="14sp" />
-            </LinearLayout>
-
-            <LinearLayout
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:orientation="vertical">
-
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="Média:" />
-
-                <TextView
-                    android:id="@+id/txtTotal"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="100,00"
-                    android:textAppearance="?android:attr/textAppearanceMedium"
-                    android:textColor="@color/colorAccent"
-                    android:textSize="14sp" />
-            </LinearLayout>
+        </LinearLayout>
+        <!-- Seção onde os produtos da venda serão listados dinamicamente -->
+        <LinearLayout
+            android:id="@+id/containerProdutos"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+          >
 
         </LinearLayout>
 
 
+        <!-- Seção Forma(s) de Pagamento -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:gravity="right"
-            android:padding="7dp">
+            android:orientation="vertical"
+            android:paddingVertical="8dp">
 
-            <LinearLayout
-                android:layout_width="0dp"
+            <TextView
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:orientation="vertical">
+                android:text="Forma(s) Pagamento:"
+                android:textStyle="bold"
+                android:textColor="@color/colorPrimaryDark"
+                android:paddingBottom="4dp" />
 
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="Forma(s) Pagamento:" />
-
-                <TextView
-                    android:id="@+id/txtFormasPagamento"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="Dinheiro"
-                    android:textAppearance="?android:attr/textAppearanceMedium"
-                    android:textColor="@color/colorPrimaryDark"
-                    android:textSize="14sp" />
-            </LinearLayout>
+            <TextView
+                android:id="@+id/txtFormasPagamento"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Dinheiro"
+                android:textAppearance="?android:attr/textAppearanceMedium"
+                android:textColor="@color/colorPrimaryDark"
+                android:textSize="14sp" />
         </LinearLayout>
 
-
+        <!-- Seção Nome do Cliente -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:gravity="right"
-            android:padding="7dp">
+            android:orientation="horizontal"
+            android:paddingVertical="8dp"
+            android:gravity="center_vertical">
 
             <TextView
                 android:id="@+id/txtNomeCliente"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:padding="6dp"
-                android:text="Listar clientes deste produto" />
+                android:text="Listar clientes deste produto"
+                android:textColor="@color/colorPrimaryDark"
+                android:textSize="14sp" />
 
             <ImageView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 app:srcCompat="@drawable/ic_user"
+                android:padding="4dp"
                 app:tint="@color/colorPrimary" />
         </LinearLayout>
 

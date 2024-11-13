@@ -1,9 +1,8 @@
+
 package br.com.zenitech.siacmobile;
 
-import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 
 import androidx.appcompat.app.AlertDialog;
@@ -16,7 +15,6 @@ import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
 import android.view.Gravity;
-import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -41,9 +39,10 @@ import java.util.Date;
 import java.util.Locale;
 import java.util.Objects;
 
-import br.com.zenitech.siacmobile.adapters.VendasAdapter;
-import br.com.zenitech.siacmobile.domains.ClientesContasReceber;
+import br.com.zenitech.siacmobile.adapters.ProdutosAdapter;
+import br.com.zenitech.siacmobile.domains.DadosCompletosDomain;
 import br.com.zenitech.siacmobile.domains.FinanceiroReceberClientes;
+import br.com.zenitech.siacmobile.domains.ProdutoEmissor;
 import br.com.zenitech.siacmobile.domains.VendasDomain;
 
 public class Vendas extends AppCompatActivity {
@@ -58,8 +57,9 @@ public class Vendas extends AppCompatActivity {
     ArrayList<String> listaProdutos;
     //LISTAR VENDAS
     ArrayList<VendasDomain> listaVendas;
-    VendasAdapter adapter;
+    ProdutosAdapter adapter;
     RecyclerView rvVendas;
+
 
     Spinner spProduto;
     EditText etQuantidade, etPreco;
@@ -72,7 +72,7 @@ public class Vendas extends AppCompatActivity {
     String nome_cliente = "";
     String latitude_cliente = "";
     String longitude_cliente = "";
-    int id = 1;
+    int id ;
     int id_venda_app = 1;
     private String total_venda = "0.0";
     String saldo = "";
@@ -87,6 +87,9 @@ public class Vendas extends AppCompatActivity {
     private String editandoVenda = "";
     private boolean isPrecoFixo = false; // PARAMETRO PARA VERIFICAÇO E EDIÇAO DE PREÇO PRE-DEFINIDO
     private int estadoEntregaFuturaOriginal;
+    // Dentro da classe Vendas ou onde o método atualizarListaProdutos está implementado
+    private ArrayList<ProdutoEmissor> listaProdutosVenda = new ArrayList<>();
+    private boolean vendaAlterada = false;  // Inicialmente, não há alterações
 
 
 
@@ -99,16 +102,42 @@ public class Vendas extends AppCompatActivity {
         setSupportActionBar(toolbar);
         Objects.requireNonNull(getSupportActionBar()).setDisplayHomeAsUpEnabled(true);
 
-       /************ COMPONENTES PARA PERSISTIR ESTADO CHECBOX ***********/
+
+
+
+        /************ COMPONENTES PARA PERSISTIR ESTADO CHECBOX ***********/
 
         // Inicializa corretamente o SharedPreferences e o Editor antes de qualquer uso
         prefs = getSharedPreferences("preferencias", MODE_PRIVATE);
         ed = prefs.edit();  // Inicializando o Editor aqui
 
+        String editarFlag = getIntent().getStringExtra("editar");
+        Log.d("VALOR DA FLAG", "onCreate: RECEBENDO " + editarFlag );
+
+        // Verifica se a chave "editar" é igual a "sim"
+        if ("sim".equals(editarFlag)) {
+            // Se estiver em modo de edição, usa o id atual sem incrementar
+            id = prefs.getInt("id_venda", 1);
+            Log.d("EDITANDO", "onCreate: USANDO ID EXISTENTE PARA VENDA " + id);
+            Toast.makeText(this, "UMA VENDA EDITADA", Toast.LENGTH_SHORT).show();
+        } else {
+            // Se não estiver no modo de edição, incrementa o id normalmente
+            id = prefs.getInt("id_venda", 1) + 1;
+            Log.d("I.D.S", "onCreate: INICIANDO TRABALHO COM IDS " + id);
+            id_venda_app = prefs.getInt("id_venda_app", 1) + 1;
+            ed.putInt("id_venda_app", id_venda_app).apply();
+            ed.putInt("id_venda", id_venda_app).apply();
+            Log.d("INSERT", "onCreate: AUMENTANDO O VALOR PRA VENDA " + id);
+            Log.d("FINALIZANDO", "onCreate: INCREMENTADO ID DA VENDA PARA " + id_venda_app);
+
+            Toast.makeText(this, "ESTA É UMA VENDA NOVA", Toast.LENGTH_SHORT).show();
+        }
+
+
+
         // Inicializar entrega_futura_venda como 0 (padrão)
         ed.putInt("entrega_futura_venda", 0).apply();
         Log.d("CheckBox", "Valor padrão de entrega_futura_venda definido para: 0");
-
 
         //
         classAuxiliar = new ClassAuxiliar();
@@ -118,8 +147,46 @@ public class Vendas extends AppCompatActivity {
         ed = prefs.edit();
         creditoPrefs = new CreditoPrefs(this);
 
+
         //
         bd = new DatabaseHelper(this);
+        listaProdutos = bd.getProdutos();
+        ArrayAdapter adapter = new ArrayAdapter(this, android.R.layout.simple_spinner_item, listaProdutos);
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        spProduto = findViewById(R.id.spProdutos);
+        spProduto.setAdapter(adapter);
+        //spProduto.requestFocus();
+
+
+        // Chama o método getRelatorioVendas e loga o resultado detalhado
+        ArrayList<VendasDomain> relatorioVendas = bd.getRelatorioVendas();
+        Log.d("getRelatorioVendas", "Número de vendas retornadas: " + relatorioVendas.size());
+
+        // Itera sobre cada venda e loga os detalhes
+        for (VendasDomain venda : relatorioVendas) {
+            Log.d("RelatorioVendas", "Código Venda: " + venda.getCodigo_venda());
+            Log.d("RelatorioVendas", "Código Cliente: " + venda.getCodigo_venda());
+            Log.d("RelatorioVendas", "Unidade Venda: " + venda.getUnidade_venda());
+            Log.d("RelatorioVendas", "Produto Venda: " + venda.getProduto_venda());
+            Log.d("RelatorioVendas", "Data Movimento: " + venda.getData_movimento());
+            Log.d("RelatorioVendas", "Quantidade Venda: " + venda.getQuantidade_venda());
+            Log.d("RelatorioVendas", "Preço Unitário: " + venda.getPreco_unitario());
+            Log.d("RelatorioVendas", "Valor Total: " + venda.getValor_total());
+            Log.d("RelatorioVendas", "Vendedor Venda: " + venda.getVendedor_venda());
+            Log.d("RelatorioVendas", "Status Autorização: " + venda.getStatus_autorizacao_venda());
+            Log.d("RelatorioVendas", "Entrega Futura: " + venda.getEntrega_futura_venda());
+            Log.d("RelatorioVendas", "Entrega Futura Realizada: " + venda.getEntrega_futura_realizada());
+            Log.d("RelatorioVendas", "Usuário Atual: " + venda.getUsuario_atual());
+            Log.d("RelatorioVendas", "Data Cadastro: " + venda.getData_cadastro());
+            Log.d("RelatorioVendas", "ID Venda App: " + venda.getCodigo_venda_app());
+            Log.d("RelatorioVendas", "Chave Importação: " + venda.getChave_importacao());
+            // Log.d("RelatorioVendas", "Formas de Pagamento: " + venda.get());
+        }
+
+        //
+
+        //
+
         bd.VendaFuturaAtiva();
 
 
@@ -129,7 +196,7 @@ public class Vendas extends AppCompatActivity {
         // Loga o valor retornado pelo método
         Log.d("VENDAS", "Venda Futura Ativa: " + vendaFuturaAtiva);
 
-       /************* LISTNER DO CHECBOX *****************/
+        /************* LISTNER DO CHECBOX *****************/
         // Inicializa o CheckBox
         CheckBox checkBoxConfirmar = findViewById(R.id.checkbox_confirmar);
 
@@ -144,18 +211,19 @@ public class Vendas extends AppCompatActivity {
             // Log para verificação
             Log.d("CheckBox", "Valor de entrega_futura_venda definido para: " + entregaFutura);
         });
+        obterDados();
 
         //
         rvVendas = findViewById(R.id.rvVendas);
         rvVendas.setLayoutManager(new LinearLayoutManager(Vendas.this));
 
-        //
+        /*
         listaProdutos = bd.getProdutos();
         ArrayAdapter adapter = new ArrayAdapter(this, android.R.layout.simple_spinner_item, listaProdutos);
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         spProduto = findViewById(R.id.spProdutos);
         spProduto.setAdapter(adapter);
-        //spProduto.requestFocus();
+        //spProduto.requestFocus();*/
 
         //
         etQuantidade = findViewById(R.id.etQuantidade);
@@ -173,6 +241,21 @@ public class Vendas extends AppCompatActivity {
         textTotalItens = findViewById(R.id.textTotalItens);
         textTotalItens.setText(R.string.zero);
 
+        // Verifica se a flag "editar" é "sim" para determinar o modo de edição ou criação de uma nova venda
+        if ("sim".equals(editarFlag)) {
+
+            // Caso seja edição, usa o id atual e loga a venda
+            Log.d("EDITANDO VENDA", "Flag de edição ativa. Logando dados da venda com id_venda_app: " + id_venda_app);
+            logarDadosCompletosVenda();
+            Toast.makeText(this, "Editando uma venda existente", Toast.LENGTH_SHORT).show();
+        } else {
+            // Caso contrário, inicia uma nova venda e incrementa o ID
+            Log.d("NOVA VENDA", "Flag de edição inativa. Criando nova venda com novo ID.");
+            inicializarVendaPrincipal();
+            Toast.makeText(this, "Iniciando uma nova venda", Toast.LENGTH_SHORT).show();
+        }
+
+
         etPreco.setOnEditorActionListener((v, actionId, event) -> {
             boolean handled = false;
             if (actionId == EditorInfo.IME_ACTION_SEND) {
@@ -180,7 +263,8 @@ public class Vendas extends AppCompatActivity {
                 if (etQuantidade.getText().toString().equals("") || etQuantidade.getText().toString().equals("0") || etPreco.getText().toString().equals("") || etPreco.getText().toString().equals("R$ 0,00")) {
                     Toast.makeText(Vendas.this, "Quantidade e Preço não podem ser vazios.", Toast.LENGTH_LONG).show();
                 } else {
-                    addVenda();
+                    adicionarProdutoAoPedido();
+                    AttVendafutura();
                 }
 
                 handled = true;
@@ -210,99 +294,41 @@ public class Vendas extends AppCompatActivity {
                     || valEtPreco.equals("0.00")) {
                 ShowMsgToast("Informe o valor unitário.");
             } else {
-                addVenda();
+                adicionarProdutoAoPedido();
+                AttVendafutura();
+                atualizarListaProdutos();
+
             }
         });
 
-        //
-        Intent intent = getIntent();
+        /******************* VERIFICAR MARCAÇAO PREVIA ENTREGA FUTURA ****************/
 
-        if (intent != null) {
-            Bundle params = intent.getExtras();
+        // Aqui chamamos o método para verificar se a venda é futura e armazenamos o estado original
+        int idVendaAppLocal = prefs.getInt("id_venda_app", 0);
+        int entregaFutura = bd.getEntregaFuturaVenda(idVendaAppLocal);
+        Log.d("log id ", "onCreate: id venda para entrega futura " + idVendaAppLocal);
+        estadoEntregaFuturaOriginal = entregaFutura; // Armazena o estado original
+        Log.d("VENDA RECUPERADA", "onCreate: recebendo entrega futura " + entregaFutura);
+        // Atualiza o estado do CheckBox de acordo
+        checkBoxConfirmar.setChecked(entregaFutura == 1);  // Marca o CheckBox se for venda futura
 
-            if (params != null) {
+        // Adiciona o listener de mudança de estado do CheckBox
+        checkBoxConfirmar.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            // Se o checkbox for marcado, definimos entrega_futura_venda para 1, caso contrário permanece 0
+            int entregaFuturaAtual = isChecked ? 1 : 0;
 
-                //SE A VENDA FOR NOVA
-                if (params.getString("id_venda").equals("")) {
-
-                    //
-                    id = prefs.getInt("id_venda", 1);
-
-                    id_venda_app = (prefs.getInt("id_venda_app", 1) + 1);
-                    ed.putInt("id_venda_app", id_venda_app).apply();
-
-                    id_cliente = params.getString("codigo");
-                    nome_cliente = params.getString("nome");
-                    latitude_cliente = params.getString("latitude_cliente");
-                    longitude_cliente = params.getString("longitude_cliente");
-                    saldo = params.getString("saldo");
-                    cpfcnpj = params.getString("cpfcnpj");
-                    endereco = params.getString("endereco");
-                    editandoVenda = "";
-
-                    // **Aqui inserimos a verificação e o armazenamento do limite de crédito**
-                    DatabaseHelper dbHelper = new DatabaseHelper(this);
-                    int limiteCreditoPrimario = dbHelper.getLimiteCreditoCliente(id_cliente);
-                    creditoPrefs.setLimitePrimario(String.valueOf(limiteCreditoPrimario));
-
-                    // Log para depuração
-                    Log.d("LIMite PRIMARIO", "Limite PRIMARIO de crédito para o cliente " + id_cliente + ": " + limiteCreditoPrimario);
-
-
-                }
-                //SE FOR EDITAR A ÚLTIMA VENDA REALIZADA
-                else {
-                    //
-                    id = Integer.parseInt(params.getString("id_venda"));
-                    id_venda_app = Integer.parseInt(params.getString("id_venda_app"));
-                    ed.putInt("id_venda_app", id_venda_app).apply();
-
-
-                    id_cliente = params.getString("codigo");
-                    nome_cliente = params.getString("nome");
-                    latitude_cliente = params.getString("latitude_cliente");
-                    longitude_cliente = params.getString("longitude_cliente");
-                    saldo = params.getString("saldo");
-                    cpfcnpj = params.getString("cpfcnpj");
-                    endereco = params.getString("endereco");
-                    editandoVenda = params.getString("editar");
-
-                    // Aqui chamamos o método para verificar se a venda é futura e armazenamos o estado original
-                    int entregaFutura = bd.getEntregaFuturaVenda(id_venda_app);
-                    estadoEntregaFuturaOriginal = entregaFutura; // Armazena o estado original
-                    Log.d("VENDA RECUPERADA", "onCreate: recebendo entrega futura " + entregaFutura);
-                    // Atualiza o estado do CheckBox de acordo
-                    checkBoxConfirmar.setChecked(entregaFutura == 1);  // Marca o CheckBox se for venda futura
-
-                    // Adiciona o listener de mudança de estado do CheckBox
-                    checkBoxConfirmar.setOnCheckedChangeListener((buttonView, isChecked) -> {
-                        // Se o checkbox for marcado, definimos entrega_futura_venda para 1, caso contrário permanece 0
-                        int entregaFuturaAtual = isChecked ? 1 : 0;
-
-                        // Compara o novo estado com o estado original
-                        if (entregaFuturaAtual != estadoEntregaFuturaOriginal) {
-                            // Se houve mudança, atualizamos o estado no banco de dados
-                            bd.atualizarEntregaFutura(entregaFuturaAtual, id_venda_app);
-                            Log.d("CheckBox", "Estado de entrega futura alterado e atualizado para: " + entregaFuturaAtual);
-                        } else {
-                            Log.d("CheckBox", "Nenhuma mudança no estado de entrega futura.");
-                        }
-
-                        // Atualiza o SharedPreferences (ou outra ação necessária)
-                        ed.putInt("entrega_futura_venda", entregaFuturaAtual).apply();
-                    });
-                }
-
-
-                //
-                getSupportActionBar().setTitle("Data Mov. " + classAuxiliar.exibirDataAtual());
-
-                //
-                String nomeCliente = classAuxiliar.maiuscula1(nome_cliente.toLowerCase());
-                getSupportActionBar().setSubtitle(nomeCliente);
-                consultarInadimplencia();
+            // Compara o novo estado com o estado original
+            if (entregaFuturaAtual != estadoEntregaFuturaOriginal) {
+                // Se houve mudança, atualizamos o estado no banco de dados
+                bd.atualizarEntregaFutura(entregaFuturaAtual, idVendaAppLocal);
+                Log.d("CheckBox", "Estado de entrega futura alterado e atualizado para: " + entregaFuturaAtual);
+            } else {
+                Log.d("CheckBox", "Nenhuma mudança no estado de entrega futura.");
             }
-        }
+
+            // Atualiza o SharedPreferences (ou outra ação necessária)
+            ed.putInt("entrega_futura_venda", entregaFuturaAtual).apply();
+        });
 
         //
         findViewById(R.id.btnPagamento).setOnClickListener(view -> {
@@ -310,6 +336,16 @@ public class Vendas extends AppCompatActivity {
             if (textTotalItens.getText().toString().equals("0")) {
                 Toast.makeText(Vendas.this, "Adicione Itens a Venda.", Toast.LENGTH_SHORT).show();
             } else {
+
+
+                id = id + 1;
+                ed.putInt("id_venda", id_venda_app).apply();
+
+                Atualizatabela();
+                obterTotalItensPedido();
+
+                //  bd.atualizarValoresVenda(id, Double.parseDouble(valor_unit_emissor),totalVenda);
+
                 Intent intent1 = new Intent(Vendas.this, FinanceiroDaVenda.class);
                 intent1.putExtra("codigo_cliente", id_cliente);
                 intent1.putExtra("nome_cliente", nome_cliente);
@@ -332,8 +368,7 @@ public class Vendas extends AppCompatActivity {
                 startActivity(intent1);
 
                 finish();
-            }
-        });
+            }});
 
         /***************** CLICK DO BOTAO APOS A CONSULTA DO PARAMETRO  PREÇO_FIXO ******************/
 
@@ -345,6 +380,7 @@ public class Vendas extends AppCompatActivity {
 
                 // Obtém o preço do produto selecionado
                 String preco = bd.getMargemCliente(spProduto.getSelectedItem().toString(), id_cliente);
+                valor_unit_emissor = preco;
 
                 // Verifica se o preço é fixo (caso o bloqueio de edição esteja ativo)
                 boolean isPrecoFixo = bd.isPrecoFixo();  // Método para verificar se o preço é fixo
@@ -355,7 +391,7 @@ public class Vendas extends AppCompatActivity {
                     if (isPrecoFixo) {
                         etPreco.setText(preco);  // Preenche o campo com o preço retornado
                         etPreco.setEnabled(false);  // Bloqueia a edição
-                       // Toast.makeText(Vendas.this, "PREÇO FIXO ENCONTRADO. EDIÇÃO BLOQUEADA", Toast.LENGTH_SHORT).show();
+                        // Toast.makeText(Vendas.this, "PREÇO FIXO ENCONTRADO. EDIÇÃO BLOQUEADA", Toast.LENGTH_SHORT).show();
                     } else {
                         // Se não for preço fixo, permite edição
                         etPreco.setText(preco);
@@ -421,89 +457,189 @@ public class Vendas extends AppCompatActivity {
     }
 
 
+    /************* INICIAR VENDA PRINCIPAL TABELA VENDAS APP *********************/
 
-    //ADICIONAR VENDAS
-    private void addVenda() {
-        // Primeiro, lista os registros existentes com entrega_futura_venda e seus códigos de venda
-        ArrayList<String> registrosEntregaFutura = bd.listarCodigosEntregaFutura();
-        Log.d("Registros Existentes", "Registros de entrega_futura_venda e seus códigos de venda: " + registrosEntregaFutura.toString());
+    private void inicializarVendaPrincipal() {
+        // Armazenar dados em variáveis temporárias
+        String codigoVenda = String.valueOf(id); // CODIGO_VENDA
+        String codigoClienteVenda = id_cliente; // CODIGO_CLIENTE_VENDA
+        String unidadeVenda = prefs.getString("unidade", ""); // UNIDADE_VENDA
+        String produtoVenda = spProduto.getSelectedItem().toString(); // PRODUTO_VENDA
+        String dataMovimento = classAuxiliar.formatarData(prefs.getString("data_movimento", "")); // DATA_MOVIMENTO
+        String quantidadeVenda = etQuantidade.getText().toString(); // QUANTIDADE_VENDA
+        String precoUnitario = ""; // PRECO_UNITARIO (vazio por enquanto)
+        String valorTotal = ""; // VALOR_TOTAL (vazio por enquanto)
+        String nomeVendedor = prefs.getString("nome_vendedor", "app"); // VENDEDOR_VENDA
+        String statusAutorizacaoVenda = "0"; // STATUS_AUTORIZACAO_VENDA
+        String entregaFuturaVenda = "0"; // ENTREGA_FUTURA_VENDA
+        String entregaFuturaRealizada = "0"; // ENTREGA_FUTURA_REALIZADA
+        String usuarioAtual = prefs.getString("usuario_atual", "app"); // USUARIO_ATUAL
+        String dataCadastro = classAuxiliar.inserirDataAtual(); // DATA_CADASTRO
+        String idVendaApp = String.valueOf(prefs.getInt("id_venda_app", 1)); // id_venda_app
+
+        // Adiciona a venda no banco de dados
+        bd.addVenda(new VendasDomain(
+                codigoVenda,
+                codigoClienteVenda,
+                unidadeVenda,
+                produtoVenda,
+                dataMovimento,
+                quantidadeVenda,
+                precoUnitario,
+                valorTotal,
+                nomeVendedor,
+                statusAutorizacaoVenda,
+                entregaFuturaVenda,
+                entregaFuturaRealizada,
+                usuarioAtual,
+                dataCadastro,
+                idVendaApp,
+                "0", // Campo adicional
+                "" // Campo adicional
+        ));
+
+        // Log das informações
+        Log.d("InicializarVenda", "Venda principal criada com as seguintes informações:");
+        Log.d("InicializarVenda", "Código Venda: " + codigoVenda);
+        Log.d("InicializarVenda", "Código Cliente Venda: " + codigoClienteVenda);
+        Log.d("InicializarVenda", "Unidade Venda: " + unidadeVenda);
+        Log.d("InicializarVenda", "Produto Venda: " + produtoVenda);
+        Log.d("InicializarVenda", "Data Movimento: " + dataMovimento);
+        Log.d("InicializarVenda", "Quantidade Venda: " + quantidadeVenda);
+        Log.d("InicializarVenda", "Preço Unitário: " + precoUnitario);
+        Log.d("InicializarVenda", "Valor Total: " + valorTotal);
+        Log.d("InicializarVenda", "Nome Vendedor: " + nomeVendedor);
+        Log.d("InicializarVenda", "Status Autorização Venda: " + statusAutorizacaoVenda);
+        Log.d("InicializarVenda", "Entrega Futura Venda: " + entregaFuturaVenda);
+        Log.d("InicializarVenda", "Entrega Futura Realizada: " + entregaFuturaRealizada);
+        Log.d("InicializarVenda", "Usuário Atual: " + usuarioAtual);
+        Log.d("InicializarVenda", "Data Cadastro: " + dataCadastro);
+        Log.d("InicializarVenda", "ID Venda App: " + idVendaApp);
+    }
 
 
-        if (listaVendas.size() == 0) {
-            //
-            id = id + 1;
-            ed.putInt("id_venda", id).apply();
+    private  void obterDados(){
+        Intent intent = getIntent();
 
-            //
-            String valorUnit = String.valueOf(classAuxiliar.converterValores(etPreco.getText().toString()));
+        if (intent != null) {
+            Bundle params = intent.getExtras();
 
-            //MULTIPLICA O VALOR PELA QUANTIDADE
-            String[] multiplicar = {valorUnit, etQuantidade.getText().toString()};
-            String total = String.valueOf(classAuxiliar.multiplicar(multiplicar));
+            if (params != null) {
 
-            //INSERIR VENDA
-            bd.addVenda(new VendasDomain(
-                    "" + String.valueOf(id),//CODIGO_VENDA
-                    "" + id_cliente,//CODIGO_CLIENTE_VENDA
-                    "" + prefs.getString("unidade", ""),//UNIDADE_VENDA
-                    "" + spProduto.getSelectedItem().toString(),//PRODUTO_VENDA
-                    "" + classAuxiliar.formatarData(prefs.getString("data_movimento", "")),//DATA_MOVIMENTO classAuxiliar.inserirDataAtual()
-                    "" + etQuantidade.getText().toString(),//QUANTIDADE_VENDA
-                    "" + valorUnit,//PRECO_UNITARIO
-                    "" + total,//VALOR_TOTAL
-                    "" + prefs.getString("nome_vendedor", "app"),//VENDEDOR_VENDA
-                    "0",//STATUS_AUTORIZACAO_VENDA
-                    "0",//ENTREGA_FUTURA_VENDA
-                    "0",//ENTREGA_FUTURA_REALIZADA
-                    "" + prefs.getString("usuario_atual", "app"),//USUARIO_ATUAL
-                    ""  + classAuxiliar.inserirDataAtual(),//DATA_CADASTRO
-                    "" + String.valueOf(prefs.getInt("id_venda_app", 1)),
-                    "0",
-                    ""
-            ));
+                //SE A VENDA FOR NOVA
+                if (id != 0){
+                    //(params.getString("id_venda").equals("")) {
+                    Log.d("Venda", "Iniciando uma nova venda.");
 
-            //SETA OS DADOS PARA ENVIAR AO EMISSOR
-            produto_emissor = spProduto.getSelectedItem().toString();
-            quantidade_emissor = etQuantidade.getText().toString();
-            valor_unit_emissor = valorUnit;
 
-            //
-            listaVendas = bd.getVendasCliente(prefs.getInt("id_venda_app", 1));
-            adapter = new VendasAdapter(this, listaVendas);
-            rvVendas.setAdapter(adapter);
+                    id_cliente = params.getString("codigo");
+                    nome_cliente = params.getString("nome");
+                    latitude_cliente = params.getString("latitude_cliente");
+                    longitude_cliente = params.getString("longitude_cliente");
+                    saldo = params.getString("saldo");
+                    cpfcnpj = params.getString("cpfcnpj");
+                    endereco = params.getString("endereco");
+                    editandoVenda = "";
 
-          /******** ATUALIZAÇAO DO CAMPO DE ENTREGA-FUTURA DENTRO DA VENDA *******/
 
-            // Recupera o valor de entrega futura salvo no SharedPreferences
-            int entregaFutura = prefs.getInt("entrega_futura_venda", 0);
+                    // Log dos dados para verificar se estão corretos
+                    Log.d("DadosCliente", "ID Cliente: " + id_cliente);
+                    Log.d("DadosCliente", "Nome Cliente: " + nome_cliente);
+                    Log.d("DadosCliente", "Latitude: " + latitude_cliente);
+                    Log.d("DadosCliente", "Longitude: " + longitude_cliente);
+                    Log.d("DadosCliente", "Saldo: " + saldo);
+                    Log.d("DadosCliente", "CPF/CNPJ: " + cpfcnpj);
+                    Log.d("DadosCliente", "Endereço: " + endereco);
+                    Log.d("DadosCliente", "Editando: " + editandoVenda);
 
-            // Atualiza o campo entrega_futura_venda apenas para a venda recém-adicionada (usando id_venda_app)
-            int codigoVendaRecemAdicionada = prefs.getInt("id_venda_app", 1); // Obtenha o ID da venda recém-adicionada
-            int resultado = bd.atualizarEntregaFutura(entregaFutura, codigoVendaRecemAdicionada);
+                    // **Aqui inserimos a verificação e o armazenamento do limite de crédito**
+                    DatabaseHelper dbHelper = new DatabaseHelper(this);
+                    int limiteCreditoPrimario = dbHelper.getLimiteCreditoCliente(id_cliente);
+                    // Checa se o limite primário já foi definido e armazena o valor apropriado
+                    if (creditoPrefs.getLimitePrimario() == null || creditoPrefs.getLimitePrimario().isEmpty()) {
+                        // Se o limite primário ainda não foi definido, define-o com o valor atual do banco
+                        creditoPrefs.setLimitePrimario(String.valueOf(limiteCreditoPrimario));
+                        Log.d("LIMITE PRIMÁRIO", "Definindo limite primário de crédito para o cliente " + id_cliente + ": " + limiteCreditoPrimario);
+                    } else {
+                        // Se o limite primário já estiver definido, atualiza o limite de crédito original
+                        creditoPrefs.setLimiteCreditoOriginal(String.valueOf(limiteCreditoPrimario));
+                        Log.d("LIMITE ORIGINAL", "Atualizando limite de crédito original para o cliente " + id_cliente + ": " + limiteCreditoPrimario);
+                    }
 
-            // Verifica se a atualização foi bem-sucedida
-            if (resultado > 0) {
-                Log.d("UpdateLog", "Campo entrega_futura_venda atualizado com sucesso para o código de venda: " + codigoVendaRecemAdicionada);
-            } else {
-                Log.d("UpdateLog", "Falha ao atualizar o campo entrega_futura_venda.");
+                }
+                //SE FOR EDITAR A ÚLTIMA VENDA REALIZADA
+                else {
+                    Log.d("CAIU NA EDIÇAO", "obterDados: NAO E VENDA NOVA ");
+
+                   /* Log.d("Venda", "Editando uma venda existente.");
+                    //
+                    id = Integer.parseInt(params.getString("id_venda"));
+                    id_venda_app = Integer.parseInt(params.getString("id_venda_app"));
+                    ed.putInt("id_venda_app", id_venda_app).apply();
+
+
+                    id_cliente = params.getString("codigo");
+                    nome_cliente = params.getString("nome");
+                    latitude_cliente = params.getString("latitude_cliente");
+                    longitude_cliente = params.getString("longitude_cliente");
+                    saldo = params.getString("saldo");
+                    cpfcnpj = params.getString("cpfcnpj");
+                    endereco = params.getString("endereco");
+                    editandoVenda = params.getString("editar");*/
+
+
+                }
+
+
+                //
+                getSupportActionBar().setTitle("Data Mov. " + classAuxiliar.exibirDataAtual());
+
+                //
+                String nomeCliente = classAuxiliar.maiuscula1(nome_cliente.toLowerCase());
+                getSupportActionBar().setSubtitle(nomeCliente);
+                consultarInadimplencia();
             }
-
-
-
-            textTotalItens.setText(String.valueOf(listaVendas.size()));
-
-            String v = classAuxiliar.maskMoney(new BigDecimal(bd.getValorTotalVenda(String.valueOf(id_venda_app))));
-            txtTotalVenda.setText(v);
-            Log.e("TOTAL", v);
-            Log.e("TOTAL", "VENDAS: " + bd.getValorTotalVenda(String.valueOf(id_venda_app)));
-
-            etQuantidade.setText("");
-            etPreco.setText(R.string.zeros);
-            spProduto.requestFocus();
-
-        } else {
-            Toast.makeText(getBaseContext(), "No momento só é permitido um item por venda!", Toast.LENGTH_SHORT).show();
         }
+
+    }
+
+    /************ METODO ORIGINAL UNICO PRODUTO POR VENDA  ************/
+
+    /*ADICIONAR VENDAS
+    private void addVenda() {
+
+        //
+        String valorUnit = String.valueOf(classAuxiliar.converterValores(etPreco.getText().toString()));
+
+        //MULTIPLICA O VALOR PELA QUANTIDADE
+        String[] multiplicar = {valorUnit, etQuantidade.getText().toString()};
+        String total = String.valueOf(classAuxiliar.multiplicar(multiplicar));
+
+
+        //SETA OS DADOS PARA ENVIAR AO EMISSOR
+        produto_emissor = spProduto.getSelectedItem().toString();
+        quantidade_emissor = etQuantidade.getText().toString();
+        valor_unit_emissor = valorUnit;
+
+        //
+        listaVendas = bd.getVendasCliente(prefs.getInt("id_venda_app", 1));
+        adapter = new VendasAdapter(this, listaVendas);
+        rvVendas.setAdapter(adapter);
+
+
+
+        textTotalItens.setText(String.valueOf(listaVendas.size()));
+
+        String v = classAuxiliar.maskMoney(new BigDecimal(bd.getValorTotalVenda(String.valueOf(id_venda_app))));
+        txtTotalVenda.setText(v);
+        Log.e("TOTAL", v);
+        Log.e("TOTAL", "VENDAS: " + bd.getValorTotalVenda(String.valueOf(id_venda_app)));
+
+        etQuantidade.setText("");
+        etPreco.setText(R.string.zeros);
+        spProduto.requestFocus();
+
+
 
         //ESCODER O TECLADO
         // TODO Auto-generated method stub
@@ -513,16 +649,316 @@ public class Vendas extends AppCompatActivity {
         } catch (Exception e) {
             // TODO: handle exception
         }
+    }*/
+
+    /******** ATUALIZAÇAO DO CAMPO DE ENTREGA-FUTURA DENTRO DA VENDA *******/
+
+    private void AttVendafutura(){
+
+        // Recupera o valor de entrega futura salvo no SharedPreferences
+        int entregaFutura = prefs.getInt("entrega_futura_venda", 0);
+        Log.d("MARCAÇAO SALVA", "AttVendafutura: ENTREGA FUTURA  " + entregaFutura );
+
+        // Atualiza o campo entrega_futura_venda apenas para a venda recém-adicionada (usando id_venda_app)
+        int codigoVendaRecemAdicionada = prefs.getInt("id_venda", 0); // Obtenha o ID da venda recém-adicionada
+        Log.d("ATUALIZAR NA VENDA ", "AttVendafutura: ID PRA USAR NA ATT " +codigoVendaRecemAdicionada);
+        int resultado = bd.atualizarEntregaFutura(entregaFutura, codigoVendaRecemAdicionada);
+
+        // Verifica se a atualização foi bem-sucedida
+        if (resultado > 0) {
+            Log.d("UpdateLog", "Campo entrega_futura_venda atualizado com sucesso para o código de venda: " + codigoVendaRecemAdicionada);
+        } else {
+            Log.d("UpdateLog", "Falha ao atualizar o campo entrega_futura_venda.");
+        }
+
     }
+
+    /***************** INSERIR PRODUTOS NO PEDIDO **************************/
+
+    private void adicionarProdutoAoPedido() {
+        // Captura as informações de produto
+        String id_venda_app = String.valueOf(prefs.getInt("id_venda_app", 0));
+        String produto = spProduto.getSelectedItem().toString();
+        String quantidade = etQuantidade.getText().toString();
+        quantidade_emissor = quantidade;
+        Log.d("pegando QUANTIDADE", "adicionarProdutoAoPedido: PEGANDO A QUANITDADE " + quantidade_emissor);
+        String precoUnitario = String.valueOf(classAuxiliar.converterValores(etPreco.getText().toString()));
+        valor_unit_emissor = precoUnitario;
+        Log.d("pegando PREÇO UNIT", "adicionarProdutoAoPedido: PEGANDO PREÇO UNITARIO " + quantidade_emissor);
+
+        long resultadoInsercao = bd.addProdutoVenda(produto, Integer.parseInt(quantidade), Double.parseDouble(precoUnitario), String.valueOf(id_venda_app));
+        if (resultadoInsercao != -1) {
+            Log.d("Inserção", "Produto inserido com sucesso na tabela produtos_vendas_app, ID da linha: " + resultadoInsercao + ", ID da venda: " + id_venda_app + ", Produto: " + produto);
+            // listarItensVendas();
+            atualizarListaProdutos();
+            resetarCamposVenda();
+            atualizarListaProdutos();
+            vendaAlterada = true;
+        } else {
+            Log.e("Inserção", "Falha ao inserir produto na tabela produtos_vendas_app.");
+        }
+    }
+
+
+
+
+    private String calcularTotalVenda(String valorUnit, String quantidade) {
+        String[] multiplicar = {valorUnit, quantidade};
+        return String.valueOf(classAuxiliar.multiplicar(multiplicar));
+    }
+
+    /************** ATUALIZAR LISTA VISUAL DOS PRODUTOS ******************/
+
+    private void atualizarListaProdutos() {
+        // Recupera o código da venda atual
+        String codigoVendaApp = String.valueOf(prefs.getInt("id_venda_app", 0));
+        Log.d("ID PRA ATT", "atualizarListaProdutos: ID PRA ATUALIZAR TABELA EDIÇAO " + codigoVendaApp);
+        ArrayList<ProdutoEmissor> produtosAtualizados = bd.getProdutosVenda(codigoVendaApp);
+
+        // Atualiza listaProdutosVenda, verificando duplicações e inserindo ou atualizando produtos conforme necessário
+        listaProdutosVenda.clear();
+        listaProdutosVenda.addAll(produtosAtualizados);
+
+        // Verifica e configura o adaptador para o RecyclerView
+        if (adapter == null) {
+            adapter = new ProdutosAdapter(this, listaProdutosVenda, codigoVendaApp);
+            rvVendas.setAdapter(adapter);
+            rvVendas.setLayoutManager(new LinearLayoutManager(this));
+            vendaAlterada = true ;
+        } else {
+            adapter.notifyDataSetChanged();
+        }
+
+        // Calcula o total de itens e o valor total da venda
+        int totalItens = 0;
+        double totalVenda = 0.0;
+        for (ProdutoEmissor produto : listaProdutosVenda) {
+            try {
+                int quantidade = Integer.parseInt(produto.getQuantidade());
+                double valorUnitario = Double.parseDouble(produto.getValorUnitario());
+                totalItens += quantidade;
+                totalVenda += quantidade * valorUnitario;
+            } catch (NumberFormatException e) {
+                Log.e("atualizarListaProdutos", "Erro ao converter quantidade ou valor unitário", e);
+            }
+        }
+
+        // Atualiza a exibição dos totais de itens e vendas
+        int finalTotalItens = totalItens;
+        double finalTotalVenda = totalVenda;
+        runOnUiThread(() -> {
+            textTotalItens.setText(String.valueOf(finalTotalItens));
+            txtTotalVenda.setText(classAuxiliar.maskMoney(new BigDecimal(finalTotalVenda)));
+            adapter.notifyDataSetChanged();
+        });
+
+        // Log dos totais calculados para depuração
+        Log.d("atualizarListaProdutos", "Total de itens atualizado: " + totalItens);
+        Log.d("atualizarListaProdutos", "Total de vendas atualizado: " + totalVenda);
+    }
+
+
+   /* private void atualizarListaProdutos() {
+       String codigoVendaApp = String.valueOf(prefs.getInt("id_venda_app", 0));
+        Log.d("ID PRA ATT", "atualizarListaProdutos: ID PRA ATUALIZAR TABELA EDIÇAO " + codigoVendaApp);
+
+
+        // Limpa a lista de produtos para evitar duplicações
+        //listaProdutosVenda.clear();
+        Log.d("atualizarListaProdutos", "Lista de produtos limpa. Tamanho atual: " + listaProdutosVenda.size());
+
+        // Adiciona produtos atualizados para o código de venda atual
+        ArrayList<ProdutoEmissor> produtosAtualizados = bd.getProdutosVenda(codigoVendaApp);
+        Log.d("ID PRA ATT LISTA", "atualizarListaProdutos: ID PRA ATT DA LISTA DE PRODSUTOS " + codigoVendaApp);
+        listaProdutosVenda.addAll(produtosAtualizados);
+        Log.d("atualizarListaProdutos", "Produtos atualizados adicionados. Novo tamanho da lista: " + listaProdutosVenda.size());
+
+        // Verifique se o adaptador está nulo e atualize ou configure o adaptador
+        if (adapter == null) {
+            adapter = new ProdutosAdapter(this, listaProdutosVenda,codigoVendaApp);
+            rvVendas.setAdapter(adapter);
+            Log.d("atualizarListaProdutos", "Adapter de produtos inicializado.");
+        } else {
+            adapter.notifyDataSetChanged();
+            Log.d("atualizarListaProdutos", "Adapter de produtos notificado sobre a alteração de dados.");
+        }
+
+        // Atualiza o total de itens e valor total
+        textTotalItens.setText(String.valueOf(listaProdutosVenda.size()));
+        double totalVenda = bd.listarProdutosVendasApp(codigoVendaApp);
+        String valorFormatado = classAuxiliar.maskMoney(new BigDecimal(totalVenda));
+        txtTotalVenda.setText(valorFormatado);
+
+        Log.d("atualizarListaProdutos", "Total de vendas formatado e atualizado: " + valorFormatado);
+    }*/
+
+
+    private void atualizarResumoVenda() {
+        textTotalItens.setText(String.valueOf(listaVendas.size()));
+        String v = classAuxiliar.maskMoney(new BigDecimal(bd.getValorTotalVenda(String.valueOf(id_venda_app))));
+        txtTotalVenda.setText(v);
+        Log.e("TOTAL", v);
+        Log.e("TOTAL", "VENDAS: " + bd.getValorTotalVenda(String.valueOf(id_venda_app)));
+    }
+
+    private void resetarCamposVenda() {
+        etQuantidade.setText("");
+        //  etPreco.setText(R.string.zeros);
+        spProduto.requestFocus();
+    }
+
+    private void esconderTeclado() {
+        try {
+            InputMethodManager imm = (InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
+            imm.hideSoftInputFromWindow(Objects.requireNonNull(getCurrentFocus()).getWindowToken(), 0);
+        } catch (Exception e) {
+            Log.e("Teclado", "Erro ao esconder o teclado: ", e);
+        }
+    }
+
+    /******************* ATUALIZAR TABELA PRODUTO VENDAS APP DURANTE O PEDIDO ***********/
+
+    private void Atualizatabela() {
+        // Log para verificar se a flag foi salva corretamente
+        boolean vendaAtualizada = prefs.getBoolean("vendaAtualizada", false);
+        Log.d("LOG ATT TABELA", "Flag vendaAtualizada salva no SharedPreferences: " + vendaAtualizada);
+        Log.d("LOG ATT TABELA", "Flag vendaEditada em memória: " + vendaAlterada);
+
+        if (!vendaAtualizada || !vendaAlterada)  {
+            Log.d("PULANDO ATT", "Atualizatabela: NAO HOUVVE ATERAÇOES EM NEHUM LUGAR  ");
+
+        }else{
+
+            // Recupera o ID da venda atual
+            int idVendaAtual = prefs.getInt("id_venda_app", 0);
+
+            // Converte o valor unitário do produto para double usando BigDecimal
+            double valorUnitario = new BigDecimal(valor_unit_emissor.replace(",", ".").trim()).doubleValue();
+
+            // Remove caracteres indesejados antes de converter o valor total da venda
+            String totalVendaString = txtTotalVenda.getText().toString().replace("R$", "").replaceAll("[^\\d.]", "").trim();
+            double totalVenda = new BigDecimal(totalVendaString).doubleValue();
+
+            // Usa o método obterTotalItensPedido para calcular o total de itens como int
+            int totalItens = obterTotalItensPedido();
+
+            // Chama o método para atualizar os valores da venda no banco de dados
+            bd.atualizarValoresVenda(idVendaAtual, valorUnitario, totalVenda, totalItens);
+            // vendaAlterada = true;
+
+            // Log para verificação dos dados
+            Log.d("Atualizatabela", "Dados atualizados na tabela para ID: " + idVendaAtual + ", Valor Unitário: " + valorUnitario + ", Valor Total da Venda: " + totalVenda + ", Quantidade Total: " + totalItens);
+
+
+        }
+
+
+    }
+
+
+    private int obterTotalItensPedido() {
+        int totalItens = 0;
+
+        // Recupera o código da venda atual
+        String codigoVendaApp = String.valueOf(id_venda_app);
+
+        // Recupera a lista de produtos para a venda atual
+        ArrayList<ProdutoEmissor> produtosVenda = bd.getProdutosVenda(codigoVendaApp);
+
+        // Soma as quantidades de cada produto convertendo de String para int
+        for (ProdutoEmissor produto : produtosVenda) {
+            try {
+                totalItens += Integer.parseInt(produto.getQuantidade());
+            } catch (NumberFormatException e) {
+                Log.e("obterTotalItensPedido", "Erro ao converter quantidade para inteiro: " + produto.getQuantidade(), e);
+            }
+        }
+
+        Log.d("TotalItensPedido", "Total de itens no pedido atual: " + totalItens);
+
+        return totalItens;
+    }
+
+    /******************** CARREGA OS DADOS DA VENDA PRA EDIÇAO *****************/
+
+    // Método para obter e logar todos os dados completos da venda
+    private void logarDadosCompletosVenda() {
+
+        int idVendaAppLocal = prefs.getInt("id_venda_app", 0);
+        Log.d("LOGAR DADOS ", "logarDadosCompletosVenda: ID RECUPERADO DO SHARE " + idVendaAppLocal);
+
+        // Chama o método para obter os dados completos da venda
+        DadosCompletosDomain dadosCompletos = bd.obterDadosCompletosVenda(idVendaAppLocal);
+        Log.d("DADOS COMPLETOS", "logarDadosCompletosVenda: CODIGO PARA BUSCA " + idVendaAppLocal);
+
+        // Logando todos os dados da venda principal
+        Log.d("DadosCompletosVenda", "Código Venda: " + dadosCompletos.getCodigoVenda());
+        Log.d("DadosCompletosVenda", "Código Venda App: " + dadosCompletos.getCodigoVendaApp());
+        Log.d("DadosCompletosVenda", "Código Cliente: " + dadosCompletos.getCodigoCliente());
+        Log.d("DadosCompletosVenda", "Nome Cliente: " + dadosCompletos.getNomeCliente());
+        Log.d("DadosCompletosVenda", "Unidade Venda: " + dadosCompletos.getUnidadeVenda());
+        Log.d("DadosCompletosVenda", "Produto Venda: " + dadosCompletos.getProdutoVenda());
+        Log.d("DadosCompletosVenda", "Data Movimento: " + dadosCompletos.getDataMovimento());
+        Log.d("DadosCompletosVenda", "Quantidade Venda: " + dadosCompletos.getQuantidadeVenda());
+        Log.d("DadosCompletosVenda", "Preço Unitário: " + dadosCompletos.getPrecoUnitario());
+        Log.d("DadosCompletosVenda", "Valor Total: " + dadosCompletos.getValorTotal());
+        Log.d("DadosCompletosVenda", "Vendedor Venda: " + dadosCompletos.getVendedorVenda());
+        Log.d("DadosCompletosVenda", "Status Autorização Venda: " + dadosCompletos.getStatusAutorizacaoVenda());
+        Log.d("DadosCompletosVenda", "Entrega Futura Venda: " + dadosCompletos.getEntregaFuturaVenda());
+        Log.d("DadosCompletosVenda", "Entrega Futura Realizada: " + dadosCompletos.getEntregaFuturaRealizada());
+        Log.d("DadosCompletosVenda", "Usuário Atual: " + dadosCompletos.getUsuarioAtual());
+        Log.d("DadosCompletosVenda", "Data Cadastro: " + dadosCompletos.getDataCadastro());
+        Log.d("DadosCompletosVenda", "Venda Finalizada App: " + dadosCompletos.getVendaFinalizadaApp());
+        Log.d("DadosCompletosVenda", "Chave Importação: " + dadosCompletos.getChaveImportacao());
+
+
+        // Configuração do RecyclerView e Adapter
+        rvVendas = findViewById(R.id.rvVendas);
+        String codigoVendaAppString = String.valueOf(idVendaAppLocal);
+        rvVendas.setLayoutManager(new LinearLayoutManager(Vendas.this));
+        adapter = new ProdutosAdapter(this, listaProdutosVenda,codigoVendaAppString);
+        rvVendas.setAdapter(adapter);
+
+
+        // Popula a lista de produtos do adapter com os produtos recuperados
+        listaProdutosVenda.clear();
+        listaProdutosVenda.addAll(dadosCompletos.getProdutosVenda());
+        Log.d("EXIBINDO ", "logarDadosCompletosVenda: LISTA EXIBIDA " + listaProdutosVenda);
+
+        // Notifica o adapter para atualizar a exibição dos produtos
+        if (adapter != null) {
+            adapter.notifyDataSetChanged();
+        } else {
+            Log.e("Adapter", "Adapter não foi inicializado. Verifique a configuração do RecyclerView.");
+        }
+
+
+        // Logando a lista de produtos da venda
+        for (ProdutoEmissor produto : dadosCompletos.getProdutosVenda()) {
+            Log.d("ProdutoVenda", "Nome Produto: " + produto.getNome());
+            Log.d("ProdutoVenda", "Quantidade: " + produto.getQuantidade());
+            Log.d("ProdutoVenda", "Preço Unitário: " + produto.getValorUnitario());
+            //  Log.d("ProdutoVenda", "Código Venda App: " + produto.getCodigoVendaApp());
+        }
+
+        // Logando o total de itens da venda
+        Log.d("DadosCompletosVenda", "Total de Itens na Venda: " + dadosCompletos.getTotalItens()) ;
+        textTotalItens.setText(String.valueOf(dadosCompletos.getTotalItens()));
+        double totalVenda = bd.listarProdutosVendasApp(codigoVendaAppString);
+        String valorFormatado = classAuxiliar.maskMoney(new BigDecimal(totalVenda));
+        txtTotalVenda.setText(valorFormatado);
+
+    }
+
 
     @Override
     protected void onResume() {
         super.onResume();
 
-        listarItensVendas();
+        // listarItensVendas();
     }
 
-    public void listarItensVendas() {
+    /*public void listarItensVendas() {
         try {
             // **
             listaVendas = bd.getVendasCliente(prefs.getInt("id_venda_app", 1));
@@ -542,7 +978,7 @@ public class Vendas extends AppCompatActivity {
         } catch (Exception e) {
             Log.i("Financeiro", e.getMessage());
         }
-    }
+    }*/
 
     public class MoneyTextWatcher implements TextWatcher {
         private final WeakReference<EditText> editTextWeakReference;
@@ -599,6 +1035,18 @@ public class Vendas extends AppCompatActivity {
             //define um botão como positivo
             builder.setPositiveButton("Sim", (arg0, arg1) -> {
 
+                // Excluir todos os produtos da venda atual do banco de dados
+                int linhasAfetadas = bd.deleteProdutosPorVenda(String.valueOf(id_venda_app));
+
+                // Log para verificar a exclusão
+                if (linhasAfetadas > 0) {
+                    Log.d("Cancelamento", "Venda cancelada com sucesso! " + linhasAfetadas + " produtos foram excluídos.");
+                    Toast.makeText(Vendas.this, "Venda cancelada com sucesso!", Toast.LENGTH_LONG).show();
+                    finish();
+                } else {
+                    Log.d("Cancelamento", "Nenhum produto foi excluído. Verifique o código de venda.");
+                }
+
 
                 /* Restaurar limite de crédito ao cancelar uma venda a prazo
                 String valorAprazo = creditoPrefs.getValorAprazo();
@@ -608,6 +1056,7 @@ public class Vendas extends AppCompatActivity {
                     dbHelper.restituirLimiteCreditoCliente(id_cliente, valorRestituido); // Use id_cliente aqui
                     creditoPrefs.clear(); // Limpa as informações armazenadas após o cancelamento
                 }*/
+
 
 
 
@@ -691,7 +1140,7 @@ public class Vendas extends AppCompatActivity {
                 AlertDialog alerta = builder.create();
                 alerta.setCancelable(false);
                 alerta.show();
-               // builder.show();
+                // builder.show();
             } else {
                 Log.d("Inadimplencia", "O cliente está inadimplente, mas o bloqueio por inadimplência não está ativo.");
                 // Segue o fluxo normal se o bloqueio não está ativo

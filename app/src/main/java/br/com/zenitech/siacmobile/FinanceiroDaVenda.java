@@ -74,6 +74,7 @@ import br.com.zenitech.siacmobile.domains.Conta;
 import br.com.zenitech.siacmobile.domains.FinanceiroReceberClientes;
 import br.com.zenitech.siacmobile.domains.FinanceiroVendasDomain;
 import br.com.zenitech.siacmobile.domains.PosApp;
+import br.com.zenitech.siacmobile.domains.VendasPedidosComProdutosDomain;
 import br.com.zenitech.siacmobile.interfaces.ILogin;
 import dmax.dialog.SpotsDialog;
 import retrofit2.Call;
@@ -187,12 +188,31 @@ public class FinanceiroDaVenda extends AppCompatActivity implements AdapterView.
         checkbox_confirmar = findViewById(R.id.checkbox_confirmar);
         creditoPrefs = new CreditoPrefs(this);
         vendaEditada = false;
+        // Instanciando o SharedPreferences
+        prefs = getSharedPreferences("preferencias", MODE_PRIVATE);
+        id_venda_app = prefs.getInt("id_venda_app",0);
+        Log.d("DEBUG_ID_VENDA_APP", "Valor de id_venda_app: " + id_venda_app);
 
-       /* // Verifica o limite de crédito disponível
-        DatabaseHelper dbHelper1 = new DatabaseHelper(this);
-        int limiteCreditoCliente1 = dbHelper1.getLimiteCreditoCliente(codigo_cliente);*/
+        bd = new DatabaseHelper(this);
+        // Chamada do método para exibir logs no logcat
+        ArrayList<VendasPedidosComProdutosDomain> listaVendasComProdutos = bd.getRelatorioVendasComProdutos();
 
-        //Log.d("QANTES DE TUDO", "onCreate: LIMITE ORIGINAL ANTEES DE TUDO" +limiteCreditoCliente1);
+
+
+        // Obtendo os dados da última venda do cliente
+        String[] dados_venda = bd.getUltimaVendasCliente();
+
+         // Verificando se o array não está vazio
+        if (dados_venda != null && dados_venda.length > 0) {
+            // Iterando sobre os dados e logando cada elemento
+            for (String dado : dados_venda) {
+                Log.d("DADOS_VENDA", dado);
+            }
+        } else {
+            Log.d("DADOS_VENDA", "Nenhuma venda encontrada para o cliente.");
+
+        }
+
 
 
         // Inicializações e configurações
@@ -528,7 +548,7 @@ public class FinanceiroDaVenda extends AppCompatActivity implements AdapterView.
             iniciarStone();
         }
     }
-    
+
     /********************* verificar limite **************************/
     private boolean verificarLimiteCreditoPrazo() {
         if (!formasPagamento.isEmpty()) {
@@ -675,6 +695,21 @@ public class FinanceiroDaVenda extends AppCompatActivity implements AdapterView.
 
         Log.d("AtualizarLimiteCredito", "Novo limite de crédito do cliente: " + novoLimite);
     }
+
+
+    /************** ATUALIZAR VENDA CONCLUIDA *******************/
+    public void atualizarVendaConlcuida() {
+        // Obtendo o SharedPreferences
+        SharedPreferences prefs = context.getSharedPreferences("preferencias", Context.MODE_PRIVATE);
+
+        // Recuperando o id_venda sem valor padrão
+      //  int idVenda = prefs.getInt("id_venda_app", 0);
+
+        // Chamando o método marcarVendaComoFinalizada com o id recuperado
+       bd.marcarVendaComoFinalizada(id_venda_app);
+        Log.d("ATUALIZANDO", "AtUALIZANDO O CAMPO DA VENDA PRA 1: ");
+    }
+
 
     @Override
     protected void onResume() {
@@ -856,6 +891,8 @@ public class FinanceiroDaVenda extends AppCompatActivity implements AdapterView.
 
     //
     private void _salvarFinanceiro() {
+        atualizarVendaConlcuida();
+
         if (txtTotalItemFinanceiro.getText().equals("0,00")) {
             //
             Toast.makeText(FinanceiroDaVenda.this, "Adicione pelo menos uma forma de pagamento ao financeiro.", Toast.LENGTH_LONG).show();
@@ -1435,6 +1472,19 @@ public class FinanceiroDaVenda extends AppCompatActivity implements AdapterView.
 
                 // Limpa as informações armazenadas após o cancelamento
                 creditoPrefs.clear();
+            }
+
+            //Excluir todos os produtos da venda atual do banco de dados
+            int linhasAfetadas = bd.deleteProdutosPorVenda(String.valueOf(id_venda_app));
+            Log.d("ID PARA EXCLUSAO TOTAL", "Valor de id_venda_app: " + id_venda_app);
+
+            // Log para verificar a exclusão
+            if (linhasAfetadas > 0) {
+                Log.d("FInanceiro_CANCELER", "Venda cancelada com sucesso! " + linhasAfetadas + " produtos foram excluídos.");
+                Toast.makeText(FinanceiroDaVenda.this, "Venda cancelada com sucesso!", Toast.LENGTH_LONG).show();
+                finish();
+            } else {
+                Log.d("FInanceiro_CANCELER", "Nenhum produto foi excluído. Verifique o código de venda.");
             }
 
             //Toast.makeText(InformacoesVagas.this, "positivo=" + arg1, Toast.LENGTH_SHORT).show();
