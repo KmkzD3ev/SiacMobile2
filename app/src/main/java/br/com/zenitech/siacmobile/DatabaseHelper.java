@@ -22,6 +22,8 @@ import java.math.BigDecimal;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Objects;
+import java.util.HashMap;
+
 
 import br.com.zenitech.siacmobile.domains.*;
 
@@ -388,45 +390,56 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         return vendaFutura == 1;
     }
 
-
-    /************ METODO DE LISTAGEM DE VENDAS FUTURAS *************/
+    /*****************NOVO METODO ENTREGA FUTURA **************/
     @SuppressLint("Range")
-    public ArrayList<ListarVendasDomain> listarDetalhesCompletosVendasFuturasReais() {
-        ArrayList<ListarVendasDomain> lista = new ArrayList<>();
+    public ArrayList<VendaFuturaDomain> listarDetalhesCompletosVendasFuturas() {
+        ArrayList<VendaFuturaDomain> listaVendasFuturas = new ArrayList<>();
         SQLiteDatabase db = this.getReadableDatabase();
 
-        // Ajuste a consulta para incluir o nome do cliente com um JOIN
-        String query = "SELECT v.codigo_venda, v.entrega_futura_venda, v.codigo_cliente, c.nome_cliente, " +
-                "v.produto_venda, v.quantidade_venda, v.valor_total, v.unidade_venda, v.preco_unitario " +
+        // Consulta com JOIN para buscar dados da venda e os produtos
+        String query = "SELECT v.codigo_venda, v.codigo_cliente, c.nome_cliente, " +
+                "p.produto, p.quantidade " +
                 "FROM vendas_app v " +
                 "JOIN clientes c ON v.codigo_cliente = c.codigo_cliente " +
+                "JOIN produtos_vendas_app p ON v.codigo_venda = p.codigo_venda_app " +
                 "WHERE v.entrega_futura_venda = 1";
 
         Cursor cursor = db.rawQuery(query, null);
 
+        // Mapa temporário para rastrear as vendas únicas pelo código de venda
+        HashMap<Integer, VendaFuturaDomain> vendasMap = new HashMap<>();
+
         if (cursor.moveToFirst()) {
             do {
+                // Extraindo dados da venda e do cliente
                 int codigoVenda = cursor.getInt(cursor.getColumnIndex("codigo_venda"));
                 int codigoCliente = cursor.getInt(cursor.getColumnIndex("codigo_cliente"));
-                String nomeCliente = cursor.getString(cursor.getColumnIndex("nome_cliente")); // Nome do cliente
-                String produtoVenda = cursor.getString(cursor.getColumnIndex("produto_venda"));
-                int quantidadeVenda = cursor.getInt(cursor.getColumnIndex("quantidade_venda"));
-                double valorTotal = cursor.getDouble(cursor.getColumnIndex("valor_total"));
-                String unidadeVenda = cursor.getString(cursor.getColumnIndex("unidade_venda"));
-                double precoUnitario = cursor.getDouble(cursor.getColumnIndex("preco_unitario"));
+                String nomeCliente = cursor.getString(cursor.getColumnIndex("nome_cliente"));
 
-                // Log para verificar o nome do cliente
-                Log.d("DatabaseHelper", "Nome do Cliente: " + nomeCliente);
+                // Extraindo dados de produtos associados
+                String produto = cursor.getString(cursor.getColumnIndex("produto"));
+                int quantidade = cursor.getInt(cursor.getColumnIndex("quantidade"));
+                ProdutoEmissor produtoEmissor = new ProdutoEmissor(produto, String.valueOf(quantidade)," ");
 
-                // Adiciona o nome do cliente ao construtor da lista
-                lista.add(new ListarVendasDomain(codigoVenda, codigoCliente, nomeCliente, produtoVenda, quantidadeVenda, valorTotal, unidadeVenda, precoUnitario));
+                // Verificar se a venda já está no mapa
+                if (vendasMap.containsKey(codigoVenda)) {
+                    // Adiciona o produto ao objeto de venda existente
+                    vendasMap.get(codigoVenda).getProdutos().add(produtoEmissor);
+                } else {
+                    // Cria uma nova venda e adiciona ao mapa e à lista de vendas
+                    ArrayList<ProdutoEmissor> produtos = new ArrayList<>();
+                    produtos.add(produtoEmissor);
+                    VendaFuturaDomain novaVenda = new VendaFuturaDomain(codigoVenda, codigoCliente, nomeCliente, produtos);
+                    vendasMap.put(codigoVenda, novaVenda);
+                    listaVendasFuturas.add(novaVenda);
+                }
+
             } while (cursor.moveToNext());
         } else {
-            // Log se nenhum dado for retornado
             Log.d("DatabaseHelper", "Nenhuma venda futura encontrada.");
         }
         cursor.close();
-        return lista;
+        return listaVendasFuturas;
     }
 
    /* @SuppressLint("Range")

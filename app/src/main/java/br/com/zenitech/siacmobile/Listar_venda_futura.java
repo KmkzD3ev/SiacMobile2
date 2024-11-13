@@ -13,16 +13,19 @@ import android.view.Menu;
 import android.view.MenuItem;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import br.com.zenitech.siacmobile.adapters.VendaFuturaAdapter;
-import br.com.zenitech.siacmobile.domains.ListarVendasDomain;
+import br.com.zenitech.siacmobile.domains.ProdutoEmissor;
+import br.com.zenitech.siacmobile.domains.VendaFuturaDomain;
 
 public class Listar_venda_futura extends AppCompatActivity implements SearchView.OnQueryTextListener {
 
     private RecyclerView recyclerViewVendasFuturas;
     private VendaFuturaAdapter adapter;
     private DatabaseHelper bd;
-    private ArrayList<ListarVendasDomain> vendasFuturas;  // Lista completa de vendas futuras
+    // Lista completa de vendas futuras
+    private ArrayList<VendaFuturaDomain> vendasTEST;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -38,6 +41,21 @@ public class Listar_venda_futura extends AppCompatActivity implements SearchView
         recyclerViewVendasFuturas = findViewById(R.id.recyclerViewVendasFuturas);
         bd = new DatabaseHelper(this);
 
+       /* vendasTEST = bd.listarDetalhesCompletosVendasFuturas();  // Carrega todas as vendas futuras
+        Log.d("ListarVendaFutura", "Número de vendas futuras recuperadas: " + vendasTEST.size());
+
+// Logando os detalhes de cada venda futura
+        for (VendaFuturaDomain venda : vendasTEST) {
+            Log.d("DetalhesVendaFutura", "Código da Venda: " + venda.getCodigoVenda());
+            Log.d("DetalhesVendaFutura", "Código do Cliente: " + venda.getCodigoCliente());
+            Log.d("DetalhesVendaFutura", "Nome do Cliente: " + venda.getNomeCliente());
+
+            // Se a venda tem produtos associados, loga cada produto e quantidade
+            for (ProdutoEmissor produto : venda.getProdutos()) {
+                Log.d("DetalhesVendaFutura", "Produto: " + produto.getNome() + ", Quantidade: " + produto.getQuantidade());
+            }
+        }*/
+
         // Configuração do RecyclerView
         recyclerViewVendasFuturas.setLayoutManager(new LinearLayoutManager(this));
 
@@ -50,12 +68,29 @@ public class Listar_venda_futura extends AppCompatActivity implements SearchView
     }
 
     private void carregarDados() {
-        vendasFuturas = bd.listarDetalhesCompletosVendasFuturasReais();  // Carrega todas as vendas futuras
-        Log.d("ListarVendaFutura", "Número de vendas futuras recuperadas: " + vendasFuturas.size());
-        adapter = new VendaFuturaAdapter(vendasFuturas);  // Atualiza o adapter com a lista completa
+        // Carrega todas as vendas futuras usando o novo método
+        List<VendaFuturaDomain> vendasTEST = bd.listarDetalhesCompletosVendasFuturas();
+        Log.d("ListarVendaFutura", "Número de vendas futuras recuperadas: " + vendasTEST.size());
+
+        // Loga os detalhes de cada venda futura
+        for (VendaFuturaDomain venda : vendasTEST) {
+            Log.d("DetalhesVendaFutura", "Código da Venda: " + venda.getCodigoVenda());
+            Log.d("DetalhesVendaFutura", "Código do Cliente: " + venda.getCodigoCliente());
+            Log.d("DetalhesVendaFutura", "Nome do Cliente: " + venda.getNomeCliente());
+
+            // Se a venda tem produtos associados, loga cada produto e sua quantidade
+            for (ProdutoEmissor produto : venda.getProdutos()) {
+                Log.d("DetalhesVendaFutura", "Produto: " + produto.getNome() + ", Quantidade: " + produto.getQuantidade());
+            }
+        }
+
+        // Atualiza o adapter com a lista de vendas futuras carregada
+        adapter = new VendaFuturaAdapter(vendasTEST);
         recyclerViewVendasFuturas.setAdapter(adapter);
         adapter.notifyDataSetChanged();
     }
+
+
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -87,10 +122,10 @@ public class Listar_venda_futura extends AppCompatActivity implements SearchView
 
 
     private void filtrarVendasFuturas(String texto) {
-        ArrayList<ListarVendasDomain> listaFiltrada = new ArrayList<>();
+        ArrayList<VendaFuturaDomain> listaFiltrada = new ArrayList<>();
 
         // Lógica de filtragem para vendas futuras
-        for (ListarVendasDomain venda : vendasFuturas) {
+        for (VendaFuturaDomain venda : vendasTEST) {
             // Cria uma string composta com todas as informações relevantes para a busca
             StringBuilder str = new StringBuilder();
 
@@ -98,13 +133,11 @@ public class Listar_venda_futura extends AppCompatActivity implements SearchView
             if (venda.getNomeCliente() != null) {
                 str.append(venda.getNomeCliente().toLowerCase()).append(" ");
             }
-            if (venda.getProduto() != null) {
-                str.append(venda.getProduto().toLowerCase()).append(" ");
+            for (ProdutoEmissor produto : venda.getProdutos()) {
+                str.append(produto.getNome().toLowerCase()).append(" ");
+                str.append(String.valueOf(produto.getQuantidade())).append(" ");
             }
-            if (venda.getUnidade() != null) {
-                str.append(venda.getUnidade().toLowerCase()).append(" ");
-            }
-            str.append(String.valueOf(venda.getCliente())).append(" ");
+            str.append(String.valueOf(venda.getCodigoCliente())).append(" ");
             str.append(String.valueOf(venda.getCodigoVenda())).append(" ");
 
             // Se a string composta contiver o texto digitado, adicione à lista filtrada
@@ -116,7 +149,6 @@ public class Listar_venda_futura extends AppCompatActivity implements SearchView
         // Atualiza o adapter com a nova lista filtrada
         adapter.setFilter(listaFiltrada);
     }
-
 
    /* private void filtrarVendasFuturas(String texto) {
         ArrayList<ListarVendasDomain> listaFiltrada = new ArrayList<>();

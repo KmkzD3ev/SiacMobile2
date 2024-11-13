@@ -122,11 +122,14 @@ public class Vendas extends AppCompatActivity {
             Toast.makeText(this, "UMA VENDA EDITADA", Toast.LENGTH_SHORT).show();
         } else {
             // Se não estiver no modo de edição, incrementa o id normalmente
-            id = prefs.getInt("id_venda", 1) + 1;
+            id = prefs.getInt("id_venda", 1) ;
             Log.d("I.D.S", "onCreate: INICIANDO TRABALHO COM IDS " + id);
-            id_venda_app = prefs.getInt("id_venda_app", 1) + 1;
+            id_venda_app = prefs.getInt("id_venda_app", 1) ;
+            Log.d("I.D.S", "onCreate: INICIANDO TRABALHO COM IDS " + id_venda_app);
+            id = id + 1 ;
+            id_venda_app = id_venda_app + 1 ;
             ed.putInt("id_venda_app", id_venda_app).apply();
-            ed.putInt("id_venda", id_venda_app).apply();
+            ed.putInt("id_venda", id).apply();
             Log.d("INSERT", "onCreate: AUMENTANDO O VALOR PRA VENDA " + id);
             Log.d("FINALIZANDO", "onCreate: INCREMENTADO ID DA VENDA PARA " + id_venda_app);
 
@@ -338,8 +341,8 @@ public class Vendas extends AppCompatActivity {
             } else {
 
 
-                id = id + 1;
-                ed.putInt("id_venda", id_venda_app).apply();
+              /*  id = id + 1;
+                ed.putInt("id_venda", id_venda_app).apply();*/
 
                 Atualizatabela();
                 obterTotalItensPedido();

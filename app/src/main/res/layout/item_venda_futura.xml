@@ -14,7 +14,7 @@
         android:background="@drawable/border_card"
         android:padding="16dp">
 
-        <!-- Nome do Cliente (primeiro a ser exibido) -->
+        <!-- Nome do Cliente -->
         <TextView
             android:id="@+id/labelNomeCliente"
             android:layout_width="wrap_content"
@@ -23,6 +23,7 @@
             android:textStyle="bold"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
+
         <TextView
             android:id="@+id/txtNomeCliente"
             android:layout_width="0dp"
@@ -37,10 +38,11 @@
             android:id="@+id/labelCodigoVenda"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Código da venda:"
+            android:text="Código da Venda:"
             android:textStyle="bold"
-            app:layout_constraintStart_toStartOf="@+id/labelNomeCliente"
+            app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/txtNomeCliente" />
+
         <TextView
             android:id="@+id/txtCodigoVenda"
             android:layout_width="0dp"
@@ -57,8 +59,9 @@
             android:layout_height="wrap_content"
             android:text="Código do Cliente:"
             android:textStyle="bold"
-            app:layout_constraintStart_toStartOf="@+id/labelCodigoVenda"
+            app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/txtCodigoVenda" />
+
         <TextView
             android:id="@+id/txtCliente"
             android:layout_width="0dp"
@@ -69,101 +72,40 @@
             app:layout_constraintTop_toTopOf="@+id/labelCliente"
             tools:text="Código Cliente" />
 
-        <!-- Produto -->
-        <TextView
-            android:id="@+id/labelProduto"
-            android:layout_width="wrap_content"
+        <!-- Container Dinâmico de Produtos -->
+        <LinearLayout
+            android:id="@+id/containerProdutos"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Produto:"
-            android:textStyle="bold"
-            app:layout_constraintStart_toStartOf="@+id/labelCliente"
-            app:layout_constraintTop_toBottomOf="@+id/txtCliente" />
-        <TextView
-            android:id="@+id/txtProduto"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
-            android:layout_marginStart="8dp"
-            app:layout_constraintStart_toEndOf="@+id/labelProduto"
-            app:layout_constraintTop_toTopOf="@+id/labelProduto"
-            tools:text="Produto Y" />
+            android:orientation="vertical"
+            android:layout_marginTop="8dp"
+            app:layout_constraintTop_toBottomOf="@+id/txtCliente">
 
-        <!-- Quantidade -->
-        <TextView
-            android:id="@+id/labelQuantidade"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Quantidade:"
-            android:textStyle="bold"
-            app:layout_constraintStart_toStartOf="@+id/labelProduto"
-            app:layout_constraintTop_toBottomOf="@+id/txtProduto" />
-        <TextView
-            android:id="@+id/txtQuantidade"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
-            android:layout_marginStart="8dp"
-            app:layout_constraintStart_toEndOf="@+id/labelQuantidade"
-            app:layout_constraintTop_toTopOf="@+id/labelQuantidade"
-            tools:text="150" />
 
-        <!-- Valor Total -->
-        <TextView
-            android:id="@+id/labelValorTotal"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Valor Total:"
-            android:textStyle="bold"
-            app:layout_constraintStart_toStartOf="@+id/labelQuantidade"
-            app:layout_constraintTop_toBottomOf="@+id/txtQuantidade" />
-        <TextView
-            android:id="@+id/txtValorTotal"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
-            android:layout_marginStart="8dp"
-            app:layout_constraintStart_toEndOf="@+id/labelValorTotal"
-            app:layout_constraintTop_toTopOf="@+id/labelValorTotal"
-            tools:text="R$ 450.00" />
+            <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:paddingVertical="4dp">
 
-        <!-- Unidade -->
-        <TextView
-            android:id="@+id/labelUnidade"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Unidade:"
-            android:textStyle="bold"
-            app:layout_constraintStart_toStartOf="@+id/labelValorTotal"
-            app:layout_constraintTop_toBottomOf="@+id/txtValorTotal" />
-        <TextView
-            android:id="@+id/txtUnidade"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
-            android:layout_marginStart="8dp"
-            app:layout_constraintStart_toEndOf="@+id/labelUnidade"
-            app:layout_constraintTop_toTopOf="@+id/labelUnidade"
-            tools:text="Peças" />
+                <TextView
+                    android:id="@+id/txtProdutoNome"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Produto Nome"
+                    android:textStyle="bold" />
 
-        <!-- Preço Unitário -->
-        <TextView
-            android:id="@+id/labelPrecoUnitario"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Preço Unitário:"
-            android:textStyle="bold"
-            app:layout_constraintStart_toStartOf="@+id/labelUnidade"
-            app:layout_constraintTop_toBottomOf="@+id/txtUnidade" />
-        <TextView
-            android:id="@+id/txtPrecoUnitario"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
-            android:layout_marginStart="8dp"
-            app:layout_constraintStart_toEndOf="@+id/labelPrecoUnitario"
-            app:layout_constraintTop_toTopOf="@+id/labelPrecoUnitario"
-            tools:text="R$ 3.00" />
+                <TextView
+                    android:id="@+id/txtProdutoQuantidade"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Quantidade" />
+            </LinearLayout>
 
+
+
+
+        </LinearLayout>
     </androidx.constraintlayout.widget.ConstraintLayout>
-
 </androidx.cardview.widget.CardView>
