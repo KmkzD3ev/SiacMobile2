@@ -58,9 +58,10 @@ public interface IEnviarDados {
     Call<ArrayList<EnviarDados>> enviarDadosProdutos(
             @Field("TELA") String TELA,
             @Field("SERIAL") String SERIAL,
-            @Field("ID_DA_VENDA") String ID_DA_VENDA,  // Renomeado de FINVEN para ID_DA_VENDA
+            @Field("IDDAVENDA") String IDDAVENDA,
             @Field("PRODUTOS") String PRODUTOS,
             @Field("QUANTIDADES") String QUANTIDADES
+
     );
 
 

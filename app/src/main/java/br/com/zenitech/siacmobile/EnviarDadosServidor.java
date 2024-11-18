@@ -164,7 +164,6 @@ public class EnviarDadosServidor extends AppCompatActivity {
             }
         });
     }
-    // Método enviarDadosProdutos atualizado para enviar apenas os dados necessários
     void enviarDadosProdutos() {
         findViewById(R.id.cv_btn_enviar_dados).setVisibility(View.GONE);
 
@@ -173,36 +172,38 @@ public class EnviarDadosServidor extends AppCompatActivity {
         // Logando apenas os campos relevantes
         Log.d("EnvioDadosProdutos", "TELA: 852");
         Log.d("EnvioDadosProdutos", "SERIAL: " + prefs.getString("serial", ""));
-        Log.d("EnvioDadosProdutos", "ID_DA_VENDA: " + dadosProdutos[1]);  // ID da venda (antigo FINVEN)
-        Log.d("EnvioDadosProdutos", "PRODUTOS: " + dadosProdutos[8]);
-        Log.d("EnvioDadosProdutos", "QUANTIDADES: " + dadosProdutos[9]);
 
-        // Realizando a chamada com os parâmetros necessários
+        // Realizando a chamada para cada produto individualmente
         final Call<ArrayList<EnviarDados>> call = iEnviarDados.enviarDadosProdutos(
                 "852",
                 prefs.getString("serial", ""),
-                "" + dadosProdutos[1],
-                "" + dadosProdutos[8],
-                "" + dadosProdutos[9]
+               "" + dadosProdutos[2],
+                "" + dadosProdutos[0],
+                "" +dadosProdutos[1]
         );
 
         call.enqueue(new Callback<ArrayList<EnviarDados>>() {
-            @Override
-            public void onResponse(Call<ArrayList<EnviarDados>> call, Response<ArrayList<EnviarDados>> response) {
-                final ArrayList<EnviarDados> sincronizacao = response.body();
-                if (sincronizacao != null) {
-                    quant++;
-                    FinalizarPOS();
-                }
-            }
+                @Override
+                public void onResponse(Call<ArrayList<EnviarDados>> call, Response<ArrayList<EnviarDados>> response) {
+                    final ArrayList<EnviarDados> sincronizacao = response.body();
+                    if (sincronizacao != null) {
 
-            @Override
-            public void onFailure(Call<ArrayList<EnviarDados>> call, Throwable t) {
-                if (pd != null && pd.isShowing()) {
-                    pd.dismiss();
+                        FinalizarPOS();
+                    }
                 }
-            }
-        });
+
+                @Override
+                public void onFailure(Call<ArrayList<EnviarDados>> call, Throwable t) {
+
+                    if (pd != null && pd.isShowing()) {
+                        pd.dismiss();
+                    }
+                }
+            });
+
+
+        // Log fim do envio para a venda
+        Log.d("EnvioDadosProdutos", "Envio concluído para todos os produtos de ID_DA_VENDA: " );
     }
 
     void enviarDadosContasReceber() {
@@ -352,3 +353,87 @@ public class EnviarDadosServidor extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 }
+
+
+//    void enviarDados() {
+//        findViewById(R.id.cv_btn_enviar_dados).setVisibility(View.GONE);
+//
+//        final IEnviarDados iEnviarDados = IEnviarDados.retrofit.create(IEnviarDados.class);
+//
+//        // Logando os dados antes de enviar para a API
+//        Log.d("EnvioDados", "TELA: 850");
+//        Log.d("EnvioDados", "SERIAL: " + prefs.getString("serial", ""));
+//        Log.d("EnvioDados", "VENDAS: " + dados[0]);
+//        Log.d("EnvioDados", "CLIENTES: " + dados[1]);
+//        Log.d("EnvioDados", "DATAS: " + dados[4]);
+//
+//        // Divide os dados por ";" para visualizar pedidos com múltiplos produtos
+//        String[] vendasArray = dados[0].split(";");
+//        String[] clientesArray = dados[1].split(";");
+//        String[] produtosArray = dados[2].split(";");
+//        String[] quantidadesArray = dados[3].split(";");
+//        String[] datasArray = dados[4].split(";");
+//        String[] valoresArray = dados[5].split(";");
+//
+//        for (int i = 1; i < vendasArray.length; i++) {
+//            Log.d("Pedido", "---- Detalhes do Pedido " + i + " ----");
+//            Log.d("Pedido", "Venda ID: " + vendasArray[i]);
+//            Log.d("Pedido", "Cliente ID: " + clientesArray[i]);
+//            Log.d("Pedido", "Data: " + datasArray[i]);
+//
+//            // Logando produtos, quantidades e valores de cada venda
+//            Log.d("Pedido", "Produtos: " + produtosArray[i]);
+//            Log.d("Pedido", "Quantidades: " + quantidadesArray[i]);
+//            Log.d("Pedido", "Valores: " + valoresArray[i]);
+//        }
+//
+//        // Log para os dados financeiros, como no código original
+//        Log.d("EnvioDados", "FINANCEIROS: " + dadosFin[0]);
+//        Log.d("EnvioDados", "FINVEN: " + dadosFin[1]);
+//        Log.d("EnvioDados", "VENCIMENTOS: " + dadosFin[2]);
+//        Log.d("EnvioDados", "VALORESFIN: " + dadosFin[3]);
+//        Log.d("EnvioDados", "FPAGAMENTOS: " + dadosFin[4]);
+//        Log.d("EnvioDados", "DOCUMENTOS: " + dadosFin[5]);
+//        Log.d("EnvioDados", "NOTASFISCAIS: " + dadosFin[6]);
+//        Log.d("EnvioDados", "CODALIQUOTAS: " + dadosFin[7]);
+//        Log.d("EnvioDados", "ENTFUTURA: " + entregaFuturaString);
+//
+//        final Call<ArrayList<EnviarDados>> call = iEnviarDados.enviarDados(
+//                "850",
+//                prefs.getString("serial", ""),
+//               "" + dados[0],
+//                "" +  dados[1],
+//               "" + dados[2],
+//               "" + dados[3],
+//               "" + dados[4],
+//               "" + dados[5],
+//                "" +  dadosFin[0],
+//              "" + dadosFin[1],
+//               ""+ dadosFin[2],
+//               "" +dadosFin[3],
+//             ""  + dadosFin[4],
+//              "" + dadosFin[5],
+//             "" +  dadosFin[6],
+//              "" + dadosFin[7],
+//              "" + entregaFuturaString
+//        );
+//
+//        call.enqueue(new Callback<ArrayList<EnviarDados>>() {
+//            @Override
+//            public void onResponse(Call<ArrayList<EnviarDados>> call, Response<ArrayList<EnviarDados>> response) {
+//                final ArrayList<EnviarDados> sincronizacao = response.body();
+//                if (sincronizacao != null) {
+//                    quant++;
+//                    FinalizarPOS();
+//                }
+//            }
+//
+//            @Override
+//            public void onFailure(Call<ArrayList<EnviarDados>> call, Throwable t) {
+//                //CANCELA A MENSAGEM DE SINCRONIZAÇÃO
+//                if (pd != null && pd.isShowing()) {
+//                    pd.dismiss();
+//                }
+//            }
+//        });
+//    }

@@ -3760,23 +3760,17 @@ public DadosCompletosDomain obterDadosCompletosVenda(int codigoVendaApp) {
         return ret;
     }
 
-    /*****************************************************/
+    /**************ENVIAR DADOS ALTERAÇOES **********************/
     public String[] EnviarDadosProdutos() {
 
-        StringBuilder FINANCEIROS = new StringBuilder();
-        StringBuilder FINVEN = new StringBuilder();
-        StringBuilder VENCIMENTOS = new StringBuilder();
-        StringBuilder VALORESFIN = new StringBuilder();
-        StringBuilder FPAGAMENTOS = new StringBuilder();
-        StringBuilder DOCUMENTOS = new StringBuilder();
-        StringBuilder NOTASFISCAIS = new StringBuilder();
-        StringBuilder CODALIQUOTAS = new StringBuilder();
+
         StringBuilder PRODUTOS = new StringBuilder();
         StringBuilder QUANTIDADES = new StringBuilder();
+        StringBuilder ID_DA_VENDA = new StringBuilder();
 
-        String query = "SELECT *, (fin.valor_financeiro * 100) as valFin " +
+        String query = "SELECT pva.produto, pva.quantidade, pva.codigo_venda_app " +
                 "FROM " + TABELA_VENDAS + " ven " +
-                "INNER JOIN " + TABELA_FINANCEIRO + " fin ON fin.id_financeiro_app = ven.codigo_venda_app " +
+                "INNER JOIN produtos_vendas_app pva   ON pva.codigo_venda_app = ven.codigo_venda_app " +
                 "WHERE ven.venda_finalizada_app = '1'";
 
         myDataBase = this.getReadableDatabase();
@@ -3784,25 +3778,11 @@ public DadosCompletosDomain obterDadosCompletosVenda(int codigoVendaApp) {
 
         if (cursor.moveToFirst()) {
             do {
-                // Dados financeiros e de venda
-                FINANCEIROS.append(",").append(cursor.getString(cursor.getColumnIndexOrThrow("codigo_financeiro")));
-                FINVEN.append(",").append(cursor.getString(cursor.getColumnIndexOrThrow("codigo_venda")));
-                VENCIMENTOS.append(",").append(aux.exibirData(cursor.getString(cursor.getColumnIndexOrThrow("vencimento_financeiro"))));
-                VALORESFIN.append(",").append(cursor.getString(cursor.getColumnIndexOrThrow("valFin")));
-                FPAGAMENTOS.append(",").append(IdFormaPagamento(cursor.getString(cursor.getColumnIndexOrThrow("fpagamento_financeiro"))));
-                DOCUMENTOS.append(",").append(cursor.getString(cursor.getColumnIndexOrThrow("documento_financeiro")));
-                NOTASFISCAIS.append(",").append(cursor.getString(cursor.getColumnIndexOrThrow("nota_fiscal")));
-                CODALIQUOTAS.append(",").append(cursor.getString(cursor.getColumnIndexOrThrow("codigo_aliquota")));
+                PRODUTOS.append(",");    PRODUTOS.append(cursor.getString(cursor.getColumnIndexOrThrow("produto")));
 
-                // Dados de produtos e quantidades associados à venda
-                String codigoVendaApp = cursor.getString(cursor.getColumnIndexOrThrow("codigo_venda"));
-                ArrayList<ProdutoEmissor> produtosVenda = getProdutosPorPedido(codigoVendaApp);
+                QUANTIDADES.append(",");   QUANTIDADES.append(cursor.getString(cursor.getColumnIndexOrThrow("quantidade")));
 
-                for (ProdutoEmissor produto : produtosVenda) {
-                    PRODUTOS.append(",").append(produto.getNome());
-                    QUANTIDADES.append(",").append(produto.getQuantidade());
-                }
-
+                ID_DA_VENDA.append(",");    ID_DA_VENDA.append(cursor.getString(cursor.getColumnIndexOrThrow("codigo_venda_app")));
             } while (cursor.moveToNext());
         }
 
@@ -3810,16 +3790,11 @@ public DadosCompletosDomain obterDadosCompletosVenda(int codigoVendaApp) {
        // db.close();
 
         String[] ret = {
-                FINANCEIROS.toString(),
-                FINVEN.toString(),
-                VENCIMENTOS.toString(),
-                VALORESFIN.toString(),
-                FPAGAMENTOS.toString(),
-                DOCUMENTOS.toString(),
-                NOTASFISCAIS.toString(),
-                CODALIQUOTAS.toString(),
+
                 PRODUTOS.toString(),
-                QUANTIDADES.toString()
+                QUANTIDADES.toString(),
+                ID_DA_VENDA.toString()
+
         };
 
         for (String s : ret) {
