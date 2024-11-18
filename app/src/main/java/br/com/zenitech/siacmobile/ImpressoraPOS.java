@@ -3,7 +3,6 @@ package br.com.zenitech.siacmobile;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.drawable.Drawable;
@@ -39,8 +38,9 @@ import br.com.zenitech.siacmobile.controller.PrintViewHelper;
 import br.com.zenitech.siacmobile.domains.Clientes;
 import br.com.zenitech.siacmobile.domains.ContasBancarias;
 import br.com.zenitech.siacmobile.domains.FinanceiroReceberDomain;
+import br.com.zenitech.siacmobile.domains.ProdutoEmissor;
 import br.com.zenitech.siacmobile.domains.UnidadesDomain;
-import br.com.zenitech.siacmobile.domains.VendasPedidosDomain;
+import br.com.zenitech.siacmobile.domains.VendasPedidosComProdutosDomain;
 import stone.application.enums.Action;
 import stone.application.interfaces.StoneActionCallback;
 import stone.application.interfaces.StoneCallbackInterface;
@@ -55,6 +55,7 @@ public class ImpressoraPOS extends AppCompatActivity implements StoneActionCallb
     //
     private DatabaseHelper bd;
     private ClassAuxiliar cAux;
+    String valTotalPed;
 
     //DADOS PARA IMPRESSÃO
     String id_cliente, cliente, vencimento, numero, tel_contato, valor, tipoImpressao, cpfcnpj, endereco, nota_fiscal, strFormPags, nContaBanco;
@@ -64,8 +65,8 @@ public class ImpressoraPOS extends AppCompatActivity implements StoneActionCallb
 
     public static String[] linhaProduto;
 
-    ArrayList<VendasPedidosDomain> elementosPedidos;
-    VendasPedidosDomain pedidos;
+    ArrayList<VendasPedidosComProdutosDomain> elementosPedidos;
+    VendasPedidosComProdutosDomain pedidos;
 
     ArrayList<FinanceiroReceberDomain> elementosRecebidos;
     FinanceiroReceberDomain recebidos;
@@ -145,8 +146,13 @@ public class ImpressoraPOS extends AppCompatActivity implements StoneActionCallb
 //        ppp = new PosPrintProvider(context);
 
         if (tipoImpressao.equals("relatorio")) {
+            // Calcula o total de todas as vendas
+            BigDecimal valorTotalVendas = bd.calcularTotalVendas();
+            // Atribui o total calculado a valTotalPed em formato de string
+            valTotalPed = valorTotalVendas.toString();
+            printRelatorioNFCE58mm(valorTotalVendas);
             Log.e("IMPRESSORA", "Imprimir relatorio");
-            printRelatorioNFCE58mm();
+            //printRelatorioNFCE58mm();
         } else if (tipoImpressao.equals("relatorioBaixa")) {
             printRelatorioBaixas58mm();
         } else if (tipoImpressao.equals("Promissoria")) {
@@ -354,10 +360,10 @@ public class ImpressoraPOS extends AppCompatActivity implements StoneActionCallb
 
     // ** RELATÓRIO 58mm
 
-    private void printRelatorioNFCE58mm() {
+    private void printRelatorioNFCE58mm(BigDecimal valorTotalVendas) {
         PosPrintProvider ppp = new PosPrintProvider(this);
 
-        elementosPedidos = bd.getRelatorioVendasPedidos();
+        elementosPedidos =bd.getRelatorioVendasComProdutos();
 
         strFormPags = bd.getFormPagRelatorioVendasPedidos();
         /*String serie = bd.getSeriePOS();*/
@@ -367,7 +373,7 @@ public class ImpressoraPOS extends AppCompatActivity implements StoneActionCallb
         unidade = bd.getUnidade();
 
         String quantItens = "0";
-        String valTotalPed = "0";
+        valTotalPed = "0";
 
         int posicaoNota;
 
@@ -406,6 +412,14 @@ public class ImpressoraPOS extends AppCompatActivity implements StoneActionCallb
                 ppp.addLine("PRODUTO: " + pedidos.getProduto_venda());
                 ppp.addLine("QTDE.:  | VL.UNIT:  | VL.TOTAL: ");
                 ppp.addLine(pedidos.getQuantidade_venda() + "     | " + cAux.maskMoney(new BigDecimal(pedidos.getPreco_unitario())) + "  | " + cAux.maskMoney(new BigDecimal(pedidos.getValor_total())));
+
+                // Itera sobre a lista de produtos do pedido
+                for (ProdutoEmissor produto : pedidos.getListaProdutos()) {
+                    ppp.addLine(produto.getNome() + " | " + produto.getQuantidade() + " | " +
+                            cAux.maskMoney(new BigDecimal(produto.getValorUnitario())) + " | " +
+                            new BigDecimal(produto.getQuantidade()).multiply(new BigDecimal(produto.getValorUnitario())));
+
+                }
 
                 ppp.addLine("FORMA(S) PAGAMENTO: ");
                 ppp.addLine(pedidos.getFormas_pagamento());

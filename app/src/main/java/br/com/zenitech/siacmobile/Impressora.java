@@ -1379,8 +1379,6 @@ public class Impressora extends AppCompatActivity {
     @SuppressLint({"MissingPermission", "LongLogTag"})
     private void printPromissoria() {
 
-
-
         runTask((dialog, printer) -> {
             Log.d(LOG_TAG, "Print Relatório NFC-e");
             printer.reset();
@@ -1561,7 +1559,7 @@ public class Impressora extends AppCompatActivity {
             strFormPags = bd.getFormPagRelatorioVendasPedidos();
             /*String serie = bd.getSeriePOS();*/
             //elementosUnidade = bd.getUnidade();
-            //unidade = elementosUnidade.get(0);
+            //unidade = elementosUnidade.get(0);0
 
             unidade = bd.getUnidade();
 

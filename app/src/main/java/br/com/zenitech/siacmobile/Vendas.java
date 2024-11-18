@@ -45,6 +45,18 @@ import br.com.zenitech.siacmobile.domains.FinanceiroReceberClientes;
 import br.com.zenitech.siacmobile.domains.ProdutoEmissor;
 import br.com.zenitech.siacmobile.domains.VendasDomain;
 
+/**PARAMS
+ * NOVA ABORDAGEM CRIAMOS A VENDA PRINCIPAL NA TABELA VENDAS APP
+ *
+ * COM OS DADOS PRIMARIOS DO CLIENTE
+ *
+ *  DEMAIS DADOS SAO ACRESCENTADOS DURANTE O PROCESSO
+ *
+ * PODENDO INSERIR DIVERSOS PRODUTOS NA MSM VENDA
+ *
+ *
+ */
+
 public class Vendas extends AppCompatActivity {
     //
     private SharedPreferences prefs;
@@ -117,19 +129,25 @@ public class Vendas extends AppCompatActivity {
         // Verifica se a chave "editar" é igual a "sim"
         if ("sim".equals(editarFlag)) {
             // Se estiver em modo de edição, usa o id atual sem incrementar
+
             id = prefs.getInt("id_venda", 1);
             Log.d("EDITANDO", "onCreate: USANDO ID EXISTENTE PARA VENDA " + id);
+
             Toast.makeText(this, "UMA VENDA EDITADA", Toast.LENGTH_SHORT).show();
         } else {
             // Se não estiver no modo de edição, incrementa o id normalmente
             id = prefs.getInt("id_venda", 1) ;
             Log.d("I.D.S", "onCreate: INICIANDO TRABALHO COM IDS " + id);
+
             id_venda_app = prefs.getInt("id_venda_app", 1) ;
+
             Log.d("I.D.S", "onCreate: INICIANDO TRABALHO COM IDS " + id_venda_app);
+
             id = id + 1 ;
             id_venda_app = id_venda_app + 1 ;
             ed.putInt("id_venda_app", id_venda_app).apply();
             ed.putInt("id_venda", id).apply();
+
             Log.d("INSERT", "onCreate: AUMENTANDO O VALOR PRA VENDA " + id);
             Log.d("FINALIZANDO", "onCreate: INCREMENTADO ID DA VENDA PARA " + id_venda_app);
 
@@ -309,9 +327,12 @@ public class Vendas extends AppCompatActivity {
         // Aqui chamamos o método para verificar se a venda é futura e armazenamos o estado original
         int idVendaAppLocal = prefs.getInt("id_venda_app", 0);
         int entregaFutura = bd.getEntregaFuturaVenda(idVendaAppLocal);
+
         Log.d("log id ", "onCreate: id venda para entrega futura " + idVendaAppLocal);
+
         estadoEntregaFuturaOriginal = entregaFutura; // Armazena o estado original
         Log.d("VENDA RECUPERADA", "onCreate: recebendo entrega futura " + entregaFutura);
+
         // Atualiza o estado do CheckBox de acordo
         checkBoxConfirmar.setChecked(entregaFutura == 1);  // Marca o CheckBox se for venda futura
 
@@ -573,14 +594,19 @@ public class Vendas extends AppCompatActivity {
                 //SE FOR EDITAR A ÚLTIMA VENDA REALIZADA
                 else {
                     Log.d("CAIU NA EDIÇAO", "obterDados: NAO E VENDA NOVA ");
+                    /**
+                     *PARAMS
+                     * AQUI OS DADOS DE UMA EDIÇAO SAO CARREGADOS
+                     *
+                     * PELO METODO LOGAR DADOS COMPLETOS
+                     *
+                     */
 
                    /* Log.d("Venda", "Editando uma venda existente.");
                     //
                     id = Integer.parseInt(params.getString("id_venda"));
                     id_venda_app = Integer.parseInt(params.getString("id_venda_app"));
                     ed.putInt("id_venda_app", id_venda_app).apply();
-
-
                     id_cliente = params.getString("codigo");
                     nome_cliente = params.getString("nome");
                     latitude_cliente = params.getString("latitude_cliente");

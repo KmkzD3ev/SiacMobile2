@@ -720,7 +720,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         return listaVendas;
     }
 
-    /************* listar nova tabela ****************/
+    /************* LISTAR PRODUTOS NOVA TABELA ****************/
+
     @SuppressLint("Range")
     public ArrayList<ProdutoEmissor> getProdutosVenda(String codigoVendaApp) {
         ArrayList<ProdutoEmissor> listaProdutos = new ArrayList<>();
@@ -809,7 +810,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         return listaVendas;
     }
 
-    /************** QUANTIDADE TOTAL DE ITENS DA TABELA ************************/
+    /************** QUANTIDADE TOTAL DE ITENS DA TABELA PRODUTOS VENDAS APP  ************************/
 
     @SuppressLint("Range")
     public int getTotalQuantidadeProdutos() {
@@ -991,7 +992,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         return valorProduto;
     }
 
-/**************** OBTER TODOS OS DADOS PRA EDIÇAO ***************/
+/**************** OBTER TODOS OS DADOS DE UMA VENDA  PRA EDIÇAO ***************/
 
 public DadosCompletosDomain obterDadosCompletosVenda(int codigoVendaApp) {
     DadosCompletosDomain dadosCompletos = new DadosCompletosDomain();
@@ -3502,7 +3503,75 @@ public DadosCompletosDomain obterDadosCompletosVenda(int codigoVendaApp) {
         return str.toString();
 
     }
+    /**************** ENVIAR DADOS MODIFICADO ******************/
+    /*
+    public String[] EnviarDados(String dataMovimento) {
+        StringBuilder VENDAS = new StringBuilder();
+        StringBuilder CLIENTES = new StringBuilder();
+        StringBuilder PRODUTOS = new StringBuilder();
+        StringBuilder QUANTIDADES = new StringBuilder();
+        StringBuilder DATAS = new StringBuilder();
+        StringBuilder VALORES = new StringBuilder();
 
+        // Consulta a tabela principal de vendas para vendas finalizadas
+        String queryVendas = "SELECT * FROM " + TABELA_VENDAS + " WHERE venda_finalizada_app = '1'";
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursorVendas = db.rawQuery(queryVendas, null);
+
+        if (cursorVendas.moveToFirst()) {
+            do {
+                // Extrai os detalhes básicos de cada venda
+                String codigoVendaApp = cursorVendas.getString(cursorVendas.getColumnIndexOrThrow("codigo_venda"));
+                String clienteId = cursorVendas.getString(cursorVendas.getColumnIndexOrThrow("codigo_cliente"));
+
+                // Adiciona os dados de venda e cliente à string de retorno, preservando `;` como delimitador de vendas
+                VENDAS.append(";").append(codigoVendaApp);
+                CLIENTES.append(";").append(clienteId);
+                DATAS.append(";").append(dataMovimento);
+
+                // Obtem produtos associados à venda atual
+                ArrayList<ProdutoEmissor> produtosVenda = getProdutosPorPedido(codigoVendaApp);
+
+                // Strings temporárias para os dados dos produtos, com `,` entre itens e `;` para vendas separadas
+                StringBuilder produtosStr = new StringBuilder();
+                StringBuilder quantidadesStr = new StringBuilder();
+                StringBuilder valoresStr = new StringBuilder();
+
+                for (ProdutoEmissor produto : produtosVenda) {
+                    produtosStr.append(produto.getNome()).append(",");
+                    quantidadesStr.append(produto.getQuantidade()).append(",");
+                    valoresStr.append(produto.getValorUnitario()).append(",");
+                }
+
+                // Remover o último delimitador `,` para cada campo
+                if (produtosStr.length() > 0) produtosStr.setLength(produtosStr.length() - 1);
+                if (quantidadesStr.length() > 0) quantidadesStr.setLength(quantidadesStr.length() - 1);
+                if (valoresStr.length() > 0) valoresStr.setLength(valoresStr.length() - 1);
+
+                // Adiciona o bloco de produtos, quantidades e valores à string principal, usando `;` para separar vendas
+                PRODUTOS.append(";").append(produtosStr.toString());
+                QUANTIDADES.append(";").append(quantidadesStr.toString());
+                VALORES.append(";").append(valoresStr.toString());
+
+            } while (cursorVendas.moveToNext());
+        }
+
+        cursorVendas.close();
+        db.close();
+
+        // Retornar o mesmo array, com `;` como delimitador de vendas e `,` para itens múltiplos dentro de cada venda
+        return new String[]{
+                VENDAS.toString(),
+                CLIENTES.toString(),
+                PRODUTOS.toString(),
+                QUANTIDADES.toString(),
+                DATAS.toString(),
+                VALORES.toString()
+        };
+    }*/
+
+
+    /*************** ENVIAR DADOS ORIGINAL ****************/
     // ** Enviar dados VENDAS
     public String[] EnviarDados(String dataMovimento) {
 
@@ -3578,7 +3647,6 @@ public DadosCompletosDomain obterDadosCompletosVenda(int codigoVendaApp) {
 
     // ** Enviar dados VENDAS
     public String[] EnviarDadosFinanceiro() {
-
         // **
         /*StringBuilder VENDAS = new StringBuilder();
         StringBuilder CLIENTES = new StringBuilder();
@@ -3691,6 +3759,77 @@ public DadosCompletosDomain obterDadosCompletosVenda(int codigoVendaApp) {
 
         return ret;
     }
+
+    /*****************************************************/
+    public String[] EnviarDadosProdutos() {
+
+        StringBuilder FINANCEIROS = new StringBuilder();
+        StringBuilder FINVEN = new StringBuilder();
+        StringBuilder VENCIMENTOS = new StringBuilder();
+        StringBuilder VALORESFIN = new StringBuilder();
+        StringBuilder FPAGAMENTOS = new StringBuilder();
+        StringBuilder DOCUMENTOS = new StringBuilder();
+        StringBuilder NOTASFISCAIS = new StringBuilder();
+        StringBuilder CODALIQUOTAS = new StringBuilder();
+        StringBuilder PRODUTOS = new StringBuilder();
+        StringBuilder QUANTIDADES = new StringBuilder();
+
+        String query = "SELECT *, (fin.valor_financeiro * 100) as valFin " +
+                "FROM " + TABELA_VENDAS + " ven " +
+                "INNER JOIN " + TABELA_FINANCEIRO + " fin ON fin.id_financeiro_app = ven.codigo_venda_app " +
+                "WHERE ven.venda_finalizada_app = '1'";
+
+        myDataBase = this.getReadableDatabase();
+        Cursor cursor = myDataBase.rawQuery(query, null);
+
+        if (cursor.moveToFirst()) {
+            do {
+                // Dados financeiros e de venda
+                FINANCEIROS.append(",").append(cursor.getString(cursor.getColumnIndexOrThrow("codigo_financeiro")));
+                FINVEN.append(",").append(cursor.getString(cursor.getColumnIndexOrThrow("codigo_venda")));
+                VENCIMENTOS.append(",").append(aux.exibirData(cursor.getString(cursor.getColumnIndexOrThrow("vencimento_financeiro"))));
+                VALORESFIN.append(",").append(cursor.getString(cursor.getColumnIndexOrThrow("valFin")));
+                FPAGAMENTOS.append(",").append(IdFormaPagamento(cursor.getString(cursor.getColumnIndexOrThrow("fpagamento_financeiro"))));
+                DOCUMENTOS.append(",").append(cursor.getString(cursor.getColumnIndexOrThrow("documento_financeiro")));
+                NOTASFISCAIS.append(",").append(cursor.getString(cursor.getColumnIndexOrThrow("nota_fiscal")));
+                CODALIQUOTAS.append(",").append(cursor.getString(cursor.getColumnIndexOrThrow("codigo_aliquota")));
+
+                // Dados de produtos e quantidades associados à venda
+                String codigoVendaApp = cursor.getString(cursor.getColumnIndexOrThrow("codigo_venda"));
+                ArrayList<ProdutoEmissor> produtosVenda = getProdutosPorPedido(codigoVendaApp);
+
+                for (ProdutoEmissor produto : produtosVenda) {
+                    PRODUTOS.append(",").append(produto.getNome());
+                    QUANTIDADES.append(",").append(produto.getQuantidade());
+                }
+
+            } while (cursor.moveToNext());
+        }
+
+        cursor.close();
+       // db.close();
+
+        String[] ret = {
+                FINANCEIROS.toString(),
+                FINVEN.toString(),
+                VENCIMENTOS.toString(),
+                VALORESFIN.toString(),
+                FPAGAMENTOS.toString(),
+                DOCUMENTOS.toString(),
+                NOTASFISCAIS.toString(),
+                CODALIQUOTAS.toString(),
+                PRODUTOS.toString(),
+                QUANTIDADES.toString()
+        };
+
+        for (String s : ret) {
+            Log.i("EnviarDadosPRODUTOS", s);
+        }
+
+        return ret;
+    }
+
+
     // Método para consultar o limite de crédito de um cliente específico
     public double getLimiteCreditoCliente(int clienteId) {
         SQLiteDatabase db = this.getReadableDatabase();

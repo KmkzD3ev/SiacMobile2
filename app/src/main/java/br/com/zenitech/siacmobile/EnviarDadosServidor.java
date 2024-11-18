@@ -38,7 +38,7 @@ public class EnviarDadosServidor extends AppCompatActivity {
     private static final String TAG = "GerenciarCF";
     private Context context = null;
     private ProgressDialog pd;
-    String[] dados, dadosFin, dadosContasReceber, dadosVales;
+    String[] dados, dadosFin, dadosContasReceber, dadosVales ,dadosProdutos;
     private int quant = 0;
 
     @Override
@@ -75,6 +75,9 @@ public class EnviarDadosServidor extends AppCompatActivity {
         //
         dados = bd.EnviarDados(classAuxiliar.exibirData(prefs.getString("data_movimento_atual", "")));
 
+
+        dadosProdutos = bd.EnviarDadosProdutos();
+
         //
         dadosFin = bd.EnviarDadosFinanceiro();
 
@@ -91,6 +94,7 @@ public class EnviarDadosServidor extends AppCompatActivity {
             enviarDados();
             enviarDadosContasReceber();
             enviarDadosVales();
+            enviarDadosProdutos();
         });
     }
 
@@ -154,6 +158,46 @@ public class EnviarDadosServidor extends AppCompatActivity {
             public void onFailure(Call<ArrayList<EnviarDados>> call, Throwable t) {
 
                 //CANCELA A MENSAGEM DE SINCRONIZAÇÃO
+                if (pd != null && pd.isShowing()) {
+                    pd.dismiss();
+                }
+            }
+        });
+    }
+    // Método enviarDadosProdutos atualizado para enviar apenas os dados necessários
+    void enviarDadosProdutos() {
+        findViewById(R.id.cv_btn_enviar_dados).setVisibility(View.GONE);
+
+        final IEnviarDados iEnviarDados = IEnviarDados.retrofit.create(IEnviarDados.class);
+
+        // Logando apenas os campos relevantes
+        Log.d("EnvioDadosProdutos", "TELA: 852");
+        Log.d("EnvioDadosProdutos", "SERIAL: " + prefs.getString("serial", ""));
+        Log.d("EnvioDadosProdutos", "ID_DA_VENDA: " + dadosProdutos[1]);  // ID da venda (antigo FINVEN)
+        Log.d("EnvioDadosProdutos", "PRODUTOS: " + dadosProdutos[8]);
+        Log.d("EnvioDadosProdutos", "QUANTIDADES: " + dadosProdutos[9]);
+
+        // Realizando a chamada com os parâmetros necessários
+        final Call<ArrayList<EnviarDados>> call = iEnviarDados.enviarDadosProdutos(
+                "852",
+                prefs.getString("serial", ""),
+                "" + dadosProdutos[1],
+                "" + dadosProdutos[8],
+                "" + dadosProdutos[9]
+        );
+
+        call.enqueue(new Callback<ArrayList<EnviarDados>>() {
+            @Override
+            public void onResponse(Call<ArrayList<EnviarDados>> call, Response<ArrayList<EnviarDados>> response) {
+                final ArrayList<EnviarDados> sincronizacao = response.body();
+                if (sincronizacao != null) {
+                    quant++;
+                    FinalizarPOS();
+                }
+            }
+
+            @Override
+            public void onFailure(Call<ArrayList<EnviarDados>> call, Throwable t) {
                 if (pd != null && pd.isShowing()) {
                     pd.dismiss();
                 }

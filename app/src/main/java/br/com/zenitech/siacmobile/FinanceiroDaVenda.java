@@ -626,8 +626,6 @@ public class FinanceiroDaVenda extends AppCompatActivity implements AdapterView.
         if (verificarInadimplencia(codigo_cliente)) {
             Log.d("FinanceiroDaVenda", "Cliente está inadimplente. Carregando apenas 'DINHEIRO _ A VISTA' e outras formas 'A VISTA'.");
 
-            // Adiciona a forma padrão "DINHEIRO _ A VISTA"
-          //  formasDePagamento.add("DINHEIRO _ A VISTA");
 
             // Carregar todas as formas de pagamento disponíveis
             ArrayList<String> todasFormas = bd.getFormasPagamentoCliente(codigo_cliente);
