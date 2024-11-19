@@ -4,6 +4,7 @@ import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 
@@ -40,9 +41,9 @@ public class Principal2 extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_principal2);
+
+        // Configuração do BottomNavigationView
         BottomNavigationView navView = findViewById(R.id.nav_view);
-        // Passing each menu ID as a set of Ids because each
-        // menu should be considered as top level destinations.
         AppBarConfiguration appBarConfiguration = new AppBarConfiguration.Builder(
                 R.id.navigation_home, R.id.navigation_dashboard, R.id.navigation_notifications)
                 .build();
@@ -51,6 +52,25 @@ public class Principal2 extends AppCompatActivity {
         NavigationUI.setupActionBarWithNavController(this, navController, appBarConfiguration);
         NavigationUI.setupWithNavController(navView, navController);
 
+        // Inicialize o botão
+        Button fabVenda = findViewById(R.id.fab_venda);
+
+        // Adicione um listener para o NavController
+        navController.addOnDestinationChangedListener((controller, destination, arguments) -> {
+            if (destination.getId() == R.id.navigation_home) { // Substitua com o ID do seu PrincipalFragment
+                fabVenda.setVisibility(View.VISIBLE); // Exibe o botão no PrincipalFragment
+            } else {
+                fabVenda.setVisibility(View.GONE); // Oculta o botão nos outros fragments
+            }
+        });
+
+        // Configuração do clique do botão
+        if (fabVenda != null) {
+            fabVenda.setOnClickListener(view -> {
+                Intent intent1 = new Intent(this, Listar_venda_futura.class);
+                startActivity(intent1);
+            });
+        }
         prefs = getSharedPreferences("preferencias", MODE_PRIVATE);
         // INFORMA QUE A VENDA NÃO ESTÁ SENDO EDITADA PARA NÃO APAGAR QUANDO VOLTAR
         prefs.edit().putBoolean("EditarVenda", false).apply();
@@ -103,15 +123,10 @@ public class Principal2 extends AppCompatActivity {
         txtDataUltimoSinc.setText(prefs.getString("data_sincronizado", ""));
 
 
-        Button fabVenda = findViewById(R.id.fab_venda);
-        if (fabVenda != null) {
-            fabVenda.setOnClickListener(view -> {
-                Intent intent1 = new Intent(this, Listar_venda_futura.class);
-                startActivity(intent1);
-            });
+
         }
 
-    }
+
 
 
     private void callDialog(String impressora) {
