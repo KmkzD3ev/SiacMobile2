@@ -13,6 +13,8 @@ import android.database.sqlite.SQLiteOpenHelper;
 import android.os.Environment;
 import android.util.Log;
 
+import com.google.gson.Gson;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -21,6 +23,9 @@ import java.io.OutputStream;
 import java.math.BigDecimal;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.HashMap;
 
@@ -899,32 +904,22 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     }
     /************** METODO DE INSERÇAO PRODUTO_VENDA_APP ***********************/
 
-    public long addProdutoVenda(String produto, int quantidade, double precoUnitario, String codigoVendaApp) {
+    public long addProdutoVenda(String produto, int quantidade, double precoUnitario, String codigoVendaApp,int entregaFutura) {
         // Cria um objeto ContentValues para empacotar os valores a serem inseridos
         ContentValues values = new ContentValues();
         values.put("produto", produto);
         values.put("quantidade", quantidade);
         values.put("preco_unitario", precoUnitario);
         values.put("codigo_venda_app", codigoVendaApp);
+        values.put("entrega_futura" , entregaFutura);
 
         // Insere os dados na tabela e retorna o ID da nova linha inserida ou -1 em caso de erro
         return this.getWritableDatabase().insert("produtos_vendas_app", null, values);
     }
 
 
-    /************ EXCLUIR PRODUTO ********************************/
+    /************ EXCLUIR PRODUTO NOVA TABELA ********************************/
 
-   /* public int deleteProdutoVenda(String produto, String codigoVendaApp) {
-        // Log para verificar qual produto e código de venda estão sendo excluídos
-        Log.d("EXCLUIR PRODUTO", "Excluindo produto: " + produto + ", Código de venda: " + codigoVendaApp);
-
-        // Define a cláusula WHERE e os argumentos para identificar o produto específico
-        String whereClause = "produto = ? AND codigo_venda_app = ?";
-        String[] whereArgs = {produto, codigoVendaApp};
-
-        // Executa a exclusão e retorna o número de linhas afetadas
-        return this.getWritableDatabase().delete("produtos_vendas_app", whereClause, whereArgs);
-    }*/
     public int deleteProdutoVenda(String produto, String codigoVendaApp) {
         SQLiteDatabase db = this.getWritableDatabase();
         db.beginTransaction();  // Inicia uma transação para garantir a integridade dos dados
@@ -1526,7 +1521,8 @@ public DadosCompletosDomain obterDadosCompletosVenda(int codigoVendaApp) {
 
 
     /************ ATUALIZAR DADOS DA VENDA APOS A CRIAÇÃO PRIMÁRIA ****************/
-    public void atualizarValoresVenda(int idVenda, double valorUnitario, double totalVenda, int quantidade) {
+
+    public void atualizarValoresVenda(int idVenda, double valorUnitario, double totalVenda, int quantidade ) {
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues valores = new ContentValues();
         valores.put("preco_unitario", valorUnitario); // Valor unitário em formato double
@@ -3504,72 +3500,184 @@ public DadosCompletosDomain obterDadosCompletosVenda(int codigoVendaApp) {
 
     }
     /**************** ENVIAR DADOS MODIFICADO ******************/
-    /*
-    public String[] EnviarDados(String dataMovimento) {
-        StringBuilder VENDAS = new StringBuilder();
-        StringBuilder CLIENTES = new StringBuilder();
-        StringBuilder PRODUTOS = new StringBuilder();
-        StringBuilder QUANTIDADES = new StringBuilder();
-        StringBuilder DATAS = new StringBuilder();
-        StringBuilder VALORES = new StringBuilder();
 
-        // Consulta a tabela principal de vendas para vendas finalizadas
-        String queryVendas = "SELECT * FROM " + TABELA_VENDAS + " WHERE venda_finalizada_app = '1'";
-        SQLiteDatabase db = this.getReadableDatabase();
-        Cursor cursorVendas = db.rawQuery(queryVendas, null);
+    public String montarJson(String dataMovimento) {
+        SQLiteDatabase db = null;
+        Cursor cursorVendas = null;
 
-        if (cursorVendas.moveToFirst()) {
-            do {
-                // Extrai os detalhes básicos de cada venda
-                String codigoVendaApp = cursorVendas.getString(cursorVendas.getColumnIndexOrThrow("codigo_venda"));
-                String clienteId = cursorVendas.getString(cursorVendas.getColumnIndexOrThrow("codigo_cliente"));
+        List<Map<String, Object>> pedidos = new ArrayList<>();
 
-                // Adiciona os dados de venda e cliente à string de retorno, preservando `;` como delimitador de vendas
-                VENDAS.append(";").append(codigoVendaApp);
-                CLIENTES.append(";").append(clienteId);
-                DATAS.append(";").append(dataMovimento);
+        try {
+            db = this.getReadableDatabase(); // Abre o banco antes de começar
+            String queryVendas = "SELECT * FROM vendas_app WHERE venda_finalizada_app = '1'";
+            cursorVendas = db.rawQuery(queryVendas, null);
 
-                // Obtem produtos associados à venda atual
-                ArrayList<ProdutoEmissor> produtosVenda = getProdutosPorPedido(codigoVendaApp);
+            if (cursorVendas.moveToFirst()) {
+                do {
+                    String codigoVenda = cursorVendas.getString(cursorVendas.getColumnIndexOrThrow("codigo_venda"));
+                    String clienteId = cursorVendas.getString(cursorVendas.getColumnIndexOrThrow("codigo_cliente"));
 
-                // Strings temporárias para os dados dos produtos, com `,` entre itens e `;` para vendas separadas
-                StringBuilder produtosStr = new StringBuilder();
-                StringBuilder quantidadesStr = new StringBuilder();
-                StringBuilder valoresStr = new StringBuilder();
+                    if (db == null || !db.isOpen()) {
+                        db = this.getReadableDatabase();
+                    }
 
-                for (ProdutoEmissor produto : produtosVenda) {
-                    produtosStr.append(produto.getNome()).append(",");
-                    quantidadesStr.append(produto.getQuantidade()).append(",");
-                    valoresStr.append(produto.getValorUnitario()).append(",");
-                }
+                    String queryProdutos = "SELECT pv.codigo_venda_app, p.codigo_produto, pv.quantidade, pv.preco_unitario, pv.entrega_futura " +
+                            "FROM produtos_vendas_app pv " +
+                            "INNER JOIN produtos p ON pv.produto = p.descricao_produto " +
+                            "WHERE pv.codigo_venda_app = ?";
+                    Cursor cursorProdutos = db.rawQuery(queryProdutos, new String[]{codigoVenda});
 
-                // Remover o último delimitador `,` para cada campo
-                if (produtosStr.length() > 0) produtosStr.setLength(produtosStr.length() - 1);
-                if (quantidadesStr.length() > 0) quantidadesStr.setLength(quantidadesStr.length() - 1);
-                if (valoresStr.length() > 0) valoresStr.setLength(valoresStr.length() - 1);
+                    List<Map<String, Object>> vendas = new ArrayList<>();
+                    if (cursorProdutos.moveToFirst()) {
+                        do {
+                            Map<String, Object> venda = new LinkedHashMap<>();
 
-                // Adiciona o bloco de produtos, quantidades e valores à string principal, usando `;` para separar vendas
-                PRODUTOS.append(";").append(produtosStr.toString());
-                QUANTIDADES.append(";").append(quantidadesStr.toString());
-                VALORES.append(";").append(valoresStr.toString());
+                            venda.put("PRODUTO", cursorProdutos.getString(cursorProdutos.getColumnIndexOrThrow("codigo_produto")));
+                            venda.put("QUANTIDADE", cursorProdutos.getString(cursorProdutos.getColumnIndexOrThrow("quantidade")));
+                            venda.put("VALOR_UNITARIO", cursorProdutos.getString(cursorProdutos.getColumnIndexOrThrow("preco_unitario")));
+                            venda.put("ENTREGA_FUTURA", cursorProdutos.getString(cursorProdutos.getColumnIndexOrThrow("entrega_futura")));
+                            vendas.add(venda);
+                        } while (cursorProdutos.moveToNext());
+                    }
+                    cursorProdutos.close();
 
-            } while (cursorVendas.moveToNext());
+                    String queryFinanceiros = "SELECT * FROM " + TABELA_FINANCEIRO + " WHERE id_financeiro_app = ?";
+                    Cursor cursorFinanceiros = db.rawQuery(queryFinanceiros, new String[]{codigoVenda});
+
+                    List<Map<String, Object>> financeiros = new ArrayList<>();
+                    if (cursorFinanceiros.moveToFirst()) {
+                        do {
+                            Map<String, Object> financeiro = new LinkedHashMap<>();
+                            financeiro.put("FORMA_PAGAMENTO", IdFormaPagamento(cursorFinanceiros.getString(cursorFinanceiros.getColumnIndexOrThrow("fpagamento_financeiro"))));
+                            financeiro.put("VALOR", cursorFinanceiros.getString(cursorFinanceiros.getColumnIndexOrThrow("valor_financeiro")));
+                            financeiro.put("VENCIMENTO", aux.exibirData(cursorFinanceiros.getString(cursorFinanceiros.getColumnIndexOrThrow("vencimento_financeiro"))));
+                            financeiro.put("DOCUMENTO", cursorFinanceiros.getString(cursorFinanceiros.getColumnIndexOrThrow("documento_financeiro")));
+                            financeiro.put("NOTA_FISCAL", cursorFinanceiros.getString(cursorFinanceiros.getColumnIndexOrThrow("nota_fiscal")));
+                            financeiro.put("COD_ALIQUOTA", cursorFinanceiros.getString(cursorFinanceiros.getColumnIndexOrThrow("codigo_aliquota")));
+                            financeiros.add(financeiro);
+                        } while (cursorFinanceiros.moveToNext());
+                    }
+                    cursorFinanceiros.close();
+
+                    Map<String, Object> pedido = new LinkedHashMap<>();
+                    pedido.put("CODIGO", codigoVenda);
+                    pedido.put("CLIENTE", clienteId);
+                    pedido.put("DATA", dataMovimento); // A data agora é recebida diretamente
+                    pedido.put("VENDAS", vendas);
+                    pedido.put("FINANCEIROS", financeiros);
+
+                    pedidos.add(pedido);
+                } while (cursorVendas.moveToNext());
+            }
+        } catch (Exception e) {
+            Log.e("montarJson", "Erro ao montar JSON", e);
+        } finally {
+            if (cursorVendas != null && !cursorVendas.isClosed()) {
+                cursorVendas.close();
+            }
+            if (db != null && db.isOpen()) {
+                db.close();
+            }
         }
 
-        cursorVendas.close();
-        db.close();
+        Map<String, Object> jsonFinal = new LinkedHashMap<>();
+        jsonFinal.put("SERIAL", "005000002");
+        jsonFinal.put("PEDIDOS", pedidos);
 
-        // Retornar o mesmo array, com `;` como delimitador de vendas e `,` para itens múltiplos dentro de cada venda
-        return new String[]{
-                VENDAS.toString(),
-                CLIENTES.toString(),
-                PRODUTOS.toString(),
-                QUANTIDADES.toString(),
-                DATAS.toString(),
-                VALORES.toString()
-        };
-    }*/
+        return new Gson().toJson(jsonFinal);
+    }
 
+
+//    public String montarJson() {
+//        SQLiteDatabase db = null;
+//        Cursor cursorVendas = null;
+//
+//        List<Map<String, Object>> pedidos = new ArrayList<>();
+//
+//        try {
+//            db = this.getReadableDatabase(); // Abre o banco antes de começar
+//            // Consulta vendas finalizadas
+//            String queryVendas = "SELECT * FROM " + TABELA_VENDAS + " WHERE venda_finalizada_app = '1'";
+//            cursorVendas = db.rawQuery(queryVendas, null);
+//
+//            if (cursorVendas.moveToFirst()) {
+//                do {
+//                    // Captura os detalhes básicos da venda
+//                    String codigoVenda = cursorVendas.getString(cursorVendas.getColumnIndexOrThrow("codigo_venda"));
+//                    String clienteId = cursorVendas.getString(cursorVendas.getColumnIndexOrThrow("codigo_cliente"));
+//                    String dataMovimento = cursorVendas.getString(cursorVendas.getColumnIndexOrThrow("data_movimento"));
+//
+//                    // Garante que o banco esteja aberto antes da consulta
+//                    if (db == null || !db.isOpen()) {
+//                        db = this.getReadableDatabase();
+//                    }
+//
+//                    // Captura produtos associados à venda
+//                    String queryProdutos = "SELECT * FROM produtos_vendas_app WHERE codigo_venda_app = ?";
+//                    Cursor cursorProdutos = db.rawQuery(queryProdutos, new String[]{codigoVenda});
+//
+//                    List<Map<String, Object>> vendas = new ArrayList<>();
+//                    if (cursorProdutos.moveToFirst()) {
+//                        do {
+//                            Map<String, Object> venda = new HashMap<>();
+//                            venda.put("PRODUTO", cursorProdutos.getString(cursorProdutos.getColumnIndexOrThrow("produto")));
+//                            venda.put("QUANTIDADE", cursorProdutos.getString(cursorProdutos.getColumnIndexOrThrow("quantidade")));
+//                            venda.put("VALOR_UNITARIO", cursorProdutos.getString(cursorProdutos.getColumnIndexOrThrow("preco_unitario")));
+//                            venda.put("ENTREGA_FUTURA", cursorProdutos.getString(cursorProdutos.getColumnIndexOrThrow("entrega_futura")));
+//                            vendas.add(venda);
+//                        } while (cursorProdutos.moveToNext());
+//                    }
+//                    cursorProdutos.close();
+//
+//                    // Captura financeiros associados à venda
+//                    String queryFinanceiros = "SELECT * FROM " + TABELA_FINANCEIRO + " WHERE id_financeiro_app = ?";
+//                    Cursor cursorFinanceiros = db.rawQuery(queryFinanceiros, new String[]{codigoVenda});
+//
+//                    List<Map<String, Object>> financeiros = new ArrayList<>();
+//                    if (cursorFinanceiros.moveToFirst()) {
+//                        do {
+//                            Map<String, Object> financeiro = new HashMap<>();
+//                            financeiro.put("FORMA_PAGAMENTO", IdFormaPagamento(cursorFinanceiros.getString(cursorFinanceiros.getColumnIndexOrThrow("fpagamento_financeiro"))));
+//                            financeiro.put("VALOR", cursorFinanceiros.getString(cursorFinanceiros.getColumnIndexOrThrow("valor_financeiro")));
+//                            financeiro.put("VENCIMENTO", aux.exibirData(cursorFinanceiros.getString(cursorFinanceiros.getColumnIndexOrThrow("vencimento_financeiro"))));
+//                            financeiro.put("DOCUMENTO", cursorFinanceiros.getString(cursorFinanceiros.getColumnIndexOrThrow("documento_financeiro")));
+//                            financeiro.put("NOTA_FISCAL", cursorFinanceiros.getString(cursorFinanceiros.getColumnIndexOrThrow("nota_fiscal")));
+//                            financeiro.put("COD_ALIQUOTA", cursorFinanceiros.getString(cursorFinanceiros.getColumnIndexOrThrow("codigo_aliquota")));
+//                            financeiros.add(financeiro);
+//                        } while (cursorFinanceiros.moveToNext());
+//                    }
+//                    cursorFinanceiros.close();
+//
+//                    // Monta o pedido
+//                    Map<String, Object> pedido = new HashMap<>();
+//                    pedido.put("CODIGO", codigoVenda);
+//                    pedido.put("CLIENTE", clienteId);
+//                    pedido.put("DATA", dataMovimento);
+//                    pedido.put("VENDAS", vendas);
+//                    pedido.put("FINANCEIROS", financeiros);
+//
+//                    pedidos.add(pedido);
+//                } while (cursorVendas.moveToNext());
+//            }
+//        } catch (Exception e) {
+//            Log.e("montarJson", "Erro ao montar JSON", e);
+//        } finally {
+//            // Fecha os recursos abertos
+//            if (cursorVendas != null && !cursorVendas.isClosed()) {
+//                cursorVendas.close();
+//            }
+//            if (db != null && db.isOpen()) {
+//                db.close();
+//            }
+//        }
+//
+//        // Monta o JSON final
+//        Map<String, Object> jsonFinal = new HashMap<>();
+//        jsonFinal.put("SERIAL", "005000002");
+//        jsonFinal.put("PEDIDOS", pedidos);
+//
+//        return new Gson().toJson(jsonFinal); // Converte o mapa para JSON
+//    }
 
     /*************** ENVIAR DADOS ORIGINAL ****************/
     // ** Enviar dados VENDAS

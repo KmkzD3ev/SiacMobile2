@@ -97,16 +97,12 @@ public class BluetoothPrintActivity extends AppCompatActivity {
 
         // Carregar os dados de vendas
         carregarDadosVendas();
-       // TextView tvErrorMessage = findViewById(R.id.tvErrorMessage);
+        // TextView tvErrorMessage = findViewById(R.id.tvErrorMessage);
 
         // Verificar o contador de negativas de ativação do Bluetooth
         int negativas = prefsBluetooth.getInt("negativas_bt", 0);
         if (negativas >= 1) {
-            //exibirAlertaBluetoothNegado();
-            // Toast.makeText(this, "PRIMEIRA NEGATIVA ENCONTRADA", Toast.LENGTH_SHORT).show();
-        } else {
-            // Se não houver negativas e as permissões já estiverem concedidas, tenta ativar o Bluetooth diretamente
-            //  ativarBluetooth();
+            Log.d("NEGATIVAS BT", "onCreate: VERIFICANDO NEGATIVAS = 1 ");
         }
 
 
@@ -133,9 +129,6 @@ public class BluetoothPrintActivity extends AppCompatActivity {
         });
 
     }
-
-
-
 
 
     private void abrirConfiguracoesBluetooth() {

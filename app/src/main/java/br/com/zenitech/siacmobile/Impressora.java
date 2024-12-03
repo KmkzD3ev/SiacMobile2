@@ -1554,6 +1554,9 @@ public class Impressora extends AppCompatActivity {
             Log.d(LOG_TAG, "Print Relatório NFC-e");
             //printer.reset();
 
+            SharedPreferences prefs = getSharedPreferences("preferencias", MODE_PRIVATE);
+            int totalItensVendidos = prefs.getInt("totalItensVendidos", 0);
+
             elementosPedidos = bd.getRelatorioVendasComProdutos();
 
             strFormPags = bd.getFormPagRelatorioVendasPedidos();
@@ -1629,7 +1632,7 @@ public class Impressora extends AppCompatActivity {
             // Exibe os totais conforme o padrão já estabelecido
             textBuffer.append(tamFont).append("{br}").append("         *** TOTAIS ***").append("{br}{br}");
             textBuffer.append(tamFont).append("TOTAL DE VENDAS: ").append(elementosPedidos.size()).append("{br}");
-            textBuffer.append(tamFont).append("TOTAL DE ITENS: ").append((int) Double.parseDouble(quantItens)).append("{br}");
+            textBuffer.append(tamFont).append("TOTAL DE ITENS: ").append( totalItensVendidos).append("{br}");
             //textBuffer.append(tamFont).append("TOTAL DE ITENS: ").append(Integer.parseInt(quantItens)).append("{br}");
             //textBuffer.append(tamFont).append("VALOR TOTAL: ").append(cAux.formatarValorMonetario(new BigDecimal(valTotalPed))).append("{br}");
             textBuffer.append(tamFont).append("VALOR TOTAL: ").append(valTotal).append("{br}");

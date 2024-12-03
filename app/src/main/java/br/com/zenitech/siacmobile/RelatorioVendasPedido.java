@@ -115,7 +115,13 @@ public class RelatorioVendasPedido extends AppCompatActivity {
             txtProdutoRelatorioVendas.setText(String.valueOf(vendasDomains.size()));
             double s = Double.parseDouble(quantItens);
             txtQuantidadeRelatorioVendas.setText(String.valueOf(totalQuantidadeProdutos));
-           // txtTotalRelatorioVendas.setText(String.valueOf(classAuxiliar.maskMoney(new BigDecimal(valTotalPed))));
+
+            SharedPreferences prefs = getSharedPreferences("preferencias", MODE_PRIVATE);
+            SharedPreferences.Editor editor = prefs.edit();
+            editor.putInt("totalItensVendidos", totalQuantidadeProdutos);
+            editor.apply();  // ou editor.commit() para garantir a escrita síncrona
+
+            // txtTotalRelatorioVendas.setText(String.valueOf(classAuxiliar.maskMoney(new BigDecimal(valTotalPed))));
         }
 
 
@@ -156,6 +162,7 @@ public class RelatorioVendasPedido extends AppCompatActivity {
         // Atualiza o TextView com o valor total das vendas
         runOnUiThread(() -> {
             txtTotalRelatorioVendas.setText(classAuxiliar.maskMoney(totalDeVendas));
+
         });
     }
 

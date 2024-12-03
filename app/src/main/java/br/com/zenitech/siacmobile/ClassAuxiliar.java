@@ -9,6 +9,9 @@ import android.widget.EditText;
 import android.widget.Toast;
 
 import com.google.android.material.snackbar.Snackbar;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -127,7 +130,7 @@ public class ClassAuxiliar {
                 // Converte vírgulas para pontos e remove espaços em branco extras
                 v = v.replace(",", ".").trim();
 
-                // Tenta converter para BigDecimal e somar
+                //  converter para BigDecimal e somar
                 BigDecimal valorConvertido = new BigDecimal(v);
                 valor = valor.add(valorConvertido);
 
@@ -251,6 +254,75 @@ public class ClassAuxiliar {
         String valForm = nf.format(valor).trim().replaceAll(" ", "");
         Log.i("Decimal", valForm);
         return valForm;
+    }
+
+
+    //FORMATAR JSON
+    // Método para formatar datas no padrão ANO/MÊS/DIA (ISO 8601)
+    public String formatarDataParaISO(String data) {
+        try {
+            // Assume que a data está no formato DIA/MÊS/ANO
+            SimpleDateFormat formatoOriginal = new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault());
+            SimpleDateFormat formatoISO = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+            return formatoISO.format(formatoOriginal.parse(data));
+        } catch (Exception e) {
+            // Caso ocorra algum erro, retorna a data original e loga o erro
+            Log.e("FormatarData", "Erro ao formatar a data: " + data, e);
+            return data;
+        }
+    }
+
+    // Método para formatar valores monetários com 2 casas decimais
+    public String formatarValorComDuasCasas(String valor) {
+        try {
+            BigDecimal bd = new BigDecimal(valor);
+            bd = bd.setScale(2, RoundingMode.HALF_UP);
+            return bd.toString();
+        } catch (Exception e) {
+            Log.e("formatarValor", "Erro ao formatar valor: " + valor, e);
+            return "0.00";
+        }
+    }
+
+    // Método para aplicar formatações em um JSON
+    public JsonObject formatarJsonParaEnvio(JsonObject json) {
+        try {
+            JsonArray pedidos = json.getAsJsonArray("PEDIDOS");
+            for (JsonElement pedidoElement : pedidos) {
+                JsonObject pedido = pedidoElement.getAsJsonObject();
+
+                // Formatar DATA
+                String data = pedido.get("DATA").getAsString();
+                pedido.addProperty("DATA", inserirData(data)); // Converte para o formato YYYY-MM-DD
+
+                // Formatar VENDAS
+                JsonArray vendas = pedido.getAsJsonArray("VENDAS");
+                for (JsonElement vendaElement : vendas) {
+                    JsonObject venda = vendaElement.getAsJsonObject();
+
+                    // Formatar VALOR_UNITARIO
+                    String valorUnitario = venda.get("VALOR_UNITARIO").getAsString();
+                    venda.addProperty("VALOR_UNITARIO", formatarValorComDuasCasas(valorUnitario));
+                }
+
+                // Formatar FINANCEIROS
+                JsonArray financeiros = pedido.getAsJsonArray("FINANCEIROS");
+                for (JsonElement financeiroElement : financeiros) {
+                    JsonObject financeiro = financeiroElement.getAsJsonObject();
+
+                    // Formatar VALOR
+                    String valorFinanceiro = financeiro.get("VALOR").getAsString();
+                    financeiro.addProperty("VALOR", formatarValorComDuasCasas(valorFinanceiro));
+
+                    // Formatar VENCIMENTO
+                    String vencimento = financeiro.get("VENCIMENTO").getAsString();
+                    financeiro.addProperty("VENCIMENTO", inserirData(vencimento)); // Converte para YYYY-MM-DD
+                }
+            }
+        } catch (Exception e) {
+            Log.e("formatarJsonParaEnvio", "Erro ao formatar JSON", e);
+        }
+        return json;
     }
 
     /*public static void main(String[] args) {

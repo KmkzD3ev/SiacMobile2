@@ -47,14 +47,6 @@ class CreditoPrefs(context: Context) {
         }
 
 
-    var limiteCreditoAtual: String?
-        // Armazena e obtém o limite de crédito atual do cliente
-        get() = prefs.getString("limiteCreditoAtual", "")
-        set(limiteCreditoAtual) {
-            prefs.edit().putString("limiteCreditoAtual", limiteCreditoAtual).apply()
-        }
-
-
     var limitePrimario: String?
         // Armazena e obtém o limite de crédito primário (referência para resetar o limite)
         get() = prefs.getString("limitePrimario", "")

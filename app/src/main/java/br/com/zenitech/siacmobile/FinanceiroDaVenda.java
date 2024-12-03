@@ -1700,13 +1700,13 @@ public class FinanceiroDaVenda extends AppCompatActivity implements AdapterView.
                 Toast secondToast = Toast.makeText(getApplicationContext(), secondMessage, Toast.LENGTH_LONG);
                 secondToast.show();
             }
-        }, 3500);
+        }, 1500);
     }
 
 
     private void finalizarFinanceiroVenda() {
         bd.updateFinalizarVenda(String.valueOf(prefs.getInt("id_venda_app", 1)));
-        showSequentialToasts("Venda Finalizada Com Sucesso...", "Aguarde a impressão da promissória.");
+        showSequentialToasts("Venda Finalizada Com Sucesso...", "Aguarde a impressão ");
 
         // Verifica se o Bluetooth foi negado pelo menos duas vezes
         int negativasBluetooth = prefs.getInt("negativas_bt", 0);

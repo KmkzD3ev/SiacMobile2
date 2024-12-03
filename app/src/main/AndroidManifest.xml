@@ -129,7 +129,8 @@
         <activity
             android:name=".Principal2"
             android:configChanges="keyboardHidden|orientation|screenSize"
-            android:label="@string/title_activity_principal2" />
+            android:label="@string/title_activity_principal2"
+            />
         <activity
             android:name=".Login"
             android:configChanges="keyboardHidden|orientation|screenSize"

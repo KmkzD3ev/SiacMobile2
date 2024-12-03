@@ -102,6 +102,8 @@ public class Vendas extends AppCompatActivity {
     // Dentro da classe Vendas ou onde o método atualizarListaProdutos está implementado
     private ArrayList<ProdutoEmissor> listaProdutosVenda = new ArrayList<>();
     private boolean vendaAlterada = false;  // Inicialmente, não há alterações
+    private int estadoEntregaFutura = 0;
+    private CheckBox checkBoxConfirmar;
 
 
 
@@ -113,9 +115,6 @@ public class Vendas extends AppCompatActivity {
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         Objects.requireNonNull(getSupportActionBar()).setDisplayHomeAsUpEnabled(true);
-
-
-
 
         /************ COMPONENTES PARA PERSISTIR ESTADO CHECBOX ***********/
 
@@ -154,8 +153,6 @@ public class Vendas extends AppCompatActivity {
             Toast.makeText(this, "ESTA É UMA VENDA NOVA", Toast.LENGTH_SHORT).show();
         }
 
-
-
         // Inicializar entrega_futura_venda como 0 (padrão)
         ed.putInt("entrega_futura_venda", 0).apply();
         Log.d("CheckBox", "Valor padrão de entrega_futura_venda definido para: 0");
@@ -179,58 +176,30 @@ public class Vendas extends AppCompatActivity {
         //spProduto.requestFocus();
 
 
-        // Chama o método getRelatorioVendas e loga o resultado detalhado
-        ArrayList<VendasDomain> relatorioVendas = bd.getRelatorioVendas();
-        Log.d("getRelatorioVendas", "Número de vendas retornadas: " + relatorioVendas.size());
-
-        // Itera sobre cada venda e loga os detalhes
-        for (VendasDomain venda : relatorioVendas) {
-            Log.d("RelatorioVendas", "Código Venda: " + venda.getCodigo_venda());
-            Log.d("RelatorioVendas", "Código Cliente: " + venda.getCodigo_venda());
-            Log.d("RelatorioVendas", "Unidade Venda: " + venda.getUnidade_venda());
-            Log.d("RelatorioVendas", "Produto Venda: " + venda.getProduto_venda());
-            Log.d("RelatorioVendas", "Data Movimento: " + venda.getData_movimento());
-            Log.d("RelatorioVendas", "Quantidade Venda: " + venda.getQuantidade_venda());
-            Log.d("RelatorioVendas", "Preço Unitário: " + venda.getPreco_unitario());
-            Log.d("RelatorioVendas", "Valor Total: " + venda.getValor_total());
-            Log.d("RelatorioVendas", "Vendedor Venda: " + venda.getVendedor_venda());
-            Log.d("RelatorioVendas", "Status Autorização: " + venda.getStatus_autorizacao_venda());
-            Log.d("RelatorioVendas", "Entrega Futura: " + venda.getEntrega_futura_venda());
-            Log.d("RelatorioVendas", "Entrega Futura Realizada: " + venda.getEntrega_futura_realizada());
-            Log.d("RelatorioVendas", "Usuário Atual: " + venda.getUsuario_atual());
-            Log.d("RelatorioVendas", "Data Cadastro: " + venda.getData_cadastro());
-            Log.d("RelatorioVendas", "ID Venda App: " + venda.getCodigo_venda_app());
-            Log.d("RelatorioVendas", "Chave Importação: " + venda.getChave_importacao());
-            // Log.d("RelatorioVendas", "Formas de Pagamento: " + venda.get());
-        }
-
         //
 
         //
 
-        bd.VendaFuturaAtiva();
+            /* bd.VendaFuturaAtiva();
 
-
-
-        boolean vendaFuturaAtiva = bd.VendaFuturaAtiva();
+            boolean vendaFuturaAtiva = bd.VendaFuturaAtiva();
 
         // Loga o valor retornado pelo método
-        Log.d("VENDAS", "Venda Futura Ativa: " + vendaFuturaAtiva);
+        Log.d("VENDAS", "Venda Futura Ativa: " + vendaFuturaAtiva);*/
 
         /************* LISTNER DO CHECBOX *****************/
         // Inicializa o CheckBox
-        CheckBox checkBoxConfirmar = findViewById(R.id.checkbox_confirmar);
+       checkBoxConfirmar = findViewById(R.id.checkbox_confirmar);
 
         // Adiciona o listener de mudança de estado do CheckBox
         checkBoxConfirmar.setOnCheckedChangeListener((buttonView, isChecked) -> {
-            // Se o checkbox for marcado, definimos entrega_futura_venda para 1, caso contrário permanece 0
-            int entregaFutura = isChecked ? 1 : 0;
 
-            // Armazena o valor no SharedPreferences
-            ed.putInt("entrega_futura_venda", entregaFutura).apply();
+           //  Se o checkbox for marcado, definimos entrega_futura_venda para 1, caso contrário permanece 0
+
+            estadoEntregaFutura = isChecked ? 1 : 0;
 
             // Log para verificação
-            Log.d("CheckBox", "Valor de entrega_futura_venda definido para: " + entregaFutura);
+            Log.d("CheckBox", "Valor de entrega_futura_venda definido para: " + estadoEntregaFutura);
         });
         obterDados();
 
@@ -285,7 +254,7 @@ public class Vendas extends AppCompatActivity {
                     Toast.makeText(Vendas.this, "Quantidade e Preço não podem ser vazios.", Toast.LENGTH_LONG).show();
                 } else {
                     adicionarProdutoAoPedido();
-                    AttVendafutura();
+                    //AttVendafutura();
                 }
 
                 handled = true;
@@ -316,7 +285,7 @@ public class Vendas extends AppCompatActivity {
                 ShowMsgToast("Informe o valor unitário.");
             } else {
                 adicionarProdutoAoPedido();
-                AttVendafutura();
+                //AttVendafutura();
                 atualizarListaProdutos();
 
             }
@@ -324,7 +293,7 @@ public class Vendas extends AppCompatActivity {
 
         /******************* VERIFICAR MARCAÇAO PREVIA ENTREGA FUTURA ****************/
 
-        // Aqui chamamos o método para verificar se a venda é futura e armazenamos o estado original
+        /* Aqui chamamos o método para verificar se a venda é futura e armazenamos o estado original
         int idVendaAppLocal = prefs.getInt("id_venda_app", 0);
         int entregaFutura = bd.getEntregaFuturaVenda(idVendaAppLocal);
 
@@ -352,7 +321,7 @@ public class Vendas extends AppCompatActivity {
 
             // Atualiza o SharedPreferences (ou outra ação necessária)
             ed.putInt("entrega_futura_venda", entregaFuturaAtual).apply();
-        });
+        });*/
 
         //
         findViewById(R.id.btnPagamento).setOnClickListener(view -> {
@@ -594,6 +563,7 @@ public class Vendas extends AppCompatActivity {
                 //SE FOR EDITAR A ÚLTIMA VENDA REALIZADA
                 else {
                     Log.d("CAIU NA EDIÇAO", "obterDados: NAO E VENDA NOVA ");
+
                     /**
                      *PARAMS
                      * AQUI OS DADOS DE UMA EDIÇAO SAO CARREGADOS
@@ -681,7 +651,7 @@ public class Vendas extends AppCompatActivity {
     }*/
 
     /******** ATUALIZAÇAO DO CAMPO DE ENTREGA-FUTURA DENTRO DA VENDA *******/
-
+/*
     private void AttVendafutura(){
 
         // Recupera o valor de entrega futura salvo no SharedPreferences
@@ -700,7 +670,7 @@ public class Vendas extends AppCompatActivity {
             Log.d("UpdateLog", "Falha ao atualizar o campo entrega_futura_venda.");
         }
 
-    }
+    }*/
 
     /***************** INSERIR PRODUTOS NO PEDIDO **************************/
 
@@ -715,13 +685,16 @@ public class Vendas extends AppCompatActivity {
         valor_unit_emissor = precoUnitario;
         Log.d("pegando PREÇO UNIT", "adicionarProdutoAoPedido: PEGANDO PREÇO UNITARIO " + quantidade_emissor);
 
-        long resultadoInsercao = bd.addProdutoVenda(produto, Integer.parseInt(quantidade), Double.parseDouble(precoUnitario), String.valueOf(id_venda_app));
+        long resultadoInsercao = bd.addProdutoVenda(produto, Integer.parseInt(quantidade), Double.parseDouble(precoUnitario), String.valueOf(id_venda_app),estadoEntregaFutura);
         if (resultadoInsercao != -1) {
-            Log.d("Inserção", "Produto inserido com sucesso na tabela produtos_vendas_app, ID da linha: " + resultadoInsercao + ", ID da venda: " + id_venda_app + ", Produto: " + produto);
+            Log.d("Inserção", String.format("Produto inserido com sucesso na tabela produtos_vendas_app, ID da linha: %d, ID da venda: %s, Produto: %s, Marcado venda futura: %d", resultadoInsercao, id_venda_app, produto, estadoEntregaFutura));
+
             // listarItensVendas();
             atualizarListaProdutos();
             resetarCamposVenda();
             atualizarListaProdutos();
+            checkBoxConfirmar.setChecked(false);
+            estadoEntregaFutura = 0;
             vendaAlterada = true;
         } else {
             Log.e("Inserção", "Falha ao inserir produto na tabela produtos_vendas_app.");

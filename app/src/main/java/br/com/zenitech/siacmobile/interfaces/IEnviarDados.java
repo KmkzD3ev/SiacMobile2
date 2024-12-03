@@ -1,5 +1,7 @@
 package br.com.zenitech.siacmobile.interfaces;
 
+import com.google.gson.JsonObject;
+
 import java.util.ArrayList;
 
 import br.com.zenitech.siacmobile.Configuracoes;
@@ -9,9 +11,11 @@ import br.com.zenitech.siacmobile.domains.EnviarDados;
 import retrofit2.Call;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
+import retrofit2.http.Body;
 import retrofit2.http.Field;
 import retrofit2.http.FormUrlEncoded;
 import retrofit2.http.POST;
+import retrofit2.http.Query;
 
 public interface IEnviarDados {
 
@@ -52,18 +56,24 @@ public interface IEnviarDados {
             @Field("ENTFUTURA") String ENTFUTURA  // Novo campo adicionado para entrega futura
 
     );
+//
+//    @FormUrlEncoded
+//    @POST("index_app_siac.php")
+//    Call<ArrayList<EnviarDados>> enviarDadosProdutos(
+//            @Field("TELA") String TELA,
+//            @Field("SERIAL") String SERIAL,
+//            @Field("IDDAVENDA") String IDDAVENDA,
+//            @Field("PRODUTOS") String PRODUTOS,
+//            @Field("QUANTIDADES") String QUANTIDADES
+//    );
 
-    @FormUrlEncoded
-    @POST("index_app_siac.php")
-    Call<ArrayList<EnviarDados>> enviarDadosProdutos(
-            @Field("TELA") String TELA,
-            @Field("SERIAL") String SERIAL,
-            @Field("IDDAVENDA") String IDDAVENDA,
-            @Field("PRODUTOS") String PRODUTOS,
-            @Field("QUANTIDADES") String QUANTIDADES
 
+    @POST("http://191.243.197.5/POSSIACN/index_app_siac_v2.php?TELA=850&SERIAL=005000002")
+    Call<ArrayList<EnviarDados>> enviarDadosUnificado(
+            @Query("TELA") String TELA, // Passado como query parameter
+            @Query("SERIAL") String SERIAL, // Passado como query parameter
+            @Body JsonObject PEDIDOS  // Corpo JSON
     );
-
 
 
     @FormUrlEncoded
